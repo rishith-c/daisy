@@ -31,151 +31,151 @@ SENTINEL = "Memory view: four tiers"
 # The last measured ingest, used only when memory.db is absent. Regenerate with
 #   python3 -m memory.cli ingest --runs runs --sessions 4
 FALLBACK = {'generated': '2026-08-22',
-     'live': False,
-     'events': 320,
-     'facts': 62,
-     'summaries': 10,
-     'residue': 212,
-     'runs': 10,
-     'sources': 10,
-     'fact_kinds': {'approval': 5, 'decision': 13, 'gate': 21, 'repair': 4, 'write': 19},
-     'residue_reasons': {'deterministic': 31, 'squeezed': 181},
-     'bytes_before': 214283,
-     'bytes_after': 45874,
-     'compression': 4.7,
-     'index_kb': 17.8,
-     'float_mb': 0.58,
-     'db_mb': 1.6,
-     'audit': {'compactions': 10,
-               'events': 320,
-               'events_retained': 108,
-               'events_dropped': 212,
-               'residue_rows': 212,
-               'residue_live_pointers': 212,
-               'facts': 62,
-               'facts_in_context': 62,
-               'facts_tier0_only': 0,
-               'facts_unreachable': 0,
-               'context_coverage': 1.0,
-               'total_coverage': 1.0,
-               'reconciles': True,
-               'ratio': 4.7},
-     'biggest': {'source': 'claude:449783f3-e475-4',
-                 'span': [1, 264],
-                 'events': 264,
-                 'retained': 52,
-                 'dropped': 212,
-                 'ratio': 5.4,
-                 'probe': 100},
-     'chips': {'facts': ['taste.t1 · fail', '…veloper/daisy/README.md · created',
-                         'brief: SR-11 bracket, 2…', 'scrape · gate-set',
-                         'hardware · resume-findi'],
-               'kept': ['This is pure ideation — the out…', '<task-notification> <task-id>w4…',
-                        '**The tournament is done, and t…', '<task-notification> <task-id>w0…',
-                        '<task-notification> <task-id>w8…'],
-               'dropped': ['Workflow: Workflow', 'Skill: artifact-design',
-                           'ToolSearch: computer-use', 'SendUserFile: SendUserFile',
-                           'ToolSearch: select:WebSearch', 'Skill: superpowers:brainstorming',
-                           'Agent: Research Codex app light…', 'Agent: Research award-winning M…',
-                           'Agent: Research vector memory a…', 'Now the full verification pass …',
-                           'Agent: Research fluid native-fe…', 'Typo in the path — retrying wit…',
-                           'No site is open in this tab. Us…', 'so it cann ot be a mac app and …',
-                           'read ~/Developer/daisy/icon/dai…', 'mcp__Claude_Browser__computer: …',
-                           'mcp__Claude_Browser__navigate: …',
-                           'mcp__Claude_Browser__read_page:…']},
-     'demo': [{'label': 'exact path',
-               'q': 'index.html',
-               'gates': [],
-               'ms': 13.3,
-               'scanned': 284,
-               'held': [{'tier': 1,
-                         'kind': 'write',
-                         'subject': '~/Developer/daisy/index.html',
-                         'value': 'created',
-                         'score': 0.4885,
-                         'parts': {'exact': 0.85,
-                                   'cover': 0.0,
-                                   'cosine': 0.453,
-                                   'evidence': 0.488}}],
-               'forgotten': [{'score': 0.3133,
-                              'claim': "Bash: python3 - <<'PYEOF' p = 'index.html' h = "
-                                       'open(p).read()  # minimap: distribute proportion…',
-                              'reason': 'squeezed',
-                              'event': '6b6c3666198b',
-                              'chars': 406,
-                              'at': '11:59'},
-                             {'score': 0.3113,
-                              'claim': "Bash: python3 - <<'PYEOF' p = 'index.html' h = "
-                                       'open(p).read()  # palette: no animation (keyboar…',
-                              'reason': 'squeezed',
-                              'event': 'ee37bd83179f',
-                              'chars': 406,
-                              'at': '11:59'}]},
-              {'label': 'gate signature',
-               'q': 'something is off with the frontend',
-               'gates': ['taste.t1'],
-               'ms': 15.6,
-               'scanned': 284,
-               'held': [{'tier': 2,
-                         'kind': 'summary',
-                         'subject': 'This is pure ideation — the output is ideas, not code — so '
-                                    'per t',
-                         'value': 'probe 100%',
-                         'score': 0.3373,
-                         'parts': {'exact': 0.0,
-                                   'cover': 0.0,
-                                   'cosine': 0.337,
-                                   'evidence': 0.337}},
-                        {'tier': 1,
-                         'kind': 'gate',
-                         'subject': 'taste.t1',
-                         'value': 'fail',
-                         'score': 0.2881,
-                         'parts': {'exact': 0.0,
-                                   'cover': 1.0,
-                                   'cosine': 0.105,
-                                   'evidence': 0.288}}],
-               'forgotten': [{'score': 0.2692,
-                              'claim': 'Typo in the path — retrying with the correct one.',
-                              'reason': 'squeezed',
-                              'event': 'e64b103513b6',
-                              'chars': 49,
-                              'at': '11:59'}]},
-              {'label': 'paraphrase',
-               'q': 'inlining the hand drawn icon into the sidebar brand',
-               'gates': [],
-               'ms': 12.4,
-               'scanned': 284,
-               'held': [{'tier': 2,
-                         'kind': 'summary',
-                         'subject': 'This is pure ideation — the output is ideas, not code — so '
-                                    'per t',
-                         'value': 'probe 100%',
-                         'score': 0.293,
-                         'parts': {'exact': 0.0,
-                                   'cover': 0.0,
-                                   'cosine': 0.293,
-                                   'evidence': 0.293}}],
-               'forgotten': [{'score': 0.8417,
-                              'claim': "Now inlining the hand-drawn icon into the app's sidebar "
-                                       'brand:',
-                              'reason': 'squeezed',
-                              'event': '24fd3da5631a',
-                              'chars': 62,
-                              'at': '11:59'},
-                             {'score': 0.2624,
-                              'claim': 'Now the full verification pass in the browser:',
-                              'reason': 'squeezed',
-                              'event': 'b903953f40e5',
-                              'chars': 46,
-                              'at': '11:59'}]},
-              {'label': 'novel',
-               'q': 'kubernetes pod evicted due to memory pressure on the node',
-               'gates': [],
-               'ms': 12.1,
-               'scanned': 284,
-               'held': [],
-               'forgotten': []}]}
+            'live': False,
+            'events': 320,
+            'facts': 62,
+            'summaries': 10,
+            'residue': 212,
+            'runs': 10,
+            'sources': 10,
+            'fact_kinds': {'approval': 5, 'decision': 13, 'gate': 21, 'repair': 4, 'write': 19},
+            'residue_reasons': {'deterministic': 31, 'squeezed': 181},
+            'bytes_before': 214283,
+            'bytes_after': 45874,
+            'compression': 4.7,
+            'index_kb': 17.8,
+            'float_mb': 0.58,
+            'db_mb': 1.6,
+            'audit': {'compactions': 10,
+            'events': 320,
+            'events_retained': 108,
+            'events_dropped': 212,
+            'residue_rows': 212,
+            'residue_live_pointers': 212,
+            'facts': 62,
+            'facts_in_context': 62,
+            'facts_tier0_only': 0,
+            'facts_unreachable': 0,
+            'context_coverage': 1.0,
+            'total_coverage': 1.0,
+            'reconciles': True,
+            'ratio': 4.7},
+            'biggest': {'source': 'claude:449783f3-e475-4',
+            'span': [1, 264],
+            'events': 264,
+            'retained': 52,
+            'dropped': 212,
+            'ratio': 5.4,
+            'probe': 100},
+            'chips': {'facts': ['taste.t1 · fail', '…veloper/daisy/README.md · created',
+            'brief: SR-11 bracket, 2…', 'scrape · gate-set',
+            'hardware · resume-findi'],
+            'kept': ['This is pure ideation — the out…', '<task-notification> <task-id>w4…',
+            '**The tournament is done, and t…', '<task-notification> <task-id>w0…',
+            '<task-notification> <task-id>w8…'],
+            'dropped': ['Workflow: Workflow', 'Skill: artifact-design',
+            'ToolSearch: computer-use', 'SendUserFile: SendUserFile',
+            'ToolSearch: select:WebSearch', 'Skill: superpowers:brainstorming',
+            'Agent: Research Codex app light…', 'Agent: Research award-winning M…',
+            'Agent: Research vector memory a…', 'Now the full verification pass …',
+            'Agent: Research fluid native-fe…', 'Typo in the path — retrying wit…',
+            'No site is open in this tab. Us…', 'so it cann ot be a mac app and …',
+            'read ~/Developer/daisy/icon/dai…', 'mcp__Claude_Browser__computer: …',
+            'mcp__Claude_Browser__navigate: …',
+            'mcp__Claude_Browser__read_page:…']},
+            'demo': [{'label': 'exact path',
+            'q': 'index.html',
+            'gates': [],
+            'ms': 13.3,
+            'scanned': 284,
+            'held': [{'tier': 1,
+            'kind': 'write',
+            'subject': '~/Developer/daisy/index.html',
+            'value': 'created',
+            'score': 0.4885,
+            'parts': {'exact': 0.85,
+            'cover': 0.0,
+            'cosine': 0.453,
+            'evidence': 0.488}}],
+            'forgotten': [{'score': 0.3133,
+            'claim': "Bash: python3 - <<'PYEOF' p = 'index.html' h = "
+            'open(p).read()  # minimap: distribute proportion…',
+            'reason': 'squeezed',
+            'event': '6b6c3666198b',
+            'chars': 406,
+            'at': '11:59'},
+            {'score': 0.3113,
+            'claim': "Bash: python3 - <<'PYEOF' p = 'index.html' h = "
+            'open(p).read()  # palette: no animation (keyboar…',
+            'reason': 'squeezed',
+            'event': 'ee37bd83179f',
+            'chars': 406,
+            'at': '11:59'}]},
+            {'label': 'gate signature',
+            'q': 'something is off with the frontend',
+            'gates': ['taste.t1'],
+            'ms': 15.6,
+            'scanned': 284,
+            'held': [{'tier': 2,
+            'kind': 'summary',
+            'subject': 'This is pure ideation — the output is ideas, not code — so '
+            'per t',
+            'value': 'probe 100%',
+            'score': 0.3373,
+            'parts': {'exact': 0.0,
+            'cover': 0.0,
+            'cosine': 0.337,
+            'evidence': 0.337}},
+            {'tier': 1,
+            'kind': 'gate',
+            'subject': 'taste.t1',
+            'value': 'fail',
+            'score': 0.2881,
+            'parts': {'exact': 0.0,
+            'cover': 1.0,
+            'cosine': 0.105,
+            'evidence': 0.288}}],
+            'forgotten': [{'score': 0.2692,
+            'claim': 'Typo in the path — retrying with the correct one.',
+            'reason': 'squeezed',
+            'event': 'e64b103513b6',
+            'chars': 49,
+            'at': '11:59'}]},
+            {'label': 'paraphrase',
+            'q': 'inlining the hand drawn icon into the sidebar brand',
+            'gates': [],
+            'ms': 12.4,
+            'scanned': 284,
+            'held': [{'tier': 2,
+            'kind': 'summary',
+            'subject': 'This is pure ideation — the output is ideas, not code — so '
+            'per t',
+            'value': 'probe 100%',
+            'score': 0.293,
+            'parts': {'exact': 0.0,
+            'cover': 0.0,
+            'cosine': 0.293,
+            'evidence': 0.293}}],
+            'forgotten': [{'score': 0.8417,
+            'claim': "Now inlining the hand-drawn icon into the app's sidebar "
+            'brand:',
+            'reason': 'squeezed',
+            'event': '24fd3da5631a',
+            'chars': 62,
+            'at': '11:59'},
+            {'score': 0.2624,
+            'claim': 'Now the full verification pass in the browser:',
+            'reason': 'squeezed',
+            'event': 'b903953f40e5',
+            'chars': 46,
+            'at': '11:59'}]},
+            {'label': 'novel',
+            'q': 'kubernetes pod evicted due to memory pressure on the node',
+            'gates': [],
+            'ms': 12.1,
+            'scanned': 284,
+            'held': [],
+            'forgotten': []}]}
 
 
 # ---------------------------------------------------------------------------
@@ -183,10 +183,10 @@ FALLBACK = {'generated': '2026-08-22',
 # ---------------------------------------------------------------------------
 
 DEMO_QUERIES = [
-    ("exact path", "index.html", None),
-    ("gate signature", "something is off with the frontend", ["taste.t1"]),
-    ("paraphrase", "inlining the hand drawn icon into the sidebar brand", None),
-    ("novel", "kubernetes pod evicted due to memory pressure on the node", None),
+("exact path", "index.html", None),
+("gate signature", "something is off with the frontend", ["taste.t1"]),
+("paraphrase", "inlining the hand drawn icon into the sidebar brand", None),
+("novel", "kubernetes pod evicted due to memory pressure on the node", None),
 ]
 
 
@@ -202,121 +202,121 @@ HOME = os.path.expanduser("~")
 
 
 def _label(s: str, n: int = CHIP_CHARS) -> str:
-    """Trim a row to chip width from whichever end carries the meaning.
+"""Trim a row to chip width from whichever end carries the meaning.
 
-    A path is identified by its tail and a sentence by its head, so truncating
-    both the same way makes half the chips unreadable. Home is shortened to `~`
-    the way agents/discover.py does it — an absolute home path in shipped markup
-    is noise at best and someone's username at worst.
-    """
-    s = " ".join(str(s).replace(HOME, "~").split())
-    if len(s) <= n:
-        return s
-    pathish = "/" in s and " " not in s
-    return ("\u2026" + s[-(n - 1):]) if pathish else (s[:n - 1] + "\u2026")
+A path is identified by its tail and a sentence by its head, so truncating
+both the same way makes half the chips unreadable. Home is shortened to `~`
+the way agents/discover.py does it — an absolute home path in shipped markup
+is noise at best and someone's username at worst.
+"""
+s = " ".join(str(s).replace(HOME, "~").split())
+if len(s) <= n:
+return s
+pathish = "/" in s and " " not in s
+return ("\u2026" + s[-(n - 1):]) if pathish else (s[:n - 1] + "\u2026")
 
 
 def _distinct(rows, n: int) -> list:
-    """De-duplicate on the RENDERED label, not the source text.
+"""De-duplicate on the RENDERED label, not the source text.
 
-    Two different events that trim to the same 32 characters look like a
-    rendering bug, however honestly they were selected.
-    """
-    seen, out = set(), []
-    for (t,) in rows:
-        lab = _label(t)
-        if not lab or lab.lower() in seen:
-            continue
-        seen.add(lab.lower())
-        out.append(lab)
-        if len(out) >= n:
-            break
-    return out
+Two different events that trim to the same 32 characters look like a
+rendering bug, however honestly they were selected.
+"""
+seen, out = set(), []
+for (t,) in rows:
+lab = _label(t)
+if not lab or lab.lower() in seen:
+continue
+seen.add(lab.lower())
+out.append(lab)
+if len(out) >= n:
+break
+return out
 
 
 def _chips(con, big: dict) -> dict:
-    facts = []
-    for kind in KIND_ORDER:
-        r = con.execute("SELECT subject, value FROM fact WHERE kind = ?"
-                        " ORDER BY LENGTH(subject), subject LIMIT 1", (kind,)).fetchone()
-        if r:
-            # A decision's value is its own text again, so only append the value
-            # when it actually adds something.
-            lab, val = _label(r[0], 24), (r[1] or "")[:12]
-            facts.append(lab if not val or val.lower() in lab.lower()
-                         else "%s \u00b7 %s" % (lab, val))
-    span = big.get("span") or [0, 0]
-    args = (big.get("source", ""), span[0], span[1])
-    kept = _distinct(con.execute(
-        "SELECT text FROM event WHERE source = ? AND seq BETWEEN ? AND ?"
-        " AND text <> '' AND id NOT IN (SELECT event_id FROM residue)"
-        " ORDER BY kind = 'prose' DESC, seq", args), 5)
-    dropped = _distinct(con.execute(
-        "SELECT claim FROM residue WHERE summary_id = ? ORDER BY LENGTH(claim), id",
-        (big.get("summary_id", ""),)), 18)
-    return {"facts": facts, "kept": kept, "dropped": dropped}
+facts = []
+for kind in KIND_ORDER:
+r = con.execute("SELECT subject, value FROM fact WHERE kind = ?"
+" ORDER BY LENGTH(subject), subject LIMIT 1", (kind,)).fetchone()
+if r:
+# A decision's value is its own text again, so only append the value
+# when it actually adds something.
+lab, val = _label(r[0], 24), (r[1] or "")[:12]
+facts.append(lab if not val or val.lower() in lab.lower()
+else "%s \u00b7 %s" % (lab, val))
+span = big.get("span") or [0, 0]
+args = (big.get("source", ""), span[0], span[1])
+kept = _distinct(con.execute(
+"SELECT text FROM event WHERE source = ? AND seq BETWEEN ? AND ?"
+" AND text <> '' AND id NOT IN (SELECT event_id FROM residue)"
+" ORDER BY kind = 'prose' DESC, seq", args), 5)
+dropped = _distinct(con.execute(
+"SELECT claim FROM residue WHERE summary_id = ? ORDER BY LENGTH(claim), id",
+(big.get("summary_id", ""),)), 18)
+return {"facts": facts, "kept": kept, "dropped": dropped}
 
 
 def measured() -> dict:
-    """Read the real store, or say honestly that this is the last measurement."""
-    if not os.path.exists(DB):
-        return dict(FALLBACK)
-    from memory import boundary, recall as rc, store        # noqa: PLC0415
+"""Read the real store, or say honestly that this is the last measurement."""
+if not os.path.exists(DB):
+return dict(FALLBACK)
+from memory import boundary, recall as rc, store        # noqa: PLC0415
 
-    con = store.connect(DB)
-    s = store.stats(con)
-    a = boundary.audit_all(con)
-    per = sorted(a["compactions"], key=lambda c: -c["events_dropped"])
-    big = per[0] if per else {}
+con = store.connect(DB)
+s = store.stats(con)
+a = boundary.audit_all(con)
+per = sorted(a["compactions"], key=lambda c: -c["events_dropped"])
+big = per[0] if per else {}
 
-    chips = _chips(con, big)
+chips = _chips(con, big)
 
-    demo = []
-    for label, q, gates in DEMO_QUERIES:
-        t0 = time.time()
-        r = rc.recall(con, q, gates=gates, k=2)
-        d = {"label": label, "q": q, "gates": gates or [],
-             "ms": round((time.time() - t0) * 1000, 1), "scanned": r.scanned,
-             "held": [{"tier": h.tier, "kind": h.kind,
-                       "subject": h.subject.replace(HOME, "~")[:64],
-                       "value": h.value[:32], "score": h.score, "parts": h.parts}
-                      for h in r.held],
-             "forgotten": []}
-        for f in r.forgotten[:2]:
-            ev = rc.verbatim(con, f)
-            d["forgotten"].append({
-                "score": f.score, "claim": f.subject.replace(HOME, "~"),
-                "reason": f.reason,
-                "event": f.event_id[:12], "chars": len(ev.get("text", "") or ""),
-                "at": time.strftime("%H:%M", time.localtime(f.dropped_at))})
-        demo.append(d)
-    con.close()
+demo = []
+for label, q, gates in DEMO_QUERIES:
+t0 = time.time()
+r = rc.recall(con, q, gates=gates, k=2)
+d = {"label": label, "q": q, "gates": gates or [],
+"ms": round((time.time() - t0) * 1000, 1), "scanned": r.scanned,
+"held": [{"tier": h.tier, "kind": h.kind,
+"subject": h.subject.replace(HOME, "~")[:64],
+"value": h.value[:32], "score": h.score, "parts": h.parts}
+for h in r.held],
+"forgotten": []}
+for f in r.forgotten[:2]:
+ev = rc.verbatim(con, f)
+d["forgotten"].append({
+"score": f.score, "claim": f.subject.replace(HOME, "~"),
+"reason": f.reason,
+"event": f.event_id[:12], "chars": len(ev.get("text", "") or ""),
+"at": time.strftime("%H:%M", time.localtime(f.dropped_at))})
+demo.append(d)
+con.close()
 
-    return {
-        "generated": time.strftime("%Y-%m-%d %H:%M"), "live": True,
-        "events": s["events"], "facts": s["facts"], "summaries": s["summaries"],
-        "residue": s["residue"], "runs": s["runs"], "sources": s["sources"],
-        "fact_kinds": s["fact_kinds"], "residue_reasons": s["residue_reasons"],
-        "bytes_before": s["bytes_before"], "bytes_after": s["bytes_after"],
-        "compression": s["compression"],
-        "index_kb": round(s["index_bytes"] / 1024.0, 1),
-        "float_mb": round(s["float_bytes"] / 1e6, 2),
-        "db_mb": round(os.path.getsize(DB) / 1e6, 1),
-        "audit": {k: a["totals"][k] for k in
-                  ("compactions", "events", "events_retained", "events_dropped",
-                   "residue_rows", "residue_live_pointers", "facts",
-                   "facts_in_context", "facts_tier0_only", "facts_unreachable",
-                   "context_coverage", "total_coverage", "reconciles", "ratio")},
-        "biggest": {"source": (big.get("source") or "")[:22],
-                    "span": big.get("span", [0, 0]),
-                    "events": big.get("events", 0),
-                    "retained": big.get("events_retained", 0),
-                    "dropped": big.get("events_dropped", 0),
-                    "ratio": big.get("ratio", 0),
-                    "probe": round(100 * big.get("probe_score", 0))},
-        "chips": {k: chips[k] or FALLBACK["chips"][k] for k in ("facts", "kept", "dropped")},
-        "demo": demo,
-    }
+return {
+"generated": time.strftime("%Y-%m-%d %H:%M"), "live": True,
+"events": s["events"], "facts": s["facts"], "summaries": s["summaries"],
+"residue": s["residue"], "runs": s["runs"], "sources": s["sources"],
+"fact_kinds": s["fact_kinds"], "residue_reasons": s["residue_reasons"],
+"bytes_before": s["bytes_before"], "bytes_after": s["bytes_after"],
+"compression": s["compression"],
+"index_kb": round(s["index_bytes"] / 1024.0, 1),
+"float_mb": round(s["float_bytes"] / 1e6, 2),
+"db_mb": round(os.path.getsize(DB) / 1e6, 1),
+"audit": {k: a["totals"][k] for k in
+("compactions", "events", "events_retained", "events_dropped",
+"residue_rows", "residue_live_pointers", "facts",
+"facts_in_context", "facts_tier0_only", "facts_unreachable",
+"context_coverage", "total_coverage", "reconciles", "ratio")},
+"biggest": {"source": (big.get("source") or "")[:22],
+"span": big.get("span", [0, 0]),
+"events": big.get("events", 0),
+"retained": big.get("events_retained", 0),
+"dropped": big.get("events_dropped", 0),
+"ratio": big.get("ratio", 0),
+"probe": round(100 * big.get("probe_score", 0))},
+"chips": {k: chips[k] or FALLBACK["chips"][k] for k in ("facts", "kept", "dropped")},
+"demo": demo,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -326,8 +326,8 @@ def measured() -> dict:
 CSS = """
 /* ---------- Memory view: four tiers and the compaction moment ---------- */
 /* The stage is two beds side by side. Chips do not fade when compaction takes
-   them — they travel into the residue bed and grow a tier-0 pointer, because
-   the whole claim of this view is that nothing leaves silently. */
+them — they travel into the residue bed and grow a tier-0 pointer, because
+the whole claim of this view is that nothing leaves silently. */
 .mem-stage { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 10px; padding: 12px; }
 @media (max-width: 820px) { .mem-stage { grid-template-columns: minmax(0,1fr); } }
 .mem-pane { border: .5px solid var(--border); border-radius: var(--r-card); background: var(--surface-2); }
@@ -337,11 +337,11 @@ CSS = """
 .mem-pane .mh span { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .mem-bed { display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 11px; align-content: flex-start; min-height: 132px; }
 .mem-chip {
-  font-family: var(--mono); font-size: 10.5px; line-height: 1.55;
-  padding: 3px 7px; border-radius: var(--r-badge); max-width: 100%;
-  background: var(--bg); color: var(--ink-2);
-  border: .5px solid var(--border); border-left: 2px solid var(--ink-4);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+font-family: var(--mono); font-size: 10.5px; line-height: 1.55;
+padding: 3px 7px; border-radius: var(--r-badge); max-width: 100%;
+background: var(--bg); color: var(--ink-2);
+border: .5px solid var(--border); border-left: 2px solid var(--ink-4);
+overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .mem-chip.t1 { border-left-color: var(--pass); color: var(--ink); }
 .mem-chip.t3 { border-left-color: var(--info); }
@@ -391,7 +391,7 @@ def js(stats: dict) -> str:
 
     var demo = M.demo.map(function (d, i) {
       return '<button data-mdemo="' + i + '"' + (i === 0 ? ' class="on"' : '') + '>' +
-             d.label + '</button>';
+ d.label + '</button>';
     }).join('');
 
     el.innerHTML =
@@ -558,16 +558,16 @@ def js(stats: dict) -> str:
     var held = d.held.map(function (h) {
       var p = h.parts;
       return '<div class="grow"><span class="gn">tier ' + h.tier + ' &middot; ' + h.score.toFixed(3) + '</span>' +
-             '<span class="gd">' + h.subject + '</span>' +
-             '<span class="gm ok">exact ' + p.exact + ' &middot; cover ' + p.cover + ' &middot; cos ' + p.cosine + '</span></div>';
+ '<span class="gd">' + h.subject + '</span>' +
+ '<span class="gm ok">exact ' + p.exact + ' &middot; cover ' + p.cover + ' &middot; cos ' + p.cosine + '</span></div>';
     }).join('');
 
     var gone = d.forgotten.map(function (f) {
       return '<div class="grow"><span class="gn">forgotten &middot; ' + f.score.toFixed(3) + '</span>' +
-             '<span class="gd">compacted ' + f.at + ' &middot; ' + f.reason + ' &middot; event ' + f.event + '</span>' +
-             '<span class="gm">tier 0 holds ' + f.chars + ' chars</span></div>' +
-             '<div class="row" style="height:auto;padding:8px 12px">' +
-             '<span class="path" style="white-space:normal">&ldquo;' + f.claim + '&rdquo;</span></div>';
+ '<span class="gd">compacted ' + f.at + ' &middot; ' + f.reason + ' &middot; event ' + f.event + '</span>' +
+ '<span class="gm">tier 0 holds ' + f.chars + ' chars</span></div>' +
+ '<div class="row" style="height:auto;padding:8px 12px">' +
+ '<span class="path" style="white-space:normal">&ldquo;' + f.claim + '&rdquo;</span></div>';
     }).join('');
 
     var foot = nothing
@@ -621,7 +621,7 @@ def main() -> int:
     for anchor, _ in edits:
         n = h.count(anchor)
         if n != 1:
-            raise SystemExit("anchor %r appears %d times, expected 1" % (anchor[:56], n))
+raise SystemExit("anchor %r appears %d times, expected 1" % (anchor[:56], n))
     for anchor, replacement in edits:
         h = h.replace(anchor, replacement, 1)
 
