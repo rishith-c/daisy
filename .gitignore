@@ -14,3 +14,6 @@ tools/timer.log
 # generated at runtime by the scraper
 scrape/last_good.json
 scrape/rules.proposed.json
+
+# per-run artifacts
+runs/
