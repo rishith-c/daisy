@@ -63,6 +63,12 @@ gate "scrape — drift detection and selector auto-repair" \
 gate "garden — device link, consent-gated autonomous publish" \
      env PYTHONWARNINGS=ignore $PY -m garden.test_garden
 
+gate "memory — four tiers and the verified forgetting boundary" \
+     env PYTHONWARNINGS=ignore $PY -m memory.test_memory
+
+gate "importer — detection, idempotent import, autosync, attention" \
+     env PYTHONWARNINGS=ignore $PY -m importer.test_importer
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'

@@ -127,18 +127,18 @@ def _stat_digest(path: str) -> str:
 # ---------------------------------------------------------------------------
 
 _SESSION_SCAN = {
-    "claude":   ("~/.claude/projects", "Claude Code", discover.scan_claude),
-    "codex":    ("~/.codex/sessions", "Codex", discover.scan_codex),
-    "opencode": ("~/.local/share/opencode/opencode.db", "OpenCode", discover.scan_opencode),
+    "claude":   (".claude/projects", "Claude Code", discover.scan_claude),
+    "codex":    (".codex/sessions", "Codex", discover.scan_codex),
+    "opencode": (".local/share/opencode/opencode.db", "OpenCode", discover.scan_opencode),
 }
 
 
-def sessions(vendor: str, root: str = None) -> Source:
+def sessions(vendor: str, home: str = None, root: str = None) -> Source:
     where, label, scan = _SESSION_SCAN[vendor]
-    path = root or os.path.expanduser(where)
+    path = root or os.path.join(home or HOME, *where.split("/"))
     found = []
     try:
-        found = scan(path) if root else scan()
+        found = scan(path)
     except Exception as exc:                       # a corrupt store is not fatal
         return Source(vendor + "-sessions", vendor, "sessions",
                       label + " sessions", _short(path), False,
@@ -490,7 +490,7 @@ def cursor_app(home: str = None) -> Source:
 def detect(home: str = None, project: str = None) -> dict:
     home = home or HOME
     srcs = [
-        sessions("claude"), sessions("codex"), sessions("opencode"),
+        sessions("claude", home), sessions("codex", home), sessions("opencode", home),
         rules(project, home),
         mcp_claude(home), mcp_codex(home), mcp_cursor(home),
         skills("claude-skills", home), skills("codex-skills", home),

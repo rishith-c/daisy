@@ -48,11 +48,15 @@ def _imported(st: State) -> dict:
 
 
 def payload(st: State) -> dict:
-    """Everything the Import view needs, in one object."""
+    """Everything the Import view needs, in one object — and nothing else. The
+    per-item arrays are dropped: the view draws counts and effects, and shipping
+    a few hundred session records into a webview to render the number 44 would
+    be silly. `detect --json` is where the items live."""
     det = detect()
     done = _imported(st)
     for s in det["sources"]:
         s["imported"] = done.get(s["id"], 0)
+        s.pop("items", None)
     return {"generated": det["generated"], "home": det["home"],
             "project": det["project"], "state": st.home,
             "sources": det["sources"], "sync": syncmod.status(st),
@@ -175,18 +179,30 @@ def main(argv=None):
     ap.add_argument("--state", help="import state directory (default: importer/state)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("detect", help="what could be imported, and what would land")
+    # The same two flags again after the subcommand, because `status --json` is
+    # what anyone actually types. SUPPRESS keeps the trailing copy from
+    # overwriting a leading one with its own default.
+    def common(pr):
+        pr.add_argument("--json", action="store_true", default=argparse.SUPPRESS)
+        pr.add_argument("--state", default=argparse.SUPPRESS)
+        return pr
 
-    im = sub.add_parser("import", help="import one explicitly named source")
+    common(sub.add_parser("detect", help="what could be imported, and what would land"))
+
+    im = common(sub.add_parser("import", help="import one explicitly named source"))
     im.add_argument("--source", required=True, action="append",
                     help="source id from `detect` (repeat for more than one)")
     im.add_argument("--item", action="append", default=[],
                     help="narrow to specific item keys within the source")
-    im.add_argument("--dry-run", action="store_true",
-                    help="the default; shown so it can be stated explicitly")
-    im.add_argument("--apply", action="store_true", help="actually write")
+    # Mutually exclusive so `--dry-run --apply` is an error rather than a
+    # coin flip. --dry-run does nothing on its own; it exists so the safe
+    # default can be stated out loud in a script.
+    mode = im.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true",
+                      help="the default; accepted so it can be stated explicitly")
+    mode.add_argument("--apply", action="store_true", help="actually write")
 
-    sy = sub.add_parser("sync", help="autosync: toggle it, or run one pass")
+    sy = common(sub.add_parser("sync", help="autosync: toggle it, or run one pass"))
     g = sy.add_mutually_exclusive_group()
     g.add_argument("--on", action="store_true")
     g.add_argument("--off", action="store_true")
@@ -195,11 +211,12 @@ def main(argv=None):
     sy.add_argument("--force", action="store_true",
                     help="run even with autosync off, and ignore the watermarks")
 
-    sub.add_parser("attention", help="imports that are not finished")
-    sub.add_parser("status", help="one screen: detection, sync, attention")
+    common(sub.add_parser("attention", help="imports that are not finished"))
+    common(sub.add_parser("status", help="one screen: detection, sync, attention"))
 
     a = ap.parse_args(argv)
-    st = State(a.state)
+    a.json = getattr(a, "json", False)
+    st = State(getattr(a, "state", None))
 
     if a.cmd == "detect":
         det = detect()

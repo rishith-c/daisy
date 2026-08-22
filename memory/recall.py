@@ -66,18 +66,30 @@ from . import store  # noqa: E402
 # reason: a memory that always answers is a memory that invents.
 EVIDENCE_FLOOR = 0.20
 
-# Tier 3 is judged more leniently, on purpose. A residue claim is a 96-character
-# stub, so its vector is thin and it will never score like a full memory. The
-# asymmetry is deliberate: a false positive here costs one pointer read, and a
-# false negative costs a decision made on a hole.
-RESIDUE_FLOOR = 0.12
+# Tier 3 is judged more STRICTLY than tier 1, which is the opposite of what the
+# short-claim argument predicts, and the measurement is why. A residue claim is
+# a 96-character stub, and short texts score higher when they genuinely match
+# because there is less to dilute the overlap: across the fixture corpus and a
+# real 212-row ingest, true residue matches land at 0.39-0.84 while the best a
+# deliberately novel query can manage is 0.17-0.23.
+#
+# The wide gap matters because "you forgot something about this" is a stronger
+# claim than "I know this". A wrong one sends the agent down a pointer for
+# nothing and, worse, teaches it that the forgetting boundary cries wolf — which
+# is the one property the whole package depends on. With the separation this
+# clean, precision is free.
+RESIDUE_FLOOR = 0.25
 
 # Wide enough that quantisation error cannot push a true match out, narrow
 # enough that the exact rescore stays cheap. Same shape as commons.
 SHORTLIST = 96
 
 _WS = re.compile(r"\s+")
-_PATHY = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_./\-]*\.[A-Za-z0-9]{1,6}")
+# Unicode-aware: a repo with a Cyrillic or CJK directory name is still a repo,
+# and an exact leg that silently cannot see those paths is worse than no exact
+# leg. The extension must start with a letter so that "1.5" and "0.09" are read
+# as the numbers they are rather than as filenames.
+_PATHY = re.compile(r"\w[\w./\-]*\.[^\W\d_]\w{0,5}", re.UNICODE)
 _DOTTED = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+")
 _QUOTED = re.compile(r"[\"'“‘]([^\"'”’]{3,80})[\"'”’]")
 
@@ -278,10 +290,7 @@ def recall(con, query: str, gates=None, k: int = 5,
     """
     t0 = time.time()
     toks = tokens(query)
-    want = set(_norm(g) for g in (gates or []) if g)
-    # Gate names written into the prose count as gates: an agent typing
-    # "taste.t1 keeps failing" has supplied a signature whether it meant to or not.
-    want |= set(t for t in toks if "." in t and "/" not in t)
+    want = _gates(con, gates, toks)
     qvec = embed(query or " ")
     qbits = pack_bits(qvec)
 
@@ -323,8 +332,7 @@ def forgotten(con, query: str, gates=None, k: int = 5,
     """
     t0 = time.time()
     toks = tokens(query)
-    want = set(_norm(g) for g in (gates or []) if g)
-    want |= set(t for t in toks if "." in t and "/" not in t)
+    want = _gates(con, gates, toks)
     qvec = embed(query or " ")
     qbits = pack_bits(qvec)
 
@@ -343,6 +351,25 @@ def forgotten(con, query: str, gates=None, k: int = 5,
     hits.sort(key=lambda h: (-h.score, -h.dropped_at))
     return Recall(query=query, forgotten=hits[:k], scanned=_count(con, "residue"),
                   ms=round((time.time() - t0) * 1000, 2))
+
+
+def _gates(con, gates, toks) -> set:
+    """The gate signature this query carries, explicit or written into the prose.
+
+    An agent typing "taste.t1 keeps failing" has supplied a signature whether it
+    meant to or not, so dotted tokens are promoted — but only the ones the store
+    can confirm are gate names. Guessing from shape does not work: `taste.t1`
+    and `index.html` are the same shape, and treating a filename as a gate makes
+    every write fact score as if it had matched a verification result. The store
+    already knows every gate it has ever recorded, so this is a lookup rather
+    than a heuristic.
+    """
+    want = set(_norm(g) for g in (gates or []) if g)
+    if toks:
+        known = set(r[0].lower() for r in con.execute(
+            "SELECT DISTINCT subject FROM fact WHERE kind = 'gate'"))
+        want |= {t for t in toks if t in known}
+    return want
 
 
 def _count(con, table: str) -> int:

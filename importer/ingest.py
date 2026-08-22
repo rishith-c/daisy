@@ -46,7 +46,8 @@ import time
 from dataclasses import dataclass, field, asdict
 
 from .detect import by_id
-from .state import BLOCK_CLOSE, BLOCK_OPEN, CONFIG_HEADER, State, digest
+from .state import (BLOCK_CLOSE, BLOCK_OPEN, CONFIG_HEADER, LEDGER, REGISTRY,
+                    RUNS, State, digest)
 
 # config.md block tags have to survive being read by a human, so the path is
 # slugged rather than hashed.
@@ -289,23 +290,23 @@ def run(source_id: str, det: dict, st: State = None, dry_run: bool = True,
     # A dry run stops here having touched nothing but memory.
     if dry_run:
         if "runs" in docs["dirty"] and rep.tally("added") + rep.tally("updated"):
-            rep.writes.append("runs.json")
+            rep.writes.append(RUNS)
         if "config" in docs["dirty"]:
             rep.writes.append("config.md")
         if "registry" in docs["dirty"] and rep.tally("added") + rep.tally("updated"):
-            rep.writes.append("registry.json")
+            rep.writes.append(REGISTRY)
         if rep.writes:
-            rep.writes.append("ledger.json")
+            rep.writes.append(LEDGER)
         return rep
 
-    if "runs" in docs["dirty"] and st.write_json("runs.json", docs["runs"]):
-        rep.writes.append("runs.json")
-    if "registry" in docs["dirty"] and st.write_json("registry.json", docs["registry"]):
-        rep.writes.append("registry.json")
+    if "runs" in docs["dirty"] and st.write_json(RUNS, docs["runs"]):
+        rep.writes.append(RUNS)
+    if "registry" in docs["dirty"] and st.write_json(REGISTRY, docs["registry"]):
+        rep.writes.append(REGISTRY)
     if "config" in docs["dirty"] and st.write_config(docs["config"]):
         rep.writes.append("config.md")
-    if st.write_json("ledger.json", led):
-        rep.writes.append("ledger.json")
+    if st.write_json(LEDGER, led):
+        rep.writes.append(LEDGER)
     return rep
 
 

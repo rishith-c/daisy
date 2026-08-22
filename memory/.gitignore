@@ -1,0 +1,6 @@
+# The store is a build artifact of `python3 -m memory.cli ingest`, and it holds
+# verbatim text from whatever real sessions were ingested on this machine. It is
+# rebuilt in seconds and should never travel with the source.
+*.db
+*.db-wal
+*.db-shm

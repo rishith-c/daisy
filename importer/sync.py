@@ -31,7 +31,7 @@ import time
 
 from . import ingest
 from .detect import by_id
-from .state import State, digest
+from .state import SYNC, State, digest
 
 
 def source_cursor(src: dict) -> str:
@@ -58,7 +58,7 @@ def set_enabled(on: bool, st: State = None) -> dict:
     s = st.sync()
     s["enabled"] = bool(on)
     s["toggled"] = round(time.time())
-    st.write_json("sync.json", s)
+    st.write_json(SYNC, s)
     return status(st)
 
 
@@ -104,7 +104,7 @@ def sync_once(det: dict, st: State = None, dry_run: bool = True,
     if not dry_run:
         s["last_run"] = round(time.time())
         s["last_result"] = {"moved": moved, "sources": len(out)}
-        st.write_json("sync.json", s)
+        st.write_json(SYNC, s)
     result["last_run_human"] = _ago(s.get("last_run"))
     return result
 
