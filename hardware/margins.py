@@ -126,13 +126,25 @@ def bolt_shear(load_kg: float, count: int, dia_mm: float, grade: str = "8.8") ->
 
 
 def mass(width_mm: float, thick_mm: float, length_mm: float,
-         material: str = "AL6061-T6", budget_g: float = 60.0) -> Gate:
+         material: str = "AL6061-T6", budget_g: float = 60.0,
+         volume_mm3: float | None = None) -> Gate:
+    """Mass from the real solid when geometry is available, else the envelope.
+
+    Passing `volume_mm3` from hardware.bracket measures the part that will
+    actually be made; the bounding-box fallback exists only so the gate can run
+    before geometry has been generated, and it under-reports by the foot.
+    """
     m = MATERIALS[material]
-    vol = (width_mm / 1000.0) * (thick_mm / 1000.0) * (length_mm / 1000.0)
-    grams = vol * m["rho"] * 1000.0
+    if volume_mm3 is None:
+        vol_m3 = (width_mm / 1000.0) * (thick_mm / 1000.0) * (length_mm / 1000.0)
+        source = "envelope"
+    else:
+        vol_m3 = volume_mm3 * 1e-9
+        source = "solid"
+    grams = vol_m3 * m["rho"] * 1000.0
     return Gate("physics.mass", round(grams, 1), budget_g,
                 round(budget_g / grams, 3) if grams else float("inf"),
-                "g", "m = rho * V", material)
+                "g", "m = rho * V", "%s, %s" % (material, source))
 
 
 def thermal(power_w: float, area_mm2: float, h: float = 12.0,
@@ -191,11 +203,11 @@ def select_fastener(rows: list[dict], load_kg: float, count: int, fos: float) ->
 def evaluate(load_kg: float, arm_mm: float, width_mm: float, thick_mm: float,
              material: str = "AL6061-T6", fos: float = 1.5,
              bolt_rows: list[dict] | None = None, bolt_count: int = 2,
-             mass_budget_g: float = 60.0) -> dict:
+             mass_budget_g: float = 60.0, volume_mm3: float | None = None) -> dict:
     """Run every gate. Returns the gates, the verdict, and the repair if needed."""
     gates = [
         bending(load_kg, arm_mm, width_mm, thick_mm, material),
-        mass(width_mm, thick_mm, arm_mm, material, mass_budget_g),
+        mass(width_mm, thick_mm, arm_mm, material, mass_budget_g, volume_mm3),
     ]
     pick = None
     if bolt_rows is not None:

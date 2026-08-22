@@ -921,7 +921,7 @@ table.l tr.click:hover td { background: var(--wash); }
       <div class="act"><span class="tag pass">GREEN</span></div></div>
       <div class="grow"><span class="gn">taste.t1 + t2</span><span class="gd">0 lint findings &middot; 28 contrast pairs clean</span><span class="gm ok">&#10003;</span></div>
       <div class="grow"><span class="gn">contract conformance</span><span class="gd">frontend fetches &sube; contract &middot; routes &equiv; contract</span><span class="gm ok">&#10003;</span></div>
-      <div class="grow"><span class="gn">physics margins</span><span class="gd">bend 1.50 &middot; shear 288 &middot; mass 6.33 &mdash; all &ge; target</span><span class="gm ok">&#10003;</span></div>
+      <div class="grow"><span class="gn">physics margins</span><span class="gd">bend 1.50 &middot; shear 288 &middot; mass 5.06 &mdash; all &ge; target</span><span class="gm ok">&#10003;</span></div>
       <div class="grow"><span class="gn">merged smoke boot</span><span class="gd">npm run build &middot; Playwright hit on / &middot; 200</span><span class="gm ok">&#10003;</span></div>
       <div class="grow"><span class="gn">scrape freshness</span><span class="gd">bolt table 11:07:32 &middot; inside ttl</span><span class="gm ok">&#10003;</span></div>
       <div class="res" style="display:block">Every row here was produced by something deterministic. The scorecard lives in Port rather than in the orchestrator on purpose: the thing deciding whether to merge is not the thing that wrote the code.</div></div>
@@ -952,7 +952,7 @@ table.l tr.click:hover td { background: var(--wash); }
           <text x="163" y="118" fill="#B5B3AA" font-size="7" font-family="monospace">MPa</text>
         </svg></div>
         <div class="mt"><b>bracket_v2.glb</b><span>run 1042 &middot; cleared by physics &middot; FoS 1.50</span></div></div>
-      <div class="acard"><div class="th"><div class="doc"><b># margin-report &middot; run 1042</b><br>trace_id  a41f09c2<br>approver  rishith<br>web bending   106/50 MPa  <b>FoS 1.50</b><br>bolt shear    2/480 MPa  <b>FoS 288.3</b><br>bolt  M3 8.8 $0.09 &middot; vendor 11:07<br>mass  9.5 g &le; 60 g</div></div>
+      <div class="acard"><div class="th"><div class="doc"><b># margin-report &middot; run 1042</b><br>trace_id  a41f09c2<br>approver  rishith<br>web bending   106/50 MPa  <b>FoS 1.50</b><br>bolt shear    2/480 MPa  <b>FoS 288.3</b><br>bolt  M3 8.8 $0.09 &middot; vendor 11:07<br>mass  11.9 g &le; 60 g</div></div>
         <div class="mt"><b>margin-report.md</b><span>run 1042 &middot; cites trace + approver</span></div></div>
       <div class="acard"><div class="th"><div class="doc"><b>flight-recorder.jsonl</b><br>{"kind":"gate","name":"taste.t1","v":"fail"}<br>{"kind":"repair","by":"resume"}<br>{"kind":"gate","name":"physics","v":"fail"}<br>{"kind":"repair","by":"algebra"}<br>{"kind":"merge","scorecard":"green"}</div></div>
         <div class="mt"><b>Flight recorder</b><span>run 1042 &middot; append-only &middot; replayable</span></div></div>
@@ -1203,7 +1203,7 @@ $ echo $?
       '<tr><td class="nm">web bending</td><td>σ = 6M / (b·t²)</td><td>69.0 MPa</td><td>50 MPa</td><td class="no">0.72 ✕</td></tr>' +
       '<tr><td class="nm">bolt shear</td><td>τ = F / (n·A)</td><td>1.7 MPa</td><td>480 MPa</td><td class="ok">288.3</td></tr>' +
       '<tr><td class="nm">bolt select</td><td>min $ · FoS ≥ 1.5</td><td colspan="2">M3 · 8.8 · $0.09 — scraped 11:07:32</td><td class="ok">✓</td></tr>' +
-      '<tr><td class="nm">mass</td><td>ρ · V</td><td>6.6 g</td><td>≤ 60 g</td><td class="ok">9.11</td></tr></table></div></div>' },
+      '<tr><td class="nm">mass</td><td>ρ · V (solid)</td><td>8.3 g</td><td>≤ 60 g</td><td class="ok">7.19</td></tr></table></div></div>' },
     { d: 900, kind: 'card', html:
       '<div class="card"><div class="chead"><span class="ci">√</span><div><b>Algebraic repair · not an LLM guess</b><div class="sub">invert the margin equation, solve, patch, regenerate</div></div></div>' +
       '<div class="derive">σ = 6M / (b·t²)   ⇒   t = √( 6M / (b · σ_allow / FoS) )\n' +
@@ -1214,7 +1214,7 @@ $ echo $?
       '<div class="sx"><table class="m"><tr><th>check</th><th>formula</th><th>value</th><th>allowable</th><th>FoS</th></tr>' +
       '<tr><td class="nm">web bending</td><td>σ = 6M / (b·t²)</td><td>33.2 MPa</td><td>50 MPa</td><td class="ok">1.50 ✓</td></tr>' +
       '<tr><td class="nm">bolt shear</td><td>τ = F / (n·A)</td><td>1.7 MPa</td><td>480 MPa</td><td class="ok">288.3</td></tr>' +
-      '<tr><td class="nm">mass</td><td>ρ · V</td><td>9.5 g</td><td>≤ 60 g</td><td class="ok">6.33</td></tr></table></div></div>' },
+      '<tr><td class="nm">mass</td><td>ρ · V (solid)</td><td>11.9 g</td><td>≤ 60 g</td><td class="ok">5.06</td></tr></table></div></div>' },
     { d: 980, kind: 'gate', wait: 'conductor', bell: true, html:
       '<div class="card alert"><div class="chead"><span class="ci">!</span><div><b>SigNoz alert · human summoned</b><div class="sub">gate_failures ≥ 2 in run 1042 — labctl keeps no counter</div></div><div class="act"><span class="tag warn">ALERT FIRED</span><button class="primary" id="conductor">Open in Conductor</button></div></div>' +
       '<div class="res" hidden><b>Reviewed.</b> conductor:// opened on runs/1042 · operator inspected both repairs · run resumed</div></div>' },
