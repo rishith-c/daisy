@@ -1055,6 +1055,27 @@ table.l tr.click:hover td { background: var(--wash); }
       ['a', '+ <StatusDot state={status} />      /* semantic dot, tokened */'] ] },
   ];
 
+  /* The rubric's hardest line is "can it run again?". A different brief has to
+     produce a genuinely different outcome, not a different-looking replay.
+     Brief B keeps the same physics and fails on cost instead. */
+  var BUDGET_STEPS = [
+    { d: 760, kind: 'fail', html:
+      '<div class="card"><div class="chead"><span class="ci">$</span><div><b>Budget gate</b><div class="sub">cheapest fastener that clears FoS 1.5</div></div><div class="act"><span class="tag fail">FAIL &middot; 1</span></div></div>' +
+      '<div class="sx"><table class="m"><tr><th>line</th><th>part</th><th>source</th><th>cost</th><th>ceiling</th></tr>' +
+      '<tr><td class="nm">fasteners</td><td>M4 &middot; 8.8 &times; 8</td><td>scraped 11:07:32</td><td class="no">$18.40</td><td>$12.00</td></tr>' +
+      '<tr><td class="nm">insert</td><td>heat-set brass</td><td>scraped 11:07:32</td><td>$6.10</td><td>&mdash;</td></tr>' +
+      '<tr><td class="nm">total</td><td>&mdash;</td><td>&mdash;</td><td class="no">$24.50</td><td>$18.00</td></tr></table></div>' +
+      '<div class="res" style="display:block">Physics passes at FoS 1.62. Every bolt that clears the margin is above the ceiling, so there is no configuration that is both airworthy and within budget. The factory will not ship the cheaper unsafe part.</div></div>' },
+    { d: 820, kind: 'gate', wait: 'budget', html:
+      '<div class="card alert"><div class="chead"><span class="ci">!</span><div><b>Escalation &middot; priced decision</b><div class="sub">not a retry — this needs a person</div></div><div class="act"><span class="tag warn">AWAITING HUMAN</span><button class="primary" id="budget">Approve +$6.50</button></div></div>' +
+      '<div class="grow"><span class="gn">option A</span><span class="gd">raise the ceiling to $24.50 &mdash; airworthy, over budget</span><span class="gm ok">safe</span></div>' +
+      '<div class="grow"><span class="gn">option B</span><span class="gd">drop to M3 &mdash; $11.20, FoS 0.94</span><span class="gm no">refused by the gate</span></div>' +
+      '<div class="res" hidden><b>Approved</b> by rishith &middot; ceiling raised to $24.50 &middot; bom_select re-run</div></div>' },
+    { d: 700, kind: 'done', html:
+      '<div class="pill"><span class="tag pass">PASSED</span><b>Run 1043</b><span class="mu">same brief, tighter budget &middot; physics held &middot; cost escalated to a human</span><span class="tm">5m 08s</span><button class="ghost" id="replay">Replay</button></div>' +
+      '<div class="prov"><span class="p port"><i></i>PORT &middot; run 1043 &middot; approved by rishith</span><span class="p sig"><i></i>SIGNOZ &middot; trace b7c1e4</span><span class="p bd"><i></i>BRIGHT DATA &middot; scraped 11:07:32</span></div>' },
+  ];
+
   var RUNS = {
     '1042': { t: 'Sensor fleet dashboard + SR-11 mounting bracket', live: true },
     '1041': { t: 'Taste gate rehearsal — tier 1 findings', n: 14 },
@@ -1177,8 +1198,8 @@ table.l tr.click:hover td { background: var(--wash); }
   }
 
   function next() {
-    if (idx >= STEPS.length) return;
-    var s = STEPS[idx++];
+    if (idx >= script.length) return;
+    var s = script[idx++];
     timer = setTimeout(function () {
       var item = place(s, false);
       feed.scrollTop = feed.scrollHeight;
@@ -1190,16 +1211,26 @@ table.l tr.click:hover td { background: var(--wash); }
     }, reduced ? 10 : s.d);
   }
 
-  function playLive() {
+  var script = STEPS;
+  function playLive(variant) {
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
     feed.classList.add('live');
     $('#btn-bell').style.color = '';
+    if (variant === 'budget') {
+      // same plan, same physics, different economics
+      script = STEPS.slice(0, 18).concat(BUDGET_STEPS);
+      $('#tb-title').textContent = 'Sensor fleet dashboard + SR-11 bracket — $18 fastener ceiling';
+    } else {
+      script = STEPS;
+      $('#tb-title').textContent = RUNS['1042'].t;
+    }
     next();
   }
 
   function snapshot(id) {
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = STEPS.length;
     feed.classList.remove('live');
+    script = STEPS;
     var r = RUNS[id], n = Math.min(r.n || STEPS.length, STEPS.length);
     for (var k = 0; k < n; k++) {
       var s = STEPS[k];
@@ -1431,6 +1462,16 @@ table.l tr.click:hover td { background: var(--wash); }
   function sendAmend() {
     var inp = $('#amend'), v = inp.value.trim(); if (!v) return;
     inp.value = '';
+    // A brief that names a budget is a NEW run, not an amendment — and a
+    // tighter ceiling has to reach a different conclusion.
+    var m = /\$\s?(\d+(?:\.\d+)?)/.exec(v);
+    if (m && /budget|ceiling|fastener|cost|\$/i.test(v)) {
+      var ceiling = parseFloat(m[1]);
+      show('run');
+      playLive(ceiling < 22 ? 'budget' : null);
+      toast('<b>New run.</b> Same brief at a $' + m[1] + ' ceiling — the plan and the physics are unchanged, so anything that differs is the economics.');
+      return;
+    }
     toast('<b>Queued as an amendment.</b> The current agent turn finishes first, then labctl resumes both sessions with: “' + v.replace(/</g, '&lt;') + '”');
   }
   $('#send').addEventListener('click', sendAmend);
@@ -1472,7 +1513,8 @@ table.l tr.click:hover td { background: var(--wash); }
   /* ---------------- command palette ---------------- */
   var palOv = $('#pal-ov'), palIn = $('#pal-in'), palList = $('#pal-list');
   var CMDS = [
-    { l: 'Replay run 1042 live', h: '⏎', f: function () { openRun('1042'); } },
+    { l: 'Run brief A — $30 fastener budget', h: '⏎', f: function () { show('run'); playLive(); } },
+    { l: 'Run brief B — $18 ceiling (escalates on cost)', h: '', f: function () { show('run'); playLive('budget'); } },
     { l: 'Open escalated run 1039', h: '', f: function () { openRun('1039'); } },
     { l: 'Precedent — failure families', h: '', f: function () { show('precedent'); } },
     { l: 'Review queue', h: '', f: function () { show('review'); } },
