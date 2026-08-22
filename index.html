@@ -850,6 +850,18 @@ table.m td.nm { color: var(--ink); }
 .prov .p.sig i { background: var(--violet); }
 .prov .p.bd  i { background: var(--ink-3); }
 
+/* ---------- empty run ---------- */
+.run-empty {
+  position: absolute; inset: 0 0 0 34px; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 36px; text-align: center; transform: translateY(-2vh); /* taste-ok: one deliberate empty-state focal point */
+}
+.run-empty[hidden] { display: none; }
+.run-empty-mark { width: 58px; height: 58px; color: var(--ink-3); opacity: .68; }
+.run-empty-mark svg { width: 100%; height: 100%; display: block; }
+.run-empty h2 { margin-top: 18px; font-size: 23px; line-height: 1.25; font-weight: 550; letter-spacing: -.025em; }
+.run-empty p { max-width: 440px; margin-top: 8px; color: var(--ink-3); font-size: 12.5px; line-height: 1.55; }
+
 /* ---------- composer ---------- */
 .dock { padding: 4px 22px 18px; }
 .composer {
@@ -1408,6 +1420,11 @@ table.l tr.click:hover td { background: var(--wash); }
   <div class="view on" id="view-run">
     <div class="stage">
       <div class="minimap" id="minimap" role="navigation" aria-label="Run outline"></div>
+      <div class="run-empty" id="run-empty" role="status" aria-live="polite" aria-hidden="false">
+        <span class="run-empty-mark" id="run-empty-mark" aria-hidden="true"></span>
+        <h2>What should we build in Daisy?</h2>
+        <p>Start with the outcome. Use one local model, or let Daisy Chain coordinate the full crew.</p>
+      </div>
       <div id="feed" class="live" role="log" aria-live="polite" aria-relevant="additions" aria-label="Run activity"><div class="col" id="col"></div></div>
     </div>
     <button class="jump" id="jump" aria-label="Jump to latest">Jump to latest ↓</button>
@@ -2643,6 +2660,21 @@ $ echo $?
   /* daisy:chain-live */
   var NEW_RUN_EMPTY = true;
 
+  function showEmptyRun() {
+    var empty = $('#run-empty'), mark = $('#run-empty-mark');
+    if (!empty) return;
+    if (mark && !mark.firstChild) mark.innerHTML = DAISY_MARK();
+    empty.hidden = false;
+    empty.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideEmptyRun() {
+    var empty = $('#run-empty');
+    if (!empty) return;
+    empty.hidden = true;
+    empty.setAttribute('aria-hidden', 'true');
+  }
+
   function newBlankRun(focusComposer) {
     clearTimeout(timer);
     clearWorking();
@@ -2653,11 +2685,13 @@ $ echo $?
     $('#tb-title').textContent = 'New run';
     $$('.thread').forEach(function (t) { t.classList.remove('active'); });
     NEW_RUN_EMPTY = true;
+    showEmptyRun();
     if (focusComposer !== false) setTimeout(function () { $('#amend').focus(); }, 0);
   }
 
   function playLive(variant) {
     NEW_RUN_EMPTY = false;
+    hideEmptyRun();
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
     feed.classList.add('live');
     following = true; $('#jump').classList.remove('on');
@@ -2678,6 +2712,7 @@ $ echo $?
 
   function snapshot(id) {
     NEW_RUN_EMPTY = false;
+    hideEmptyRun();
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = STEPS.length;
     feed.classList.remove('live');
     script = STEPS;
@@ -3368,6 +3403,7 @@ $ echo $?
 
   /* ---------------- composer ---------------- */
   function addBriefToRun(value) {
+    hideEmptyRun();
     var item = document.createElement('div');
     item.className = 'item';
     var brief = document.createElement('div');
@@ -3727,7 +3763,7 @@ $ echo $?
   applyTheme();
   clearDemoWorkspace();
   newBlankRun(false);
-  /* daisy:real-agent-v4 */
+  /* daisy:real-agent-v5 */
 
   /* ---------------- the mark ---------------- */
   function DAISY_MARK() { return "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M64.9 44.2Q81.5 36.2 95.0 50.4Q80.5 62.2 64.4 56.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M66.6 53.0Q82.6 53.6 87.2 69.4Q68.2 76.0 59.1 62.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M62.5 60.2Q77.0 71.6 75.0 90.3Q56.7 84.3 52.6 65.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M55.8 65.4Q62.9 80.9 48.6 91.8Q39.1 80.2 45.5 65.0\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M47.7 65.3Q46.2 84.9 27.6 89.1Q23.3 71.2 38.5 60.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M39.9 61.3Q29.0 74.3 11.2 71.7Q18.5 56.2 34.1 53.6\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M35.4 55.5Q20.6 63.0 6.6 52.0Q18.2 37.2 34.2 44.9\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M34.2 48.2Q16.7 45.5 10.6 26.6Q28.9 25.4 38.9 37.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M39.0 39.9Q24.7 26.8 25.4 10.6Q43.9 16.6 46.9 34.9\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M45.4 34.3Q38.3 19.4 52.1 6.2Q62.7 18.7 54.5 34.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M52.8 34.6Q54.1 18.0 73.2 14.3Q75.2 29.7 61.3 38.8\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M60.3 36.4Q70.8 22.0 89.3 26.4Q82.9 43.0 66.0 47.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M67.2 50.0Q65.5 56.0 63.1 61.0Q58.1 64.2 53.0 67.1Q46.9 66.3 41.2 65.3Q38.2 59.8 34.9 55.5Q34.6 50.5 34.0 44.2Q38.1 39.8 41.2 34.7Q47.0 34.1 53.0 32.7Q57.9 36.1 62.5 39.5Q65.3 44.2 67.2 50.0Z\" fill=\"var(--daisy)\" stroke=\"var(--daisy-deep)\" stroke-width=\"3.2\" stroke-linejoin=\"round\"/></svg>"; }

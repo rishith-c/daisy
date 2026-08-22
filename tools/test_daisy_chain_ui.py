@@ -49,6 +49,12 @@ class DaisyChainUIGeneratorTests(unittest.TestCase):
 
         self.assertIn("function clearDemoWorkspace", html)
         self.assertIn("No runs yet", html)
+        self.assertIn('id="run-empty"', html)
+        self.assertIn('id="run-empty-mark"', html)
+        self.assertIn("What should we build in Daisy?", html)
+        self.assertIn("function showEmptyRun", html)
+        self.assertIn("function hideEmptyRun", html)
+        self.assertIn("hideEmptyRun();\n    var item = document.createElement('div');", html)
         self.assertIn("cmd: 'agent.run'", html)
         self.assertIn("model: selected.model.id", html)
         self.assertIn("provider: selected.model.provider || ''", html)

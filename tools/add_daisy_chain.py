@@ -19,7 +19,46 @@ IDX = os.path.join(ROOT, "index.html")
 BASE_GUARD = "daisy:chain-live"
 V2_GUARD = "daisy:real-agent-v2"
 V3_GUARD = "daisy:real-agent-v3"
-GUARD = "daisy:real-agent-v4"
+V4_GUARD = "daisy:real-agent-v4"
+GUARD = "daisy:real-agent-v5"
+
+EMPTY_RUN_CSS = r"""/* ---------- empty run ---------- */
+.run-empty {
+  position: absolute; inset: 0 0 0 34px; z-index: 2; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 36px; text-align: center; transform: translateY(-2vh); /* taste-ok: one deliberate empty-state focal point */
+}
+.run-empty[hidden] { display: none; }
+.run-empty-mark { width: 58px; height: 58px; color: var(--ink-3); opacity: .68; }
+.run-empty-mark svg { width: 100%; height: 100%; display: block; }
+.run-empty h2 { margin-top: 18px; font-size: 23px; line-height: 1.25; font-weight: 550; letter-spacing: -.025em; }
+.run-empty p { max-width: 440px; margin-top: 8px; color: var(--ink-3); font-size: 12.5px; line-height: 1.55; }
+
+"""
+
+EMPTY_RUN_HTML = r'''      <div class="run-empty" id="run-empty" role="status" aria-live="polite" aria-hidden="false">
+        <span class="run-empty-mark" id="run-empty-mark" aria-hidden="true"></span>
+        <h2>What should we build in Daisy?</h2>
+        <p>Start with the outcome. Use one local model, or let Daisy Chain coordinate the full crew.</p>
+      </div>
+'''
+
+EMPTY_RUN_JS = r'''  function showEmptyRun() {
+    var empty = $('#run-empty'), mark = $('#run-empty-mark');
+    if (!empty) return;
+    if (mark && !mark.firstChild) mark.innerHTML = DAISY_MARK();
+    empty.hidden = false;
+    empty.setAttribute('aria-hidden', 'false');
+  }
+
+  function hideEmptyRun() {
+    var empty = $('#run-empty');
+    if (!empty) return;
+    empty.hidden = true;
+    empty.setAttribute('aria-hidden', 'true');
+  }
+
+'''
 
 CHAIN_CSS = r"""/* ---------- Daisy Chain: live botanical org map ---------- */
 .chain-shell { margin-top: 18px; border: .5px solid var(--border); border-radius: var(--r-panel);
@@ -307,6 +346,35 @@ def _replace_once(html: str, old: str, new: str, label: str) -> str:
     return html.replace(old, new, 1)
 
 
+def _add_empty_run(html: str) -> str:
+    html = _replace_once(html, "/* ---------- composer ---------- */",
+                         EMPTY_RUN_CSS + "/* ---------- composer ---------- */",
+                         "empty-run styles")
+    feed_anchor = ('      <div class="minimap" id="minimap" role="navigation" '
+                   'aria-label="Run outline"></div>\n'
+                   '      <div id="feed"')
+    html = _replace_once(html, feed_anchor,
+                         feed_anchor.split("\n")[0] + "\n" + EMPTY_RUN_HTML +
+                         '      <div id="feed"',
+                         "empty-run canvas")
+    html = _replace_once(html, "  function newBlankRun(focusComposer) {",
+                         EMPTY_RUN_JS + "  function newBlankRun(focusComposer) {",
+                         "empty-run controller")
+    html = _replace_once(html, "    NEW_RUN_EMPTY = true;\n    if (focusComposer !== false)",
+                         "    NEW_RUN_EMPTY = true;\n    showEmptyRun();\n    if (focusComposer !== false)",
+                         "show empty run")
+    html = _replace_once(html, "  function playLive(variant) {\n    NEW_RUN_EMPTY = false;",
+                         "  function playLive(variant) {\n    NEW_RUN_EMPTY = false;\n    hideEmptyRun();",
+                         "hide empty run on replay")
+    html = _replace_once(html, "  function snapshot(id) {\n    NEW_RUN_EMPTY = false;",
+                         "  function snapshot(id) {\n    NEW_RUN_EMPTY = false;\n    hideEmptyRun();",
+                         "hide empty run on snapshot")
+    html = _replace_once(html, "  function addBriefToRun(value) {\n    var item",
+                         "  function addBriefToRun(value) {\n    hideEmptyRun();\n    var item",
+                         "hide empty run on brief")
+    return html
+
+
 def upgrade(html: str) -> str:
     """Return the fully upgraded app shell; a second call is a byte-for-byte no-op."""
     if GUARD in html:
@@ -321,7 +389,10 @@ def upgrade(html: str) -> str:
             ".chain-empty { max-width: 460px; margin: 88px auto; text-align: center; color: var(--ink-3); }",
             ".chain-empty { max-width: 460px; margin: 88px auto; color: var(--ink-3); }",
             "chain empty-state alignment")
-        return html.replace(V3_GUARD, GUARD, 1)
+        html = html.replace(V3_GUARD, V4_GUARD, 1)
+    if V4_GUARD in html:
+        html = _add_empty_run(html)
+        return html.replace(V4_GUARD, GUARD, 1)
 
     if BASE_GUARD not in html:
         html = _replace_once(
@@ -420,7 +491,8 @@ def upgrade(html: str) -> str:
         "$('#btn-bell').addEventListener('click', function () { closeBrandMenu(); toast('<b>No alerts.</b> New gate failures will appear here after a real run.'); });",
         "alerts")
     html = re.sub(r"^    \{ l: 'Run brief [AB].*?\n", "", html, flags=re.M)
-    return html
+    html = _add_empty_run(html)
+    return html.replace(V4_GUARD, GUARD, 1)
 
 
 def main(argv=None) -> int:
