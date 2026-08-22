@@ -309,6 +309,22 @@ creates the evidence snapshot, Port owns the run and approval, and SigNoz owns
 the correlated operational record. The output always states `live`, `dry`, or
 `spool`; those words are evidence states, not styling.
 
+## Sponsors
+
+| | State | Evidence |
+|---|---|---|
+| **Bright Data** | **live** | Scraper Studio built from plain English; 32 rows of real JSON |
+| **Port** | **live** | real org, blueprints created, a run gated Silver and an approval that blocked |
+| **SigNoz** | instrumented, **not run** | 179 tests; wire format verified against a stand-in OTLP receiver |
+
+We did not run a SigNoz instance — self-hosting needs Docker and a
+multi-gigabyte pull, and this machine had 5.4 GB free. The exporter is real and
+tested, and every run so far spooled to disk rather than dropping signals, so
+`obs.cli replay` ships the whole history the moment an endpoint exists.
+
+Full detail, including the exact commands and the measured output of each:
+**[docs/SPONSORS.md](docs/SPONSORS.md)**
+
 ## What is real, and what is not
 
 Stated plainly, because a factory that overstates itself is the thing this
