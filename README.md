@@ -218,14 +218,15 @@ python3 -m http.server 8124 --directory .
 Native macOS app:
 
 ```bash
-swiftc -O -o app/Daisy app/main.swift -framework Cocoa -framework WebKit
-mkdir -p Daisy.app/Contents/MacOS Daisy.app/Contents/Resources
-cp app/Daisy Daisy.app/Contents/MacOS/ && cp app/Info.plist Daisy.app/Contents/
-cp index.html icon/AppIcon.icns Daisy.app/Contents/Resources/
-codesign --force --deep -s - Daisy.app && open Daisy.app
+bash tools/build_app.sh
+open Daisy.app
 ```
 
-The native build tags its user agent `DaisyNative`; the UI detects it and hides its drawn traffic lights so the real ones take over.
+The reproducible build compiles the Cocoa/WebKit shell, copies only the Python
+packages and static resources Daisy needs, excludes caches, databases, spools,
+and credentials, ad-hoc signs the result, then verifies the signature. The
+native build tags its user agent `DaisyNative`; the UI detects it and hides its
+drawn traffic lights so the real ones take over.
 
 ## Status
 
