@@ -40,7 +40,8 @@ check("invokes the Garden status callback", "window.__daisyGardenStatus" in SOUR
 check("invokes the Garden pairing callback", "window.__daisyGardenPair" in SOURCE)
 check("passes the pairing code as one process argument", '["python3", "-m", "garden.link", "pair", "--code", code]' in SOURCE)
 check("uses Process argument arrays", "proc.arguments = arguments" in SOURCE)
+check("keeps the signed app bundle immutable", 'environment["PYTHONDONTWRITEBYTECODE"] = "1"' in SOURCE)
 check("never invokes a shell", "/bin/sh" not in SOURCE and "-c\"" not in SOURCE)
 
-print(f"\n{22-len(failed)} passed, {len(failed)} failed")
+print(f"\n{23-len(failed)} passed, {len(failed)} failed")
 raise SystemExit(1 if failed else 0)

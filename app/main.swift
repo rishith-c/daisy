@@ -90,6 +90,9 @@ final class Bridge: NSObject, WKScriptMessageHandler {
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         proc.arguments = arguments
         proc.currentDirectoryURL = resources
+        var environment = ProcessInfo.processInfo.environment
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        proc.environment = environment
         let pipe = Pipe()
         proc.standardOutput = pipe
         proc.standardError = FileHandle.nullDevice
