@@ -21,7 +21,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(prog="labctl", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("agents", help="which coding agents can actually be driven")
+    agents_parser = sub.add_parser("agents", help="which coding agents can actually be driven")
+    agents_parser.add_argument("--json", action="store_true")
     r = sub.add_parser("run", help="take a brief through the factory")
     r.add_argument("--brief", required=True)
     r.add_argument("--run-id")
@@ -40,9 +41,16 @@ def main(argv=None):
     a = ap.parse_args(argv)
 
     if a.cmd == "agents":
+        measured = executors.available()
+        if a.json:
+            print(json.dumps({"agents": [
+                {"name": e.name, "ok": e.ok, "detail": e.detail, "probe_ms": e.probe_ms}
+                for e in measured
+            ]}, indent=1))
+            return 0
         print("%-10s %-7s %-10s %s" % ("agent", "usable", "probe", "detail"))
         print("-" * 78)
-        for e in executors.available():
+        for e in measured:
             print("%-10s %-7s %-10s %s" % (
                 e.name, "yes" if e.ok else "no",
                 ("%.0f ms" % e.probe_ms) if e.probe_ms else "-", e.detail))
