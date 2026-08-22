@@ -919,6 +919,7 @@ table.l tr.click:hover td { background: var(--wash); }
 <script>
 (function () {
   "use strict";
+  var PRECEDENT_DEMO = [{"label":"exact repeat","q":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:12, Inter used with no paired display face in layout.tsx:8, and emoji standing in for icons in the status column","ms":15.2,"sig":["taste.t1=gross"],"tier":"fingerprint","hits":[{"run":"0384","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:34, Inter used with no paired display face in layout.tsx:34, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}},{"run":"0316","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:143, Inter used with no paired display face in layout.tsx:143, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}}]},{"label":"paraphrase","q":"my bracket bends way too much under the tip load, stress is over what the material takes","ms":83.2,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.624,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.327,"bm25":0.0,"recency":0.998,"evidence":0.665}},{"run":"0205","score":0.62,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.341,"bm25":0.0,"recency":0.793,"evidence":0.669}}]},{"label":"text-poor, gates match","q":"something is off with the part","ms":15.3,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.641,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.357,"bm25":0.0,"recency":0.998,"evidence":0.675}},{"run":"0205","score":0.613,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.355,"bm25":0.0,"recency":0.793,"evidence":0.674}}]},{"label":"novel failure","q":"the ci runner ran out of disk space while installing playwright browsers","ms":13.9,"sig":["infra.disk=gross"],"tier":null,"hits":[]}];
   var PRECEDENT_STATS = {"generated":"2026-08-22 02:40","cases":1284,"families":7,"fix_rate":90.0,"recall_ms":16.2,"fingerprint_ms":0.012,"index_kb":80,"float_mb":2.6,"quant_x":32,"db_mb":5.6,"compact_before":23450,"compact_after":983,"compact_x":24,"compact_ms":30,"probe_score":100,"probe_n":8,"top_families":[{"family":"F-11 thin-web bending","seen":329,"fixed":309,"how":"algebra","sig":"physics.bend=marginal"},{"family":"F-24 stale-scrape","seen":311,"fixed":298,"how":"resume-findings","sig":"scrape.freshness=gross"},{"family":"F-03 slop-palette","seen":211,"fixed":205,"how":"resume-findings","sig":"taste.t1=gross"},{"family":"F-31 selector-break","seen":169,"fixed":158,"how":"human","sig":"scrape.schema=gross"},{"family":"F-19 contract-drift","seen":115,"fixed":112,"how":"resume-findings","sig":"contract.conformance=gross"},{"family":"F-42 budget-overrun","seen":77,"fixed":74,"how":"human","sig":"budget.total=short"}]};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -1308,7 +1309,49 @@ table.l tr.click:hover td { background: var(--wash); }
       '<div class="grow"><span class="gn">paraphrased repeat</span><span class="gd">&ldquo;my bracket bends too much under load&rdquo;</span><span class="gm ok">cited &middot; 0.71</span></div>' +
       '<div class="grow"><span class="gn">text-poor, gates match</span><span class="gd">&ldquo;something is off with the part&rdquo;</span><span class="gm ok">cited &middot; signature carried it</span></div>' +
       '<div class="grow"><span class="gn">genuinely novel</span><span class="gd">&ldquo;pod evicted due to memory pressure&rdquo;</span><span class="gm">no precedent</span></div>' +
-      '<div class="res" style="display:block">Rank normalization would rate the least-bad candidate 1.0 and cite it confidently. Anchoring on absolute evidence is what lets the factory return <b>nothing</b> &mdash; and mean it.</div></div>';
+      '<div class="res" style="display:block">Rank normalization would rate the least-bad candidate 1.0 and cite it confidently. Anchoring on absolute evidence is what lets the factory return <b>nothing</b> &mdash; and mean it.</div></div>' +
+
+      '<h3>Try it</h3>' +
+      '<div class="lede" style="margin-bottom:12px">Four real queries against the ' + S.cases.toLocaleString() + '-case archive. These are engine output, captured by <code>tools/build_stats.py</code> &mdash; not written by hand.</div>' +
+      '<div class="seg" id="demoseg" style="margin-bottom:12px">' +
+        PRECEDENT_DEMO.map(function (d, i) {
+          return '<button data-demo="' + i + '"' + (i === 0 ? ' class="on"' : '') + '>' + d.label + '</button>';
+        }).join('') + '</div>' +
+      '<div id="demoout"></div>';
+
+    renderDemo(0);
+    $('#demoseg').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-demo]'); if (!b) return;
+      $$('#demoseg button').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      renderDemo(+b.getAttribute('data-demo'));
+    });
+  }
+
+  function renderDemo(i) {
+    var d = PRECEDENT_DEMO[i], out = $('#demoout');
+    var head =
+      '<div class="card"><div class="chead"><span class="ci">&sect;</span><div style="min-width:0">' +
+      '<b>' + (d.hits.length ? d.hits.length + ' cited' : 'No precedent') + '</b>' +
+      '<div class="sub">' + d.ms + ' ms &middot; ' + (d.tier || 'no tier matched') + ' &middot; 0 tokens</div></div>' +
+      '<div class="act"><span class="tag ' + (d.hits.length ? 'info' : 'warn') + '">' +
+      (d.hits.length ? d.tier.toUpperCase() : 'HONEST MISS') + '</span></div></div>' +
+      '<div class="grow"><span class="gn">query</span><span class="gd">&ldquo;' + d.q.slice(0, 96) + (d.q.length > 96 ? '&hellip;' : '') + '&rdquo;</span></div>' +
+      '<div class="grow"><span class="gn">gate signature</span><span class="gd">' + d.sig.join(', ') + '</span></div>';
+
+    var body = d.hits.length
+      ? d.hits.map(function (x) {
+          var pieces = x.parts && x.parts.jaccard !== undefined
+            ? 'jaccard ' + x.parts.jaccard + ' &middot; dense ' + x.parts.dense + ' &middot; bm25 ' + x.parts.bm25
+            : 'exact structural fingerprint';
+          return '<div class="grow"><span class="gn">run ' + x.run + ' &middot; ' + x.score.toFixed(3) + '</span>' +
+                 '<span class="gd">' + x.family + ' &mdash; ' + pieces + '</span>' +
+                 '<span class="gm ok">' + x.kind + '</span></div>' +
+                 '<div class="row" style="height:auto;padding:8px 12px"><span class="path" style="white-space:normal">fix: ' + x.fix + '</span></div>';
+        }).join('')
+      : '<div class="res" style="display:block"><b class="no">Never seen this.</b> Every signal fell below the evidence floor, so the factory cites nothing rather than the least-bad match. The agent is told there is no precedent and solves it fresh &mdash; then this becomes precedent for next time.</div>';
+
+    out.innerHTML = head + body + '</div>';
   }
 
   /* Count-up on measured figures. Cheap, and it makes the numbers read as
