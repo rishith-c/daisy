@@ -82,9 +82,17 @@ _DIAGNOSE = [
 ]
 
 
+# Lines these CLIs emit about *other* processes. Codex starts every MCP server
+# in the user's config and logs each one's failure to stderr; huggingface's
+# server not being logged in says nothing about whether Codex can run.
+_FOREIGN = re.compile(r"rmcp::|mcp[_.]|failed to load skill|Transport channel closed"
+                      r"|resource_metadata=|\.well-known/oauth", re.I)
+
+
 def _diagnose(text: str) -> str:
+    own = "\n".join(l for l in (text or "").splitlines() if not _FOREIGN.search(l))
     for pat, why in _DIAGNOSE:
-        if pat.search(text):
+        if pat.search(own):
             return why
     return ""
 
@@ -107,14 +115,19 @@ def probe(ex: Executor, timeout: int = PROBE_TIMEOUT, cwd: str = None) -> Execut
         return ex
     ex.probe_ms = round((time.perf_counter() - t0) * 1000.0, 1)
 
+    # Success is checked BEFORE diagnosis, not after. Codex answered the probe
+    # correctly while its stderr carried an auth failure from an unrelated MCP
+    # server, and diagnosing first reported a working agent as unusable. If the
+    # agent produced the answer, it works — whatever else it complained about.
+    if re.search(r"\bOK\b", p.stdout or ""):
+        ex.ok, ex.detail = True, "responded to the probe"
+        return ex
     why = _diagnose(out)
     if why:
         ex.ok, ex.detail = False, why
         return ex
-    # The probe asks for a literal token so success is checkable rather than
-    # "something was printed" — several CLIs print banners even when they fail.
     if re.search(r"\bOK\b", out):
-        ex.ok, ex.detail = True, "responded to the probe"
+        ex.ok, ex.detail = True, "responded to the probe (on stderr)"
     else:
         ex.ok = False
         ex.detail = "no usable reply" + (": " + out.strip().splitlines()[-1][:60] if out.strip() else "")
@@ -150,7 +163,10 @@ def run(ex: Executor, prompt: str, cwd: str = None,
         return {"agent": ex.name, "ok": False, "reason": "timeout",
                 "ms": round((time.perf_counter() - t0) * 1000.0, 1), "stdout": "", "stderr": ""}
     ms = round((time.perf_counter() - t0) * 1000.0, 1)
-    why = _diagnose((p.stdout or "") + (p.stderr or ""))
+    # Same rule: a zero exit with output is success, regardless of what the
+    # CLI logged about its own plugins.
+    why = "" if (p.returncode == 0 and (p.stdout or "").strip()) \
+          else _diagnose((p.stdout or "") + (p.stderr or ""))
     return {"agent": ex.name, "ok": p.returncode == 0 and not why,
             "reason": why or ("exit %d" % p.returncode if p.returncode else ""),
             "ms": ms, "stdout": p.stdout or "", "stderr": (p.stderr or "")[-2000:]}
