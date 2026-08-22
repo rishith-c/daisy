@@ -20,3 +20,8 @@ runs/
 
 # Garden is its own repository
 .garden/
+
+# local credentials — never committed
+.env
+.env.local
+*.key
