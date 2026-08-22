@@ -29,6 +29,7 @@ Run all of it:
 A command center in the Codex-desktop design language, **light-first**: serif agent narration, near-black-on-white chrome, colour reserved for meaning.
 
 - **Live run view** — the full factory run with real human approval gates (clarify → Port approve → escalation). Streaming word-level narration, diff cards, gate tables, an algebraic-repair derivation, and a span flame graph.
+- **CREW bay** — Claude and Codex side by side, each in its own worktree, both pinned to one `api-contract.json`. Neither can touch git; the orchestrator owns every commit, so the diffs stay symmetric. They are combined by a contract, not by a conversation.
 - **Proportional minimap** down the left edge, colour-coded by gate outcome, click to jump.
 - **Runs** — aggregate windows plus ten replayable snapshots, including a red escalated run so a judge can diagnose a failure from history.
 - **Scraper heal** — the whole auto-repair loop as its own watchable thread: the vendor restructures its table, the collector *does not error* (it quietly returns fewer keys), the schema key-diff catches it, `scraper heal` runs, the verifier checks the preview **before** a human sees it, and the healed selectors are committed to `CLAUDE.md` rather than a dashboard.

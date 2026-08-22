@@ -130,7 +130,14 @@ actually use this, or is it a screenshot of one?" Four were the latter:
 - **Artifacts** was a thumbnail gallery. Now every card names its producing run
   and clearing gate, with a full manifest.
 
-I also added two things the sponsors' own criteria ask for that were only ever
+I also added the **CREW bay** — Claude and Codex side by side against one
+`api-contract.json`. You asked for the two agents combined inside one app, and
+the run had them narrating in turn, which reads as two tools used sequentially
+rather than together. (Its layout keys off a container query, not a media query:
+the bay lives inside a fixed-width column, so viewport width was the wrong
+signal and it silently collapsed to one column at every size.)
+
+And two things the sponsors' own criteria ask for that were only ever
 *referenced*: the **Bright Data scrape** as its own step (terminal command,
 pinned collector, clean JSON, and the five rows the solver actually chooses
 from), and the **scraper heal** as its own watchable thread — because
