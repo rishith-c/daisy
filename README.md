@@ -12,7 +12,7 @@ One brief in → verified software **and** verified hardware out. Claude Code an
 index.html          the whole app — one file, zero dependencies, zero network
 precedent/          the Precedent Engine (see below) — pure stdlib Python
 taste/              the taste gate as programs — tier 1 lint, tier 2 contrast
-hardware/           the physics gate as a program — closed-form margins
+hardware/           the physics gate + parametric geometry, as programs
 app/                native macOS wrapper (Swift + WKWebView)
 icon/               generators for the hand-drawn daisy icon and brand mark
 tools/              stats builder, view generators, refinement timer (see tools/README.md)
@@ -127,8 +127,22 @@ statics, **not** FEA, fatigue, buckling, impact, or stress concentration. For a
 bracket in single-axis static bending those omissions are defensible; for
 anything cyclic or impact-loaded they are not, and it says so.
 
+It generates real geometry too. `hardware/bracket.py` is a parametric L-bracket
+that writes a binary STL and computes mass from the actual solid:
+
 ```bash
-python3 -m hardware.test_margins    # 27 tests
+python3 -m hardware.bracket --thickness 4.61 --out bracket_v2.stl
+```
+
+The two volume calculations check each other — the analytic solid and the mesh
+(by the divergence theorem) differ by exactly the volume of the bolt holes,
+which the mesh does not cut. If they ever disagree by anything else, one of them
+is wrong. Hand-built geometry is the honest choice for convex slab parts like
+this and avoids assuming an OCCT toolchain on a judge's laptop; for fillets,
+lofts or booleans you want a kernel, and the module says so.
+
+```bash
+python3 -m hardware.test_margins    # 35 tests
 ```
 
 ---
@@ -180,7 +194,7 @@ python3 -m precedent.cli recall "pod evicted, memory pressure" --gate infra.oom=
 python3 -m precedent.cli sql "SELECT family, COUNT(*) n FROM cases GROUP BY family"
 python3 -m precedent.test_precedent                   # 39 tests
 python3 -m taste.test_lint                            # 26 tests
-python3 -m hardware.test_margins                      # 27 tests
+python3 -m hardware.test_margins                      # 35 tests
 ```
 
 The `sql` subcommand is *memory as code*: an agent can interrogate its own past directly, read-only, instead of being handed retrieved chunks.

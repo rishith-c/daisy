@@ -9,6 +9,7 @@ import math
 
 from .margins import (MATERIALS, GRADES, bending, solve_thickness, bolt_shear,
                       mass, thermal, select_fastener, evaluate, NoGroundTruth, G)
+from .bracket import Bracket
 
 PASS, FAIL = 0, 0
 
@@ -108,6 +109,42 @@ def test_evaluate():
           _raises(lambda: evaluate(2.4, 90, 18, 3.2, "PETG", 1.5, [], 2), NoGroundTruth))
 
 
+def test_geometry():
+    print("\ngeometry — the mesh and the solid must agree")
+    b = Bracket(width=18.0, thickness=3.2, arm=90.0)
+    holes = b.hole_count * math.pi * (b.hole_dia / 2.0) ** 2 * b.thickness
+    check("mesh volume exceeds the solid by exactly the hole volume",
+          abs((b.mesh_volume_mm3() - b.volume_mm3()) - holes) < 0.01,
+          "%.2f vs %.2f" % (b.mesh_volume_mm3() - b.volume_mm3(), holes))
+    check("a closed mesh has 12 triangles per box, 24 for two",
+          len(b.triangles()) == 24, str(len(b.triangles())))
+    check("every triangle has a unit normal",
+          all(abs(sum(c * c for c in _norm(t)) - 1.0) < 1e-6 for t in b.triangles()))
+    thick = Bracket(width=18.0, thickness=4.61, arm=90.0)
+    check("a thicker web is a bigger solid", thick.volume_mm3() > b.volume_mm3())
+    check("mass scales with density",
+          thick.mass_g(2700.0) > thick.mass_g(1270.0))
+    check("volume is linear in width",
+          abs(Bracket(width=36.0, thickness=3.2, arm=90.0).volume_mm3()
+              - 2 * b.volume_mm3() - holes) < 0.01)
+
+    import tempfile, os, struct
+    with tempfile.TemporaryDirectory() as d:
+        p = os.path.join(d, "b.stl")
+        n = b.to_stl(p)
+        raw = open(p, "rb").read()
+        count = struct.unpack("<I", raw[80:84])[0]
+        check("STL header is 80 bytes and declares its triangle count",
+              count == len(b.triangles()), str(count))
+        check("STL length matches the binary format exactly",
+              n == 84 + 50 * count, "%d vs %d" % (n, 84 + 50 * count))
+
+
+def _norm(tri):
+    from .bracket import _normal
+    return _normal(*tri)
+
+
 def _raises(fn, exc):
     try:
         fn(); return False
@@ -124,6 +161,7 @@ def main():
     test_bolts()
     test_other_gates()
     test_evaluate()
+    test_geometry()
     print("\n%d passed, %d failed" % (PASS, FAIL))
     return 1 if FAIL else 0
 
