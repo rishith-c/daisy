@@ -9,41 +9,69 @@ import WebKit
 /// is read-only all the way down.
 final class Bridge: NSObject, WKScriptMessageHandler {
     weak var webView: WKWebView?
+    static let gardenOrigin = "https://garden-taupe-three.vercel.app"
 
     func userContentController(_ c: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let body = message.body as? [String: Any],
-              body["cmd"] as? String == "agents" else { return }
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let json = Bridge.scan()
-            guard !json.isEmpty else { return }
-            DispatchQueue.main.async {
-                let escaped = json.data(using: .utf8).flatMap {
-                    String(data: try! JSONSerialization.data(withJSONObject: [String(data: $0, encoding: .utf8)!],
-                                                             options: []), encoding: .utf8)
-                } ?? "[\"\"]"
-                self?.webView?.evaluateJavaScript(
-                    "window.__daisyAgents(\(escaped)[0])", completionHandler: nil)
+        guard let body = message.body as? [String: Any], let command = body["cmd"] as? String else { return }
+        switch command {
+        case "agents":
+            run(["python3", "-m", "agents.discover", "--json", "--limit", "8"], callback: "window.__daisyAgents")
+        case "onboarding.agents":
+            run(["python3", "-m", "agents.discover", "--json", "--limit", "8"], callback: "window.__daisyOnboarding")
+        case "garden", "garden.status":
+            run(["python3", "-m", "garden.link", "status"], callback: "window.__daisyGardenStatus")
+        case "garden.pair":
+            guard let raw = body["code"] as? String else { return }
+            let code = raw.filter { $0.isLetter || $0.isNumber }
+            guard code.count == 6 else {
+                emit("window.__daisyGardenPair", json: "{\"linked\":false,\"why\":\"Enter the six-character code from Garden.\"}")
+                return
             }
+            run(["python3", "-m", "garden.link", "pair", "--code", code], callback: "window.__daisyGardenPair")
+        case "garden.autopublish":
+            let enabled = body["on"] as? Bool == true
+            run(["python3", "-m", "garden.link", "autopublish", enabled ? "--on" : "--off"], callback: "window.__daisyGardenStatus")
+        case "garden.open":
+            let requested = body["url"] as? String ?? Bridge.gardenOrigin + "/index"
+            guard let url = URL(string: requested), url.scheme == "https",
+                  url.host == "garden-taupe-three.vercel.app" else { return }
+            NSWorkspace.shared.open(url)
+        default:
+            return
         }
     }
 
-    /// `python3 -m agents.discover --json`, run against the copy of the package
-    /// inside the bundle so the app does not depend on the checkout still
-    /// existing at the path it was built from.
-    static func scan() -> String {
-        guard let res = Bundle.main.resourceURL else { return "" }
+    /// Run a fixed argument array against the Python packages copied into the
+    /// bundle. No command is ever interpreted by a shell.
+    func run(_ arguments: [String], callback: String) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let json = Bridge.run(arguments: arguments)
+            guard !json.isEmpty else { return }
+            self?.emit(callback, json: json)
+        }
+    }
+
+    static func run(arguments: [String]) -> String {
+        guard let resources = Bundle.main.resourceURL else { return "" }
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        proc.arguments = ["python3", "-m", "agents.discover", "--json", "--limit", "8"]
-        proc.currentDirectoryURL = res
+        proc.arguments = arguments
+        proc.currentDirectoryURL = resources
         let pipe = Pipe()
         proc.standardOutput = pipe
         proc.standardError = FileHandle.nullDevice
         do { try proc.run() } catch { return "" }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         proc.waitUntilExit()
-        guard proc.terminationStatus == 0 else { return "" }
         return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    func emit(_ callback: String, json: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: [json]),
+              let quoted = String(data: data, encoding: .utf8) else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.webView?.evaluateJavaScript("\(callback)(\(quoted)[0])", completionHandler: nil)
+        }
     }
 }
 
