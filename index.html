@@ -408,6 +408,18 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
   border: none; background: transparent; box-shadow: none; border-radius: 6px;
 }
 .topbar .ell:hover { background: var(--wash); color: var(--ink-2); }
+/* Collapsing the rail used to take the toggle with it — the control that
+   reopens the thing you just closed cannot live inside the thing you closed.
+   These mirror it into the title bar, and only exist while the rail is away. */
+.rail-tools { display: none; margin: 0 6px 0 0; -webkit-app-region: no-drag; }
+body.rail .rail-tools { display: flex; }
+body.rail .rail-tools .tip { top: calc(100% + 6px); }
+/* macOS keeps its traffic lights where they were, so the mirrored cluster has
+   to clear them rather than sit underneath. */
+body.rail .topbar { padding-left: 78px; }
+/* Without the rail the minimap hugs the window edge and reads as debris beside
+   an empty margin; tuck it against the transcript instead. */
+body.rail .minimap { padding-left: 26px; }
 .topbar .ell[aria-expanded="true"] { background: var(--wash-2); color: var(--ink); }
 /* rename happens in place — no modal for a one-field edit */
 .topbar .title.editing {
@@ -1060,6 +1072,10 @@ table.l tr.click:hover td { background: var(--wash); }
 
 <main>
   <div class="topbar">
+    <div class="tb-tools rail-tools">
+      <button class="tbtn" id="rt-rail" aria-label="Toggle sidebar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2.4"/><path d="M6.2 3v10"/></svg><span class="tip">Toggle sidebar <kbd>&#8984;B</kbd></span></button>
+      <button class="tbtn" id="rt-new" aria-label="New run"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M13.2 2.8a1.55 1.55 0 0 1 0 2.2l-6.5 6.5-2.9.7.7-2.9 6.5-6.5a1.55 1.55 0 0 1 2.2 0Z"/><path d="M2.6 13.4h10.8" stroke-linecap="round"/></svg><span class="tip">New run <kbd>&#8984;N</kbd></span></button>
+    </div>
     <span class="folder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.8 4.2c0-.8.6-1.4 1.4-1.4h2.4l1.3 1.6h5.9c.8 0 1.4.6 1.4 1.4v5.6c0 .8-.6 1.4-1.4 1.4H3.2c-.8 0-1.4-.6-1.4-1.4V4.2Z" stroke-linejoin="round"/></svg></span>
     <span class="title" id="tb-title">Sensor fleet dashboard + SR-11 mounting bracket</span>
     <span class="ellwrap">
@@ -2274,6 +2290,8 @@ $ echo $?
   $('#tb-back').addEventListener('click', function () { histGo(-1); });
   $('#tb-fwd').addEventListener('click', function () { histGo(1); });
   $('#tb-new').addEventListener('click', function () { show('run'); playLive(); });
+  $('#rt-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
+  $('#rt-new').addEventListener('click', function () { show('run'); playLive(); });
   syncHist();
   $('#btn-search').addEventListener('click', function () { closeBrandMenu(); palOpen(); });
 

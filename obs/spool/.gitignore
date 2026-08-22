@@ -1,0 +1,4 @@
+# The spool is run state, not source. It exists so a demo works with no
+# network; it should never arrive in a diff.
+*
+!.gitignore
