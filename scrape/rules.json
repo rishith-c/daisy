@@ -1,0 +1,60 @@
+{
+  "note": "Version-controlled scraper configuration. See scrape/rules.py.",
+  "updated": "2026-08-22T00:00:00Z",
+  "specs": [
+    {
+      "name": "vendors.fastener",
+      "version": 1,
+      "updated": "2026-08-22T00:00:00Z",
+      "url": "https://fastener-supply.example/catalog/socket-head-cap-screws",
+      "fixture": "vendor_v1.html",
+      "row_selector": "table.parts-table > tbody > tr.part-row",
+      "ttl_hours": 24.0,
+      "min_rows": 5,
+      "row_tolerance": 0.25,
+      "median_shift_max": 3.0,
+      "notes": "Feeds hardware.margins.select_fastener. These five field names are that function's contract; renaming one here stops the physics gate certifying.",
+      "fields": [
+        {
+          "name": "grade",
+          "selector": "td.col-grade",
+          "type": "str",
+          "required": true,
+          "note": "ISO property class, e.g. 8.8 / 10.9 / A2-70"
+        },
+        {
+          "name": "dia_mm",
+          "selector": "td.col-thread",
+          "type": "num",
+          "required": true,
+          "min": 1.0,
+          "max": 24.0,
+          "note": "nominal thread diameter; 'M4' coerces to 4.0"
+        },
+        {
+          "name": "tensile_mpa",
+          "selector": "td.col-tensile",
+          "type": "num",
+          "required": true,
+          "min": 200.0,
+          "max": 2000.0
+        },
+        {
+          "name": "price_usd",
+          "selector": "td.col-price",
+          "type": "num",
+          "required": true,
+          "min": 0.0,
+          "max": 100.0
+        },
+        {
+          "name": "in_stock",
+          "selector": "td.col-stock",
+          "type": "bool",
+          "required": true
+        }
+      ],
+      "history": []
+    }
+  ]
+}

@@ -601,30 +601,42 @@ body.rail .minimap { padding-left: 26px; }
 .mtrig svg { width: 12px; height: 12px; color: var(--ink-4); }
 
 .mmenu, .msub {
-  position: fixed; z-index: 400; min-width: 208px; padding: 5px;
+  position: fixed; z-index: 400; padding: 4px;
   background: var(--surface); border: .5px solid var(--border-strong); border-radius: 12px;
   box-shadow: var(--shadow-3); opacity: 0; visibility: hidden; pointer-events: none;
   transform: translateY(4px) scale(.985); transform-origin: bottom left;
   transition: visibility 0s linear var(--d-menu), opacity var(--d-menu) var(--out), transform var(--d-menu) var(--out);
 }
 .mmenu.on, .msub.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
-.msub { min-width: 186px; max-height: 62vh; overflow-y: auto; }
+.mmenu { min-width: 196px; }
+.msub { min-width: 178px; max-height: 62vh; overflow-y: auto; transform-origin: top left; }
 .mi {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  height: 32px; padding: 0 9px; border: none; background: transparent; box-shadow: none;
-  border-radius: 7px; font-size: 13.5px; font-weight: 450; color: var(--ink); text-align: left;
+  /* justify-content: flex-start is not decorative — the global button rule
+     centres its content, which centred every label in the menu and pushed the
+     tick a third of the row away from the word it belongs to. */
+  display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+  width: 100%; height: 30px; padding: 0 9px;
+  border: none; background: transparent; box-shadow: none;
+  border-radius: 7px; font-size: 13.5px; font-weight: 450; color: var(--ink);
+  text-align: left; white-space: nowrap;
 }
 .mi:hover, .mi.open { background: var(--wash); }
-.mi .val { margin-left: auto; color: var(--ink-3); }
-.mi .chev { width: 13px; height: 13px; color: var(--ink-4); flex: 0 0 13px; }
-.mi .tick { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink); visibility: hidden; }
+.mi[disabled] { color: var(--ink-4); background: transparent; }
+.mi .val { margin-left: auto; padding-left: 18px; color: var(--ink-3); }
+.mi .chev { width: 13px; height: 13px; color: var(--ink-4); flex: 0 0 13px; margin-left: -2px; }
+/* Codex parks the checkmark on the trailing edge, not in a leading gutter. */
+.mi .tick { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink);
+            margin-left: auto; padding-left: 16px; box-sizing: content-box; visibility: hidden; }
 .mi.sel .tick { visibility: visible; }
-.mi.tall { height: auto; padding: 7px 9px; align-items: flex-start; flex-direction: column; gap: 1px; }
-.mi.tall .sub { font-size: 12px; color: var(--ink-3); font-weight: 400; }
-.mi.tall .top { display: flex; align-items: center; gap: 10px; width: 100%; }
-.msep { height: 1px; background: var(--border); margin: 5px 4px; }
-.mhead { padding: 7px 9px 4px; font-size: 11.5px; color: var(--ink-3); letter-spacing: .02em; text-transform: uppercase; }
-.mnote { padding: 4px 9px 7px; font-size: 11.5px; color: var(--ink-3); }
+.mi.sel { font-weight: 500; }
+.mi.tall { height: auto; padding: 6px 9px 7px; align-items: stretch; flex-direction: column; gap: 1px; }
+.mi.tall .sub { font-size: 11.5px; color: var(--ink-3); font-weight: 400; line-height: 1.35; white-space: normal; }
+.mi.tall .top { display: flex; align-items: center; gap: 8px; width: 100%; }
+.msep { height: 1px; background: var(--border); margin: 4px 4px; }
+.mhead { padding: 9px 9px 3px; font-size: 11px; color: var(--ink-3);
+         letter-spacing: .04em; text-transform: uppercase; font-weight: 500; }
+.mhead:first-child { padding-top: 5px; }
+.mnote { padding: 3px 9px 6px; font-size: 11.5px; color: var(--ink-3); white-space: normal; }
 
 /* ---------- cards ---------- */
 .card {
@@ -1493,8 +1505,8 @@ $ echo $?
         out += '<div class="mhead">' + VENDOR_LABEL[v] + '</div>';
         groups[v].forEach(function (m) {
           out += '<button class="mi' + (m.id === s.model.id ? ' sel' : '') +
-                 '" data-kind="model" data-val="' + m.id + '">' + TICK +
-                 '<span>' + (m.label || m.id) + '</span></button>';
+                 '" data-kind="model" data-val="' + m.id + '">' +
+                 '<span>' + (m.label || m.id) + '</span>' + TICK + '</button>';
         });
       });
     } else if (kind === 'effort') {
@@ -1503,8 +1515,8 @@ $ echo $?
         var note = (L.effort_note || {})[e];
         out += '<button class="mi' + (note ? ' tall' : '') + (e === s.effort ? ' sel' : '') +
                '" data-kind="effort" data-val="' + e + '">' +
-               (note ? '<span class="top">' + TICK + '<span>' + effortLabel(e) + '</span></span><span class="sub">' + note + '</span>'
-                     : TICK + '<span>' + effortLabel(e) + '</span>') + '</button>';
+               (note ? '<span class="top"><span>' + effortLabel(e) + '</span>' + TICK + '</span><span class="sub">' + note + '</span>'
+                     : '<span>' + effortLabel(e) + '</span>' + TICK) + '</button>';
       });
     } else {
       out += '<div class="mhead">Speed</div>';
@@ -1512,7 +1524,7 @@ $ echo $?
         var note = (L.speed_note || {})[sp];
         out += '<button class="mi tall' + (sp === s.speed ? ' sel' : '') +
                '" data-kind="speed" data-val="' + sp + '">' +
-               '<span class="top">' + TICK + '<span>' + (sp === 'fast' ? 'Fast' : 'Standard') + '</span></span>' +
+               '<span class="top"><span>' + (sp === 'fast' ? 'Fast' : 'Standard') + '</span>' + TICK + '</span>' +
                '<span class="sub">' + (note || '') + '</span></button>';
       });
     }
@@ -1526,17 +1538,23 @@ $ echo $?
   function placeMenu(el, anchorRect, toLeft) {
     el.style.visibility = 'hidden'; el.classList.add('on');
     var w = el.offsetWidth, hgt = el.offsetHeight;
-    var left = toLeft ? anchorRect.left - w - 6 : anchorRect.left;
-    if (left < 8) left = anchorRect.right + 6;
-    var top = anchorRect.top - hgt - 6;
-    if (top < 8) top = Math.min(anchorRect.bottom + 6, window.innerHeight - hgt - 8);
-    el.style.left = Math.min(left, window.innerWidth - w - 8) + 'px';
+    var left = toLeft ? anchorRect.left - w - 4 : anchorRect.left;
+    if (left < 8) left = anchorRect.right + 4;
+    // A submenu belongs beside the row that opened it. The parent menu opens
+    // upward from the composer, so reusing that rule floated the submenu above
+    // its own row with nothing connecting them.
+    var top = toLeft ? anchorRect.top - 5 : anchorRect.top - hgt - 6;
+    top = Math.max(8, Math.min(top, window.innerHeight - hgt - 8));
+    el.style.left = Math.max(8, Math.min(left, window.innerWidth - w - 8)) + 'px';
     el.style.top = top + 'px';
     el.style.visibility = '';
   }
 
   function openSub(kind, row) {
-    if (row.disabled) return;
+    // Guard the lane lookup: a click that lands between closeMenu() clearing
+    // openLane and the trigger setting it again would otherwise throw inside
+    // subHTML and leave the menu open but inert.
+    if (row.disabled || !openLane || !LANES[openLane]) return;
     if (openRow) openRow.classList.remove('open');
     openRow = row; row.classList.add('open');
     msub.innerHTML = subHTML(kind, LANES[openLane]);
