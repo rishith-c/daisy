@@ -248,13 +248,35 @@ def scrape_lane(run_id: str, fixture: str | None, log) -> LaneResult:
 # software lane — a real agent, judged by the same linter that judges Daisy
 # ---------------------------------------------------------------------------
 
-TASK = (
-    "Write a single self-contained HTML file for a status badge component "
-    "showing PASS / FAIL / PENDING states. Requirements: every colour must come "
-    "from a CSS custom property declared in one :root block; no hardcoded hex "
-    "outside :root; no emoji anywhere; no inline style attributes. "
+# The house rules every software-lane artifact must satisfy. These are the
+# constraints the taste gate actually checks, stated to the agent up front so
+# the first attempt has a chance rather than being rejected for rules it was
+# never told.
+HOUSE = (
+    "Requirements: every colour must come from a CSS custom property declared "
+    "in one :root block; no hardcoded hex outside :root; no emoji anywhere; no "
+    "inline style attributes; include a :focus-visible style and a "
+    "prefers-reduced-motion block. "
     "Output ONLY the HTML, no explanation, no markdown fences."
 )
+
+DEFAULT_TASK = ("Write a single self-contained HTML file for a status badge "
+                "component showing PASS / FAIL / PENDING states.")
+
+
+def task_for(brief: str) -> str:
+    """Build the agent's task from the brief.
+
+    This was a constant, which meant --brief was decorative: asking for a note
+    app produced a status badge and the run still reported success. A lane that
+    ignores the brief is not a lane, and the gates cannot catch it because the
+    artifact it produced was perfectly valid — just not what anyone asked for.
+    """
+    b = (brief or "").strip()
+    if not b:
+        return DEFAULT_TASK + "\n\n" + HOUSE
+    return ("Write a single self-contained HTML file that satisfies this brief:\n\n"
+            + b + "\n\n" + HOUSE)
 
 
 # The smallest thing that could honestly be called a component. An agent that
@@ -264,7 +286,7 @@ TASK = (
 MIN_BYTES = 400
 
 
-def artifact_sane(html: str, need: tuple = ("pass", "fail", "pending")) -> tuple:
+def artifact_sane(html: str, need: tuple = ()) -> tuple:
     """(ok, reason). Structural, not aesthetic — no taste judgement here."""
     t = (html or "").strip()
     if len(t) < MIN_BYTES:
@@ -446,7 +468,8 @@ def software_lane(run_id: str, brief: str, prefer: str, log,
     r.ran = True
     log("  agent: %s (probe %.0f ms)" % (ex.name, ex.probe_ms))
 
-    prompt, findings = TASK, []
+    task = task_for(brief)
+    prompt, findings = task, []
     for attempt in range(1, MAX_RETRIES + 2):
         r.attempts = attempt
         with tracer().span("agent.invoke", {"agent": ex.name, "attempt": attempt}) as s:
@@ -463,7 +486,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log,
         # overwrites its own evidence cannot be audited — "it failed then it
         # passed" is a claim until the rejected artifact is still on disk next
         # to the findings that rejected it.
-        path = os.path.join(d, "badge.attempt%d.html" % attempt)
+        path = os.path.join(d, "attempt%d.html" % attempt)
         open(path, "w", encoding="utf-8").write(html)
 
         # Structure before taste. A linter asked to judge a stub will answer
@@ -480,7 +503,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log,
             if attempt > MAX_RETRIES:
                 r.why = why
                 break
-            prompt = (TASK + "\n\nYour previous reply was rejected before it was "
+            prompt = (task + "\n\nYour previous reply was rejected before it was "
                       "even reviewed: " + why + ". Return the complete HTML "
                       "document itself, nothing else.")
             continue
@@ -502,7 +525,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log,
 
         if not findings:
             r.passed = True
-            final = os.path.join(d, "badge.html")
+            final = os.path.join(d, "app.html")
             shutil.copyfile(path, final)
             r.artifacts.append({"path": final, "bytes": len(html),
                                 "accepted_on_attempt": attempt})
@@ -516,7 +539,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log,
         named = "\n".join("- %s (line %d): %s — %s"
                           % (f.name, f.line, f.excerpt[:70], f.why[:90])
                           for f in findings[:8])
-        prompt = (TASK + "\n\nYour previous attempt was rejected by a design "
+        prompt = (task + "\n\nYour previous attempt was rejected by a design "
                   "linter with these exact findings. Fix every one:\n" + named)
     return r
 
