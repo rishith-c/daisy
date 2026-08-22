@@ -1357,6 +1357,7 @@ $ echo $?
       p.className = 'item';
       p.innerHTML = '<div class="pill"><span class="tag fail">ESCALATED</span><b>Run ' + id + '</b><span class="mu">3 gate failures · retries exhausted · parked at human review</span><span class="tm">9m 51s</span></div>';
       col.appendChild(p);
+      addMark('fail');          // keep the minimap one-to-one with the feed
     }
     feed.scrollTop = 0;
   }
