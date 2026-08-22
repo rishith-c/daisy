@@ -46,7 +46,7 @@ from agents.discover import discover                          # noqa: E402
 
 LOAD, ARM, WIDTH, THICK, MAT, FOS = 2.4, 90.0, 18.0, 3.2, "PETG", 1.5
 SCRAPE_SPEC = "vendors.fastener"
-SCRAPE_FIXTURE = os.environ.get("DAISY_SCRAPE_FIXTURE", "vendor_v1.html")
+SCRAPE_FIXTURE = os.environ.get("DAISY_SCRAPE_FIXTURE", "")
 
 
 def main() -> int:
@@ -121,8 +121,11 @@ def main() -> int:
         # repair span appears, and the physics lane loses its fastener price —
         # which is the whole point of tracing the input, not just the output.
         with gate("scrape.schema", {"spec": SCRAPE_SPEC, "fixture": SCRAPE_FIXTURE}) as g:
+            command = [sys.executable, "-m", "scrape.cli", "fetch"]
+            if SCRAPE_FIXTURE:
+                command.extend(["--fixture", SCRAPE_FIXTURE])
             out = subprocess.run(
-                [sys.executable, "-m", "scrape.cli", "fetch", "--fixture", SCRAPE_FIXTURE],
+                command,
                 cwd=ROOT, capture_output=True, text=True, timeout=30)
             data = json.loads(out.stdout or "{}")
             rows = data.get("rows") or []
@@ -140,7 +143,8 @@ def main() -> int:
             # repair signal here is what lets an operator see the factory fixing
             # its own ground truth rather than just failing.
             scrape_repair(SCRAPE_SPEC, "re-derive selectors from last-good values",
-                          "run: python3 -m scrape.cli repair --fixture %s" % SCRAPE_FIXTURE)
+                          "run: python3 -m scrape.cli repair" +
+                          (" --fixture %s" % SCRAPE_FIXTURE if SCRAPE_FIXTURE else ""))
 
         # The fastener choice is downstream of that scrape — if the selectors
         # broke, this is where it shows up as a part that cannot be certified.

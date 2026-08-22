@@ -894,8 +894,11 @@ select:focus-visible { outline: 2px solid color-mix(in srgb, var(--info) 70%, tr
 .jump.on { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
 .jump:hover { background: var(--ink); filter: brightness(1.2); }
 
-/* working indicator */
-.working { display: flex; align-items: center; gap: 9px; color: var(--ink-3); font-size: 12.5px; font-family: var(--mono); }
+/* Codex-style elapsed divider: time is the headline, activity is secondary. */
+.working { display: flex; align-items: center; gap: 10px; color: var(--ink-3); font-size: 12.5px; }
+.working::before, .working::after { content: ""; height: .5px; flex: 1 1 auto; background: var(--border); }
+.working .elapsed { color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.working .work-label { color: var(--ink-3); white-space: nowrap; }
 .working .dots { display: inline-flex; gap: 3px; }
 .working .dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-4); display: block;
   animation: bounce 1.15s var(--soft) infinite; }
@@ -1273,7 +1276,36 @@ table.l tr.click:hover td { background: var(--wash); }
 .ob-cmd button { margin-left: auto; flex: 0 0 auto; height: 26px; padding: 3px 10px; font-size: 12.5px; }
 .ob-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin-top: 10px; }
 
-/* ---------- step 3: the two choices, and the one thing that is not ---------- */
+/* ---------- step 3: local-first Garden pairing ---------- */
+.ob-routes {
+  display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; margin-top: 15px;
+}
+.ob-route {
+  display: flex; flex-direction: column; min-width: 0; min-height: 128px;
+  padding: 13px; border: .5px solid var(--border); border-radius: var(--r-card);
+  background: var(--surface);
+}
+.ob-route.garden { background: color-mix(in srgb, var(--daisy-wash) 52%, var(--surface)); }
+.ob-route b { font-size: 13px; font-weight: 600; }
+.ob-route p { font-size: 12px; line-height: 1.5; color: var(--ink-2); margin: 4px 0 12px; }
+.ob-route button { margin-top: auto; align-self: flex-start; }
+.ob-pair {
+  margin-top: 10px; padding: 12px 13px; border: .5px solid var(--border);
+  border-radius: var(--r-card); background: var(--surface-2);
+}
+.ob-pair label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 7px; }
+.ob-pairline { display: flex; align-items: center; gap: 8px; }
+.ob-code {
+  width: 150px; height: 30px; padding: 5px 9px; border: .5px solid var(--border-strong);
+  border-radius: 7px; background: var(--bg); color: var(--ink); font-family: var(--mono);
+  font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+}
+.ob-code:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 28%, transparent); }
+.ob-linkstate { min-height: 18px; margin-top: 8px; font-size: 11.5px; line-height: 1.5; color: var(--ink-2); }
+.ob-linkstate[data-state="linked"] { color: var(--pass); }
+.ob-linkstate[data-state="error"] { color: var(--fail); }
+
+/* ---------- step 4: the one preference, and the thing that is not ---------- */
 .ob-choice {
   display: flex; align-items: center; gap: 16px; padding: 13px 0;
   border-top: .5px solid var(--border);
@@ -1311,6 +1343,14 @@ table.l tr.click:hover td { background: var(--wash); }
   }
   .ob-stage.morph { transition: none; }
   .ob-steps i { transition: none; }
+}
+@media (max-width: 520px) {
+  .obs { margin-top: 4vh; max-height: 92vh; }
+  .ob-scroll { max-height: calc(92vh - 118px); }
+  .ob-routes { grid-template-columns: 1fr; }
+  .ob-route { min-height: 0; }
+  .ob-pairline { align-items: stretch; flex-direction: column; }
+  .ob-code { width: 100%; }
 }
 </style>
 
@@ -1731,8 +1771,8 @@ $ echo $?
   <div class="ob-top">
    <span class="ob-mark" id="ob-mark" aria-hidden="true"></span>
    <span class="ob-wm">Daisy</span>
-   <span class="ob-steps" id="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
-   <button class="ghost ob-skip" id="ob-skip">Skip</button>
+   <span class="ob-steps" id="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+   <button class="ghost ob-skip" id="ob-skip">Start locally</button>
   </div>
 
   <div class="ob-stage" id="ob-stage"><div class="ob-scroll" id="ob-scroll">
@@ -1788,18 +1828,42 @@ $ echo $?
     <p class="ob-note" id="ob-note"></p>
    </section>
 
-   <section class="ob-p" id="ob-p2" aria-label="Appearance and Garden">
-    <h2 id="ob-h2">Two defaults. Both already chosen.</h2>
-    <p class="ob-lede">Either can be changed later in Settings. If they are already right, press Return.</p>
+   <section class="ob-p" id="ob-p2" aria-label="Garden connection">
+    <h2 id="ob-h2">Private by default. Connected when you choose.</h2>
+    <p class="ob-lede">Daisy needs no account and stays fully useful offline. Connect Garden only when you want to publish, reuse, like, or discuss verified work.</p>
+    <div class="ob-routes">
+     <div class="ob-route">
+      <b>Stay on this Mac</b>
+      <p>Briefs, files, credentials, traces, and run history remain local. You can connect later from Settings.</p>
+      <button class="ghost" id="ob-local">Start locally</button>
+     </div>
+     <div class="ob-route garden">
+      <b>Connect the Garden</b>
+      <p>Sign in in your trusted system browser, then copy the one-time device code back here. Daisy never receives your Google credential.</p>
+      <button class="primary" id="ob-connect">Connect Garden</button>
+     </div>
+    </div>
+    <div class="ob-pair">
+     <label for="ob-code">One-time Garden code</label>
+     <div class="ob-pairline">
+      <input class="ob-code" id="ob-code" maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
+      <button id="ob-pair">Pair this Mac</button>
+     </div>
+     <p class="ob-linkstate" id="ob-linkstate" role="status" aria-live="polite">Checking whether this Mac is linked…</p>
+    </div>
+    <div class="ob-choice">
+     <span class="cl"><b>Publish verified runs automatically</b><span>Off by default. This remains unavailable until Garden is linked, and every publish still requires all gates to pass.</span></span>
+     <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to Garden"><i></i></button></span>
+    </div>
+   </section>
+
+   <section class="ob-p" id="ob-p3" aria-label="Appearance and first run">
+    <h2 id="ob-h3">Ready for the first verified run.</h2>
+    <p class="ob-lede">Choose how Daisy should look. Then drop in a brief or press <code>⌘N</code>; Daisy will ask only the questions that change a gate.</p>
     <div style="margin-top:15px">
      <div class="ob-choice">
       <span class="cl"><b>Appearance</b><span>Daisy is light-first. Auto follows your Mac.</span></span>
       <span class="ctrl"><span class="seg" id="ob-seg"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></span></span>
-     </div>
-     <div class="ob-choice">
-      <span class="cl"><b>Garden</b><span>The public index of verified solutions. Off by default. Nothing leaves this machine
-       without a recorded grant, and a solution that did not pass every gate cannot be published at all.</span><span id="ob-gnote"></span></span>
-      <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to the Garden"><i></i></button></span>
      </div>
     </div>
     <div class="ob-fixed">
@@ -1818,6 +1882,8 @@ $ echo $?
   </div>
  </div>
 </div>
+
+
 
 <div class="toast" id="toast"></div>
 <div class="peek" id="peek"></div>
@@ -2473,16 +2539,39 @@ $ echo $?
     if (r) { r.hidden = false; }
   }
 
-  var workEl = null;
+  var workEl = null, workTick = null, workStarted = 0;
+  function elapsed(ms) {
+    var seconds = Math.max(0, Math.floor(ms / 1000));
+    var minutes = Math.floor(seconds / 60), rest = seconds % 60;
+    return minutes ? minutes + 'm ' + rest + 's' : seconds + 's';
+  }
+  function paintWorking() {
+    if (!workEl) return;
+    var t = workEl.querySelector('.elapsed');
+    if (t) t.textContent = 'Working for ' + elapsed(performance.now() - workStarted);
+  }
   function showWorking(label) {
     if (workEl) workEl.remove();
+    if (workTick) clearInterval(workTick);
+    workStarted = performance.now();
     workEl = document.createElement('div');
     workEl.className = 'item working';
-    workEl.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span>' + label + '</span>';
+    workEl.innerHTML = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+      '<span class="elapsed">Working for 0s</span><span class="work-label"></span>';
+    workEl.querySelector('.work-label').textContent = label;
     col.appendChild(workEl);
+    workTick = setInterval(paintWorking, 250);
     follow();
   }
-  function clearWorking() { if (workEl) { workEl.remove(); workEl = null; } }
+  function clearWorking() {
+    if (workTick) { clearInterval(workTick); workTick = null; }
+    if (!workEl) return;
+    var t = workEl.querySelector('.elapsed');
+    if (t) t.textContent = 'Worked for ' + elapsed(performance.now() - workStarted);
+    var dots = workEl.querySelector('.dots');
+    if (dots) dots.remove();
+    workEl = null;
+  }
 
   var WORK_LABEL = {
     prose: 'thinking', card: 'writing files', fail: 'running gates',
@@ -3478,10 +3567,10 @@ $ echo $?
   var ov = $('#obv'); if (!ov) return;
   var sheet = $('#obs'), stage = $('#ob-stage'), scroll = $('#ob-scroll');
   var nextBtn = $('#ob-next'), backBtn = $('#ob-back'), skipBtn = $('#ob-skip'), hint = $('#ob-hint');
-  var KEY = 'daisy-onboarded', VERSION = '1';
-  var PANELS = ['#ob-p0', '#ob-p1', '#ob-p2'].map(function (s) { return $(s); });
-  var HEADS = ['ob-h0', 'ob-h1', 'ob-h2'];
-  var LABELS = ['Continue', 'Continue', 'Start'];
+  var KEY = 'daisy-onboarded', VERSION = '2';
+  var PANELS = ['#ob-p0', '#ob-p1', '#ob-p2', '#ob-p3'].map(function (s) { return $(s); });
+  var HEADS = ['ob-h0', 'ob-h1', 'ob-h2', 'ob-h3'];
+  var LABELS = ['Continue', 'Continue', 'Continue', 'Start locally'];
   var step = 0, open = false, navKey = false, lastFocus = null;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var native = navigator.userAgent.indexOf('DaisyNative') !== -1;
@@ -3569,6 +3658,65 @@ $ echo $?
     }
   }
 
+  function postNative(message) {
+    if (!native || !window.webkit || !window.webkit.messageHandlers ||
+        !window.webkit.messageHandlers.daisy) return false;
+    try { window.webkit.messageHandlers.daisy.postMessage(message); return true; }
+    catch (e) { return false; }
+  }
+
+  /* ---------------- Garden ----------------
+     Google authentication happens in the trusted system browser. The only
+     value typed into Daisy is a short-lived six-character pairing code, and
+     the native bridge exchanges it for a scoped device credential. */
+  var gardenState = null;
+  var gardenUrl = 'https://garden-taupe-three.vercel.app/index';
+
+  function paintGardenState() {
+    var status = $('#ob-linkstate'), auto = $('#ob-garden'), pair = $('#ob-pair');
+    if (!status || !auto) return;
+    if (!gardenState) {
+      status.dataset.state = '';
+      status.textContent = native
+        ? 'Checking whether this Mac is linked…'
+        : 'Pairing is available in Daisy.app; Garden can still be opened in this browser.';
+      auto.disabled = true;
+      auto.setAttribute('aria-checked', 'false');
+      return;
+    }
+    if (gardenState.linked) {
+      status.dataset.state = 'linked';
+      status.textContent = 'Linked' + (gardenState.account ? ' to ' + gardenState.account : '') +
+        '. This Mac holds a scoped Garden credential, never your Google sign-in.';
+      auto.disabled = false;
+      auto.setAttribute('aria-checked', gardenState.autopublish ? 'true' : 'false');
+      if (pair) pair.textContent = 'Linked';
+    } else {
+      status.dataset.state = gardenState.why ? 'error' : '';
+      status.textContent = gardenState.why || 'Not linked. Open Garden, sign in there, and paste its one-time code here.';
+      auto.disabled = true;
+      auto.setAttribute('aria-checked', 'false');
+      if (pair) { pair.disabled = false; pair.textContent = 'Pair this Mac'; }
+    }
+  }
+
+  window.__daisyGardenStatus = function (payload) {
+    try { gardenState = typeof payload === 'string' ? JSON.parse(payload) : payload; }
+    catch (e) { gardenState = { linked: false, why: 'Garden returned an unreadable status.' }; }
+    paintGardenState();
+    if (window.__daisyGarden) window.__daisyGarden(gardenState);
+  };
+
+  window.__daisyGardenPair = function (payload) {
+    var pair = $('#ob-pair');
+    if (pair) pair.disabled = false;
+    window.__daisyGardenStatus(payload);
+  };
+
+  function askGarden() {
+    if (!postNative({ cmd: 'garden.status' })) paintGardenState();
+  }
+
   /* ---------------- steps ---------------- */
   function render(dir) {
     var from = stage.getBoundingClientRect().height;
@@ -3578,7 +3726,7 @@ $ echo $?
     ov.setAttribute('aria-labelledby', HEADS[step]);
     nextBtn.textContent = LABELS[step];
     backBtn.hidden = step === 0;
-    hint.textContent = step === 2 ? 'Return to start · Esc to skip' : 'Return to continue · Esc to skip';
+    hint.textContent = step === 3 ? 'Return to start · Esc stays local' : 'Return to continue · Esc stays local';
     if (scroll) scroll.scrollTop = 0;
 
     /* Morph the sheet height so the panels do not jump. Skipped for reduced
@@ -3604,13 +3752,14 @@ $ echo $?
     }
 
     if (step === 1) { if (!probe) askNative(); paintAgents(false); }
-    if (step === 2) syncChoices();
+    if (step === 2) { askGarden(); paintGardenState(); }
+    if (step === 3) syncChoices();
     try { nextBtn.focus(); } catch (e) {}
   }
 
   function go(n, dir) {
-    if (n > 2) { finish(); return; }
-    step = Math.max(0, Math.min(2, n));
+    if (n > 3) { finish(); return; }
+    step = Math.max(0, Math.min(3, n));
     render(dir);
   }
 
@@ -3643,32 +3792,12 @@ $ echo $?
 
   function finish() { hide(); }
 
-  /* ---------------- the two choices ----------------
-     Both are driven through the app's own controls, so Settings and this sheet
-     can never disagree about what was chosen. */
+  /* ---------------- appearance ---------------- */
   function syncChoices() {
     var appSeg = $('#segtheme button.on');
     var want = appSeg ? appSeg.getAttribute('data-theme') : 'light';
     $$('#ob-seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-theme') === want); });
-    var g = $('#g-auto'), mine = $('#ob-garden'), note = $('#ob-gnote');
-    if (g && mine) {
-      mine.setAttribute('aria-checked', g.getAttribute('aria-checked') === 'true' ? 'true' : 'false');
-      mine.disabled = !!g.disabled;
-      if (note) {
-        note.textContent = g.disabled
-          ? 'This machine is not linked to a Garden yet, so the switch is inert rather than pretending. Link it later with garden.cli.'
-          : '';
-      }
-    }
   }
-
-  /* The app learns its Garden state from the native shell, which answers when
-     it answers. Mirror it rather than snapshotting it once. */
-  (function () {
-    var g = $('#g-auto'); if (!g || !window.MutationObserver) return;
-    new MutationObserver(function () { if (open) syncChoices(); })
-      .observe(g, { attributes: true, attributeFilter: ['disabled', 'aria-checked'] });
-  })();
 
   $('#ob-seg').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -3679,12 +3808,54 @@ $ echo $?
   });
 
   $('#ob-garden').addEventListener('click', function () {
-    var mine = $('#ob-garden'); if (mine.disabled) return;
+    var mine = $('#ob-garden'); if (mine.disabled || !gardenState || !gardenState.linked) return;
     var g = $('#g-auto');
-    if (g && !g.disabled) { g.click(); }
-    else { mine.setAttribute('aria-checked', mine.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); }
-    syncChoices();
+    if (g && !g.disabled) g.click();
+    else {
+      var on = mine.getAttribute('aria-checked') !== 'true';
+      postNative({ cmd: 'garden.autopublish', on: on });
+      mine.setAttribute('aria-checked', on ? 'true' : 'false');
+      gardenState.autopublish = on;
+    }
   });
+
+  $('#ob-connect').addEventListener('click', function () {
+    if (!postNative({ cmd: 'garden.open' })) window.open(gardenUrl, '_blank', 'noopener');
+    var status = $('#ob-linkstate');
+    if (status) {
+      status.dataset.state = '';
+      status.textContent = native
+        ? 'Garden opened in your system browser. Sign in there, create a device code, then return here.'
+        : 'Garden opened in a new browser tab. Pairing the Mac is available in Daisy.app.';
+    }
+  });
+
+  $('#ob-pair').addEventListener('click', function () {
+    var input = $('#ob-code'), button = $('#ob-pair'), status = $('#ob-linkstate');
+    var code = (input.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    input.value = code;
+    if (code.length !== 6) {
+      status.dataset.state = 'error';
+      status.textContent = 'Enter the six-character code shown in Garden.';
+      input.focus();
+      return;
+    }
+    if (!postNative({ cmd: 'garden.pair', code: code })) {
+      status.dataset.state = 'error';
+      status.textContent = 'Pairing needs Daisy.app so the scoped credential can be stored on this Mac.';
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Pairing…';
+    status.dataset.state = '';
+    status.textContent = 'Exchanging the one-time code for this Mac…';
+  });
+
+  $('#ob-code').addEventListener('input', function () {
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  });
+
+  $('#ob-local').addEventListener('click', finish);
 
   $('#ob-copy').addEventListener('click', function () {
     var b = $('#ob-copy'), txt = 'python3 labctl.py agents';
@@ -3724,10 +3895,11 @@ $ echo $?
   /* ---------------- when it shows ---------------- */
   window.daisyShowOnboarding = function () { if (open) hide(); show(false); };
 
-  var forced = /[?&#]onboarding\b/.test(location.search + location.hash);
+  var forced = /[?&#]onboarding/.test(location.search + location.hash);
   var seen = false;
   try { seen = localStorage.getItem(KEY) === VERSION; } catch (e) { seen = false; }
   paintAgents(false);
+  paintGardenState();
   if (forced || !seen) show(false);
 })();
 </script>

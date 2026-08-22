@@ -18,7 +18,8 @@ import tempfile
 import time
 
 from . import extract, health, repair, rules
-from .cli import Source, main as cli_main, resolve
+from . import cli
+from .cli import Source, load_html, main as cli_main, resolve
 from .extract import Extraction, FieldReport, coerce, parse, select
 from hardware.margins import NoGroundTruth, select_fastener
 
@@ -336,7 +337,8 @@ def test_source_is_honest():
     print("\nsource — never imply a fetch that did not happen")
     s = spec()
     keep = {k: os.environ.get(k) for k in
-            ("BRIGHTDATA_API_KEY", "BRD_ZONE", "BRD_CUSTOMER")}
+            ("BRIGHTDATA_API_KEY", "BRD_ZONE", "BRD_CUSTOMER",
+             "BRIGHT_DATA_API_TOKEN", "BRIGHT_DATA_COLLECTOR_ID")}
     try:
         for k in keep:
             os.environ.pop(k, None)
@@ -356,12 +358,19 @@ def test_source_is_honest():
         os.environ["BRD_CUSTOMER"] = "hl_deadbeef"
         prox = resolve(s, None)
         check("adding a customer id selects the super-proxy", prox.mode == "live-proxy")
+        os.environ["BRIGHT_DATA_API_TOKEN"] = "studio-token-do-not-print"
+        os.environ["BRIGHT_DATA_COLLECTOR_ID"] = "c_daisy_fasteners"
+        studio = resolve(s, None)
+        check("token plus collector selects Scraper Studio", studio.mode == "live-studio")
+        check("the published collector is named in provenance",
+              studio.location == "collector:c_daisy_fasteners", studio.location)
         check("--fixture overrides credentials rather than being ignored",
               resolve(s, V2).mode == "fixture")
-        blob = json.dumps([src.as_dict(), api.as_dict(), prox.as_dict(),
+        blob = json.dumps([src.as_dict(), api.as_dict(), prox.as_dict(), studio.as_dict(),
                            resolve(s, V2).as_dict()])
         check("no credential value reaches the output",
-              "secret-token-do-not-print" not in blob and "hl_deadbeef" not in blob)
+              "secret-token-do-not-print" not in blob and "studio-token-do-not-print" not in blob
+              and "hl_deadbeef" not in blob)
         check("a fixture source labels itself by file, not by absolute path",
               resolve(s, V2).label == "fixture:" + V2, resolve(s, V2).label)
     finally:
@@ -370,6 +379,69 @@ def test_source_is_honest():
                 os.environ.pop(k, None)
             else:
                 os.environ[k] = v
+
+
+def test_studio_collection_contract():
+    print("\nScraper Studio — trigger, poll, typed handoff")
+    s = spec()
+    source = Source("live-studio", "collector:c_daisy_fasteners",
+                    "token and collector are set")
+    calls = []
+    replies = [
+        {"collection_id": "j_daisy_snapshot"},
+        {"status": "building"},
+        [{"grade": "8.8", "dia_mm": 4, "tensile_mpa": 800,
+          "price_usd": 0.14, "in_stock": True}],
+    ]
+
+    class Response:
+        status = 200
+        def __init__(self, payload):
+            self.payload = payload
+        def __enter__(self):
+            return self
+        def __exit__(self, *_):
+            return False
+        def read(self):
+            return json.dumps(self.payload).encode()
+
+    def urlopen(request, timeout=None):
+        calls.append((request.full_url, request.get_method(), request.data, request.headers))
+        return Response(replies.pop(0))
+
+    old_open, old_sleep = cli.urllib.request.urlopen, cli.time.sleep
+    keep = {k: os.environ.get(k) for k in
+            ("BRIGHT_DATA_API_TOKEN", "BRIGHT_DATA_COLLECTOR_ID")}
+    try:
+        os.environ["BRIGHT_DATA_API_TOKEN"] = "studio-secret"
+        os.environ["BRIGHT_DATA_COLLECTOR_ID"] = "c_daisy_fasteners"
+        cli.urllib.request.urlopen = urlopen
+        cli.time.sleep = lambda _: None
+        studio_html = load_html(source, s)
+    finally:
+        cli.urllib.request.urlopen, cli.time.sleep = old_open, old_sleep
+        for k, v in keep.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+    rows = extract.run(s, studio_html).complete(s.required)
+    check("the collector is triggered before its dataset is read",
+          calls[0][1] == "POST" and "/dca/trigger?" in calls[0][0]
+          and "collector=c_daisy_fasteners" in calls[0][0])
+    check("the URL input matches the governed scraper spec",
+          json.loads(calls[0][2]) == [{"url": s.url}])
+    check("dataset polling uses the returned collection id",
+          len(calls) == 3 and all("id=j_daisy_snapshot" in c[0] for c in calls[1:]))
+    check("the bearer token is sent but never written into provenance",
+          calls[0][3].get("Authorization") == "Bearer studio-secret"
+          and "studio-secret" not in json.dumps(source.as_dict()))
+    check("the structured dataset enters the existing physics contract",
+          rows == [{"grade": "8.8", "dia_mm": 4.0, "tensile_mpa": 800.0,
+                    "price_usd": 0.14, "in_stock": True}], str(rows))
+    check("the snapshot id is preserved as evidence",
+          source.snapshot_id == "j_daisy_snapshot", source.snapshot_id)
 
 
 def test_cli_loop():
@@ -483,6 +555,7 @@ def main():
     test_repair_restructure()
     test_repair_refuses()
     test_source_is_honest()
+    test_studio_collection_contract()
     test_cli_loop()
     test_feeds_the_physics_gate()
     print("\n%d passed, %d failed" % (PASS, FAIL))

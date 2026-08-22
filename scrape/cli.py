@@ -9,6 +9,8 @@ The Scraper Studio, from a terminal. JSON in, JSON out, honest about both.
 Credentials come from the environment and are never read from a file, never
 echoed, and never written into any output this tool produces:
 
+    BRIGHT_DATA_API_TOKEN    Bright Data API token (Scraper Studio)
+    BRIGHT_DATA_COLLECTOR_ID published Scraper Studio collector, c_...
     BRIGHTDATA_API_KEY   Bright Data API token
     BRD_ZONE             the zone to route through
     BRD_CUSTOMER         set as well to go through the residential super-proxy
@@ -33,6 +35,7 @@ Zero third-party dependencies.
 from __future__ import annotations
 
 import argparse
+import html as _html
 import json
 import os
 import sys
@@ -50,6 +53,8 @@ from .rules import (BASELINE_PATH, LAST_GOOD_PATH, PROPOSAL_PATH, RULES_PATH,
                     RulesError, spec_to_dict)
 
 API = "https://api.brightdata.com/request"
+STUDIO_TRIGGER = "https://api.brightdata.com/dca/trigger"
+STUDIO_DATASET = "https://api.brightdata.com/dca/dataset"
 PROXY_HOST = "brd.superproxy.io:33335"
 UA = "daisy-scrape/1.0 (+stdlib urllib)"
 TIMEOUT = 45
@@ -62,6 +67,7 @@ class Source:
     location: str
     reason: str
     fetched_at: float = 0.0
+    snapshot_id: str = ""
 
     @property
     def live(self) -> bool:
@@ -78,7 +84,8 @@ class Source:
     def as_dict(self) -> dict:
         return {"mode": self.mode, "live": self.live, "location": self.location,
                 "reason": self.reason,
-                "fetched_at": round(self.fetched_at, 3) if self.fetched_at else None}
+                "fetched_at": round(self.fetched_at, 3) if self.fetched_at else None,
+                "snapshot_id": self.snapshot_id or None}
 
 
 def _env(name: str) -> str:
@@ -87,9 +94,15 @@ def _env(name: str) -> str:
 
 def resolve(spec, fixture: str | None) -> Source:
     key, zone, cust = _env("BRIGHTDATA_API_KEY"), _env("BRD_ZONE"), _env("BRD_CUSTOMER")
+    studio_key = _env("BRIGHT_DATA_API_TOKEN") or key
+    collector = _env("BRIGHT_DATA_COLLECTOR_ID")
     if fixture:
         return Source("fixture", spec.fixture_path(fixture),
                       "--fixture was given; no network call was made")
+    if studio_key and collector:
+        token_name = "BRIGHT_DATA_API_TOKEN" if _env("BRIGHT_DATA_API_TOKEN") else "BRIGHTDATA_API_KEY"
+        return Source("live-studio", "collector:" + collector,
+                      "%s and BRIGHT_DATA_COLLECTOR_ID are set" % token_name)
     if key and zone:
         if cust:
             return Source("live-proxy", spec.url,
@@ -107,6 +120,8 @@ def load_html(src: Source, spec) -> str:
             raise SystemExit(_fail("no fixture at %s" % (src.location or "(unset)"), 2))
         with open(src.location, "r", encoding="utf-8") as fh:
             return fh.read()
+    if src.mode == "live-studio":
+        return _studio_html(src, spec)
     key, zone, cust = _env("BRIGHTDATA_API_KEY"), _env("BRD_ZONE"), _env("BRD_CUSTOMER")
     if src.mode == "live-api":
         body = json.dumps({"zone": zone, "url": spec.url, "format": "raw"}).encode()
@@ -123,6 +138,68 @@ def load_html(src: Source, spec) -> str:
     with opener.open(urllib.request.Request(spec.url, headers={"User-Agent": UA}),
                      timeout=TIMEOUT) as r:
         return r.read().decode("utf-8", "replace")
+
+
+def _json_request(url: str, key: str, data: bytes | None = None):
+    req = urllib.request.Request(url, data=data, headers={
+        "Authorization": "Bearer " + key,
+        "Content-Type": "application/json",
+        "User-Agent": UA,
+    })
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as response:
+        return json.loads(response.read().decode("utf-8", "replace"))
+
+
+def _studio_html(src: Source, spec) -> str:
+    """Run a published Scraper Studio collector and adapt its typed rows.
+
+    The published collector's output schema is the same five-field contract
+    consumed by hardware.margins.select_fastener. Rendering those rows through
+    the existing HTML extractor keeps range, type, baseline, and drift gates in
+    one path instead of granting Studio results a less strict shortcut.
+    """
+    key = _env("BRIGHT_DATA_API_TOKEN") or _env("BRIGHTDATA_API_KEY")
+    collector = _env("BRIGHT_DATA_COLLECTOR_ID")
+    query = urllib.parse.urlencode({"collector": collector, "queue_next": 1})
+    trigger = _json_request(
+        STUDIO_TRIGGER + "?" + query, key,
+        json.dumps([{"url": spec.url}]).encode("utf-8"),
+    )
+    snapshot = trigger.get("collection_id") if isinstance(trigger, dict) else ""
+    if not snapshot:
+        raise OSError("Scraper Studio trigger returned no collection_id")
+    src.snapshot_id = str(snapshot)
+
+    dataset_url = STUDIO_DATASET + "?" + urllib.parse.urlencode({"id": snapshot})
+    rows = None
+    for attempt in range(24):
+        body = _json_request(dataset_url, key)
+        if isinstance(body, list):
+            rows = body
+            break
+        if isinstance(body, dict) and body.get("status") not in (None, "building", "running"):
+            raise OSError("Scraper Studio collection %s: %s" %
+                          (snapshot, body.get("status")))
+        if attempt < 23:
+            time.sleep(5)
+    if rows is None:
+        raise OSError("Scraper Studio collection %s was not ready after 120 seconds" % snapshot)
+
+    cells = (("grade", "col-grade"), ("dia_mm", "col-thread"),
+             ("tensile_mpa", "col-tensile"), ("price_usd", "col-price"),
+             ("in_stock", "col-stock"))
+    rendered = []
+    for row in rows:
+        row = row if isinstance(row, dict) else {}
+        tds = []
+        for field, cls in cells:
+            value = row.get(field, "")
+            if isinstance(value, bool):
+                value = "yes" if value else "no"
+            tds.append('<td class="%s">%s</td>' %
+                       (cls, _html.escape(str(value), quote=True)))
+        rendered.append('<tr class="part-row">%s</tr>' % "".join(tds))
+    return '<table class="parts-table"><tbody>%s</tbody></table>' % "".join(rendered)
 
 
 # ---------------------------------------------------------------------------
@@ -273,7 +350,9 @@ def cmd_status(a) -> int:
                   "required": list(spec.required),
                   "ttl_hours": spec.ttl_hours,
                   "history": [h.get("reason", "") for h in spec.history][-3:]},
-        "credentials": {"BRIGHTDATA_API_KEY": bool(_env("BRIGHTDATA_API_KEY")),
+        "credentials": {"BRIGHT_DATA_API_TOKEN": bool(_env("BRIGHT_DATA_API_TOKEN")),
+                        "BRIGHT_DATA_COLLECTOR_ID": bool(_env("BRIGHT_DATA_COLLECTOR_ID")),
+                        "BRIGHTDATA_API_KEY": bool(_env("BRIGHTDATA_API_KEY")),
                         "BRD_ZONE": bool(_env("BRD_ZONE")),
                         "BRD_CUSTOMER": bool(_env("BRD_CUSTOMER"))},
         "next_fetch_would_use": would.as_dict(),

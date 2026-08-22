@@ -229,12 +229,91 @@ The native build tags its user agent `DaisyNative`; the UI detects it and hides 
 
 ## Status
 
+## Seven-minute judge run: one chain, three sponsors
+
+The sponsor integrations are not three logos bolted onto a dashboard. They are
+three consecutive control points in the same run:
+
+1. **Bright Data Scraper Studio supplies load-bearing evidence.** Its published
+   collector returns the fastener rows consumed by the physics solver. The
+   trigger response's `collection_id`, capture time, collector ID, and source
+   URL stay attached as provenance. Missing, stale, or malformed rows stop
+   certification; there is no fallback price table.
+2. **Port is the governance boundary.** `labctl` writes the Brief, Lane, and Run
+   entities before a lane executes, writes the deterministic gate entities
+   afterward, lets Port's scorecard reduce them, then opens a plan-hash-bound
+   human approval. In offline mode the same requests enter a tamper-evident
+   replay spool and are labelled `dry`.
+3. **Open-source SigNoz explains the whole run.** Daisy emits OTLP/HTTP JSON
+   traces, metrics, and logs to a self-hosted collector. The Bright Data fetch,
+   failed physics gate, algebraic repair, rerun, Port commit, and human wait are
+   correlated in one trace. If the collector is down, the exact OTLP payloads
+   spool and replay later.
+
+The no-credential rehearsal exercises the same decisions and says what stayed
+offline:
+
+```bash
+./verify.sh
+python3 labctl.py run --run-id judge-rehearsal \
+  --brief "Verify a 2.4 kg SR-11 sensor bracket" \
+  --lane hardware --lane scrape --json
+python3 -m port.cli status --run judge-rehearsal
+python3 -m obs.cli tail -n 12
+```
+
+To show Bright Data's break-detect-repair loop without changing repository
+state:
+
+```bash
+python3 -m scrape.cli fetch --fixture vendor_v1.html
+python3 -m scrape.cli check --fixture vendor_v1_partial.html
+python3 -m scrape.cli repair --fixture vendor_v2.html \
+  --proposal /tmp/daisy-rules.proposed.json
+```
+
+For live Scraper Studio, configure the published collector once. `labctl` then
+uses it automatically because no `--fixture` was supplied:
+
+```bash
+export BRIGHT_DATA_API_TOKEN="..."
+export BRIGHT_DATA_COLLECTOR_ID="c_..."
+python3 -m scrape.cli fetch
+```
+
+For live Port, bootstrap the blueprints, scorecard, action, and service catalog
+before the run. The same `labctl` command will switch from a dry spool to live
+entity writes:
+
+```bash
+export PORT_CLIENT_ID="..."
+export PORT_CLIENT_SECRET="..."
+python3 -m port.cli bootstrap
+python3 labctl.py run --run-id judge-live \
+  --brief "Verify a 2.4 kg SR-11 sensor bracket" \
+  --lane hardware --lane scrape --json
+```
+
+Point Daisy at a local open-source SigNoz OTLP/HTTP receiver (community/self-
+hosted installs require no ingestion key), or at SigNoz Cloud with its key:
+
+```bash
+export SIGNOZ_ENDPOINT="http://localhost:4318"
+python3 tools/traced_verify.py
+python3 -m obs.cli replay
+```
+
+With all variables set, the live `labctl` command is the demo: Bright Data
+creates the evidence snapshot, Port owns the run and approval, and SigNoz owns
+the correlated operational record. The output always states `live`, `dry`, or
+`spool`; those words are evidence states, not styling.
+
 ## What is real, and what is not
 
 Stated plainly, because a factory that overstates itself is the thing this
 project exists to argue against.
 
-**Real, tested, and runnable right now — 12 gates, 756 tests, `./verify.sh`**
+**Real, tested, and runnable right now — deterministic gates and `./verify.sh`**
 
 | Piece | What it does |
 |---|---|
@@ -254,9 +333,10 @@ varies: a CLI can be installed with an expired session, or authenticated but
 older than the model its own config selects. The probe reports which, and the
 software lane declines to run rather than failing halfway.
 
-**Not live without credentials.** Port, SigNoz and Bright Data all run in
-offline / dry mode by default and say so in their output. None of them ever
-phrases a spooled request as a live one. Two env vars each turns them on.
+**Not live without credentials.** Port and Bright Data run in dry/fixture mode;
+SigNoz writes an offline spool. None ever phrases a spooled request as live.
+Self-hosted SigNoz needs only its OTLP endpoint; Port and Scraper Studio each
+need the two environment variables shown above.
 
 **Simulated.** The run playback in the UI is a scripted replay of run 1042 —
 it is a demo of the interface, not a live execution. `labctl.py` is the part

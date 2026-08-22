@@ -57,6 +57,9 @@ from commons.store import Solution, admit, recall, record_reuse, NotVerified  # 
 from lab import executors                                         # noqa: E402
 from garden import index as garden_index                          # noqa: E402
 from garden.publish import publish as garden_publish, NotPublishable  # noqa: E402
+from port.client import PortClient                                   # noqa: E402
+from port import factory as port_factory                             # noqa: E402
+from port.blueprints import (PROJECT as PORT_PROJECT, SCRAPE_TTL_S)  # noqa: E402
 
 RUNS = os.path.join(ROOT, "runs")
 MAX_RETRIES = 2
@@ -187,30 +190,44 @@ def hardware_lane(run_id: str, brief: str, log) -> LaneResult:
 # ground truth
 # ---------------------------------------------------------------------------
 
-def scrape_lane(run_id: str, fixture: str, log) -> LaneResult:
+def scrape_lane(run_id: str, fixture: str | None, log) -> LaneResult:
     r = LaneResult("scrape", ran=True)
     with gate("scrape.schema", {"fixture": fixture}) as g:
-        p = subprocess.run([sys.executable, "-m", "scrape.cli", "fetch",
-                            "--fixture", fixture], cwd=ROOT, capture_output=True,
+        cmd = [sys.executable, "-m", "scrape.cli", "fetch"]
+        if fixture:
+            cmd.extend(["--fixture", fixture])
+        p = subprocess.run(cmd, cwd=ROOT, capture_output=True,
                            text=True, timeout=60)
         data = json.loads(p.stdout or "{}")
         rows = data.get("rows") or []
         health = data.get("health") or {}
+        captured = float((data.get("source") or {}).get("fetched_at") or 0)
         g.margin = float(len(rows))
         if health.get("broken") or not rows:
             g.fail(len(rows), "; ".join(health.get("failed", [])) or "no rows")
     ok = bool(rows) and not health.get("broken")
     r.gates.append(_gate_row("scrape.schema", ok, len(rows),
                              "" if ok else "selectors no longer match"))
+    age = max(0.0, time.time() - captured) if captured else float("inf")
+    fresh = age <= SCRAPE_TTL_S
+    with gate("scrape.freshness", {"age.s": age, "ttl.s": SCRAPE_TTL_S}) as freshness_gate:
+        freshness_gate.margin = age
+        if not fresh:
+            freshness_gate.fail(age, "scraped evidence is older than %d seconds" % SCRAPE_TTL_S)
+    r.gates.append(_gate_row("scrape.freshness", fresh, age,
+                             "" if fresh else "evidence is stale or undated"))
     if not ok:
+        repair_cmd = "python3 -m scrape.cli repair"
+        if fixture:
+            repair_cmd += " --fixture %s" % fixture
         scrape_repair("vendors.fastener", "re-derive selectors from last-good values",
-                      "python3 -m scrape.cli repair --fixture %s" % fixture)
+                      repair_cmd)
         log("  scrape BROKEN — %d rows; repair available" % len(rows))
 
     with gate("physics.fastener") as g:
         try:
             pick = select_fastener(rows, LOAD_KG, 2, FOS)
-            g.margin = pick["unit_price"]
+            g.margin = pick["gate"].margin
             r.artifacts.append({"fastener": "M%s %s" % (pick["row"]["dia_mm"],
                                                         pick["row"]["grade"]),
                                 "unit_price": pick["unit_price"]})
@@ -466,9 +483,9 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
 # ---------------------------------------------------------------------------
 
 def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape", "software"),
-            prefer: str = "auto", fixture: str = "vendor_v1.html",
+            prefer: str = "auto", fixture: str | None = None,
             quiet: bool = False, crew: list = None,
-            to_garden: bool = False) -> dict:
+            to_garden: bool = False, port_client: PortClient | None = None) -> dict:
     run_id = run_id or time.strftime("%H%M%S")
     d = _rundir(run_id)
     out = []
@@ -479,20 +496,46 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
             print(msg)
 
     started = time.time()
+    governance = port_client or PortClient(run_id=run_id)
+    port_lanes = [{"name": lane,
+                   "agent": ("deterministic" if lane in ("hardware", "scrape")
+                             else prefer if lane == "software" else "claude")}
+                  for lane in lanes]
+    if not port_lanes:
+        port_lanes = [{"name": "orchestrator", "agent": "deterministic"}]
+    planned_gates = {
+        "hardware": ("physics.bend", "physics.mass", "physics.thermal"),
+        "scrape": ("scrape.schema", "physics.fastener"),
+        "software": ("taste.t1",),
+        "crew": ("contract.conformance",),
+    }
+    gate_names = sorted({gate_name for lane in lanes
+                         for gate_name in planned_gates.get(lane, ())})
+    port_brief = dict(PORT_PROJECT)
+    port_brief.update({"text": brief, "source": "cli"})
+
     with tracer().span("labctl.run", {"run.id": run_id}) as root:
         root.set("brief", brief[:200])
 
         # 1. plan first — before any lane executes.
         with tracer().span("plan.commit") as s:
+            committed = port_factory.commit_plan(
+                governance, run_id, port_brief, port_lanes, gate_names)
             plan = {"run": run_id, "brief": brief, "lanes": list(lanes),
                     "load_case": {"kg": LOAD_KG, "arm_mm": ARM_MM,
                                   "width_mm": WIDTH_MM, "fos": FOS,
                                   "material": MATERIAL},
+                    "port": {"mode": governance.mode,
+                             "plan_sha": committed["plan_sha"]},
                     "committed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
             pp = os.path.join(d, "plan.json")
-            open(pp, "w", encoding="utf-8").write(json.dumps(plan, indent=1))
+            with open(pp, "w", encoding="utf-8") as fh:
+                fh.write(json.dumps(plan, indent=1))
             s.set("plan.path", pp)
-        log("plan committed before anything ran -> %s" % os.path.relpath(pp, ROOT))
+            s.set("port.mode", governance.mode)
+            s.set("port.plan_sha", committed["plan_sha"])
+        log("plan committed to Port (%s) before anything ran -> %s"
+            % (governance.mode, os.path.relpath(pp, ROOT)))
 
         results = {}
         if "hardware" in lanes:
@@ -513,7 +556,23 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         # A lane that could not run is not a lane that passed.
         blocked = [r.lane for r in results.values() if not r.ran]
 
-        # 2. admit what passed, so the next run pays less for it.
+        # 2. The same deterministic decisions shown in Daisy become Port
+        # entities. Port's scorecard reduces these records; labctl does not
+        # maintain a second private "green" flag.
+        for lane_name, lane_result in results.items():
+            for gate_row in lane_result.gates:
+                port_factory.record_gate(
+                    governance, run_id, lane_name, gate_row["name"],
+                    gate_row["passed"], value=gate_row.get("margin"),
+                    margin=gate_row.get("margin"), detail=gate_row.get("detail", ""),
+                )
+        port_summary = port_factory.sync(governance, run_id)
+        approval = port_factory.open_approval(
+            governance, run_id, "labctl",
+            "%d gates ran; %d failed" % (len(all_gates), len(failed)),
+        )
+
+        # 3. admit what passed, so the next run pays less for it.
         admitted, published = [], []
         for r in results.values():
             if not r.passed or not r.gates:
@@ -553,6 +612,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         root.set("gates.total", len(all_gates))
         root.set("gates.failed", len(failed))
         root.set("lanes.blocked", len(blocked))
+        root.set("port.status", "awaiting_approval")
         human_escalation("release requires approval", "operator",
                          **{"run.id": run_id, "gates.failed": len(failed)})
 
@@ -562,11 +622,17 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         "duration_s": round(time.time() - started, 1),
         "lanes": {k: asdict(v) for k, v in results.items()},
         "gates": {"total": len(all_gates), "failed": len(failed)},
+        "governance": {"mode": governance.mode,
+                       "plan_sha": committed["plan_sha"],
+                       "status": "awaiting_approval",
+                       "scorecard": port_summary,
+                       "approval": approval["approval"],
+                       "spool": governance.spool if governance.mode == "dry" else None},
         "blocked_lanes": blocked,
         "admitted_to_commons": admitted,
         "garden": published,
         "artifacts_dir": d,
     }
-    open(os.path.join(d, "summary.json"), "w", encoding="utf-8").write(
-        json.dumps(summary, indent=1, default=str))
+    with open(os.path.join(d, "summary.json"), "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(summary, indent=1, default=str))
     return summary

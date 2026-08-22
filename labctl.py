@@ -31,7 +31,8 @@ def main(argv=None):
                choices=("claude", "codex", "opencode"),
                help="agents for the crew lane (default: claude, codex)")
     r.add_argument("--agent", default="auto", choices=("auto", "claude", "codex", "opencode"))
-    r.add_argument("--fixture", default="vendor_v1.html")
+    r.add_argument("--fixture", default=None,
+                   help="force an offline Bright Data fixture; omit for live Studio when configured")
     r.add_argument("--garden", action="store_true",
                    help="publish what passes to the shared Garden index "
                         "(prepares a PR branch; never pushes without --live)")
