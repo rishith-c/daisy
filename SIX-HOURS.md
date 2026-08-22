@@ -94,8 +94,22 @@ documents the tells could never pass. Both fixed. Daisy now returns **0 findings
 and one of the 26 linter tests asserts exactly that. A gate you exempt yourself from
 is not a gate.
 
-`./verify.sh` runs every gate — the lint over the UI, both suites, the archive
-stats, the it-can-say-no behaviour, and a no-third-party-requests check. All green.
+Then I built **tier 2** as well — `taste/contrast.py`, which reads the design tokens
+out of the stylesheet, composites `rgba()` and `color-mix()` the way the browser
+will, and checks every text-on-surface pair in both themes.
+
+It found **seven real WCAG failures** in Daisy on its first run. Every one looked
+fine on screen. Three of them I had already "fixed" by hand ten minutes earlier
+after eyeballing a smaller sample — which is precisely the argument for making the
+gate a program rather than a judgement. Now: 28 pairs, 0 failing, tightest 3.11:1.
+
+Tier 3 (the vision judge) genuinely needs a multimodal call, so it stays on
+rehearsal rather than every save — and the UI says so instead of implying
+otherwise.
+
+`./verify.sh` runs every gate — both taste tiers over the UI itself, both test
+suites, the archive stats, the it-can-say-no behaviour, and a
+no-third-party-requests check. All green.
 
 ## 5. Bugs the tests caught
 
