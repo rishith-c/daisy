@@ -142,6 +142,34 @@ def test_recall_uses_gate_names():
         check("kind filters", recall("bracket", gates=["physics.bend"], kind="software", db=db) == [])
 
 
+def test_thorough_verification_is_not_penalised():
+    print("\nrecall — more gates must not mean less relevant")
+    with tempfile.TemporaryDirectory() as t:
+        db = os.path.join(t, "c.db")
+        # The right answer, verified by three gates.
+        admit(Solution(task="cantilever bracket web too thin: bending margin negative at FoS 0.72",
+                       gates=[{"name": "physics.bend", "passed": True},
+                              {"name": "physics.mass", "passed": True},
+                              {"name": "physics.thermal", "passed": True}],
+                       recipe="invert sigma = 6M/(b t^2) for t and round up",
+                       vendor="claude", tokens_cost=48200), db)
+        # A related but narrower fix, verified by one.
+        admit(Solution(task="narrated physics numbers did not match the load case they claimed",
+                       gates=[{"name": "physics.bend", "passed": True}],
+                       recipe="generate displayed numbers from the gate engine",
+                       vendor="claude", tokens_cost=21400), db)
+
+        hits = recall("bracket margin is negative", gates=["physics.bend"], db=db)
+        check("both are recalled", len(hits) == 2, str(len(hits)))
+        check("the three-gate fix ranks first",
+              hits[0]["task"].startswith("cantilever bracket"),
+              "%s beat it at %.3f" % (hits[0]["task"][:40], hits[0]["score"]))
+        # Symmetric Jaccard divides by the union and would score the thorough
+        # fix 1/3 against the narrow one's 1/1 — the regression this guards.
+        check("its gate coverage is full despite the extra gates",
+              hits[0]["matched_gates"] == ["physics.bend"], str(hits[0]["matched_gates"]))
+
+
 def test_reuse_accounting():
     print("\nreuse — savings are measured, not estimated")
     with tempfile.TemporaryDirectory() as t:
@@ -251,6 +279,7 @@ def main():
     test_admission_requires_passing_gates()
     test_signature_and_identity()
     test_recall_uses_gate_names()
+    test_thorough_verification_is_not_penalised()
     test_reuse_accounting()
     test_publish_is_consent_gated()
     test_bundle_contents()

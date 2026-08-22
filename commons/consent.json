@@ -1,0 +1,12 @@
+{
+ "version": 1,
+ "grants": [
+  {
+   "scope": "local",
+   "granted": true,
+   "at": 1787418535.675437,
+   "target": "",
+   "note": ""
+  }
+ ]
+}

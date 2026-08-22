@@ -1,0 +1,3 @@
+# The spool is transient run state, like tools/timer_state.json.
+# The .gitignore itself is tracked so the directory exists on a fresh clone.
+*.jsonl

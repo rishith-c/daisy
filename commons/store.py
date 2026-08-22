@@ -219,8 +219,14 @@ def recall(task: str, kind: str = None, limit: int = 5, db: str = None,
             v = [x / n for x in v]
             cos = max(0.0, cosine(q_full, v))
             have = set(g.split("=")[0] for g in r[6].split("|") if g)
-            jac = (len(want & have) / len(want | have)) if want else 0.0
-            evidence = 0.72 * jac + 0.28 * cos if want else cos
+            # Containment, not Jaccard. The question is "does this solution
+            # address the gate I am failing", and Jaccard answers a different
+            # one — it divides by the union, so a fix that also cleared mass and
+            # thermal scores 1/3 where a narrower fix scores 1/1. That penalises
+            # a solution for having been verified more thoroughly, which is
+            # exactly backwards for a commons whose whole premise is verification.
+            cover = (len(want & have) / len(want)) if want else 0.0
+            evidence = 0.62 * cover + 0.38 * cos if want else cos
             if evidence < EVIDENCE_FLOOR:
                 continue
             out.append({
