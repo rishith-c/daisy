@@ -48,6 +48,9 @@ gate "precedent — engine + compaction test suite" \
 gate "agents — adoption of other tools' sessions" \
      env PYTHONWARNINGS=ignore $PY -m agents.test_discover
 
+gate "port — governance client, blueprints, and the approval gate" \
+     env PYTHONWARNINGS=ignore $PY -m port.test_port
+
 gate "commons — verified solution reuse across agents" \
      env PYTHONWARNINGS=ignore $PY -m commons.test_commons
 
