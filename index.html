@@ -1074,7 +1074,7 @@ table.l tr.click:hover td { background: var(--wash); }
 .obv.on .obs { animation: ob-sheet .5s var(--spring-soft) both; }
 /* A surface the operator reached from the keyboard does not animate — the
    command palette in this app ships the same rule, for the same reason. */
-.obs[data-nav="key"] { animation: none; }
+.obv.on .obs[data-nav="key"] { animation: none; }
 @keyframes ob-sheet { from { opacity: 0; transform: translateY(14px) scale(.986); } }
 
 /* ---------- chrome ---------- */
@@ -1120,7 +1120,7 @@ table.l tr.click:hover td { background: var(--wash); }
 .ob-rail .stop-tok { animation: ob-held .42s var(--spring-snappy) both; }
 .ob-rail .stop-a { animation-delay: .30s; }
 .ob-rail .stop-b { animation-delay: .40s; }
-@keyframes ob-run  { from { opacity: 0; transform: translateX(-452px); } 14% { opacity: 1; } }
+@keyframes ob-run  { from { opacity: 0; transform: translateX(-372px); } 14% { opacity: 1; } }
 @keyframes ob-held { from { opacity: 0; transform: translateX(-11px); } }
 
 .ob-gates { margin-top: 16px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
@@ -1140,30 +1140,33 @@ table.l tr.click:hover td { background: var(--wash); }
 
 /* ---------- step 2: agents ---------- */
 .ob-agents { margin-top: 15px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
-.ob-ag { display: flex; align-items: center; gap: 10px; padding: 10px 13px; min-height: 46px; }
+.ob-ag { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; }
 .ob-ag + .ob-ag { border-top: .5px solid var(--border); }
 .ob-ag .dot {
-  width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px;
+  width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px; margin-top: 6px;
   background: var(--ink-4);
   transition: background var(--d-hover) var(--out);
 }
 .ob-ag[data-state="yes"]  .dot { background: var(--pass); }
 .ob-ag[data-state="no"]   .dot { background: var(--warn); }
 .ob-ag[data-state="gone"] .dot { background: var(--ink-4); }
+.ob-ag[data-state="checking"] .dot { animation: ob-pulse 1.5s var(--out) infinite; }
+@keyframes ob-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .38; } }
 .ob-ag .nm { min-width: 0; }
 .ob-ag .nm b { display: block; font-size: 13px; font-weight: 600; }
 .ob-ag .nm span { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.ob-ag .nm em {
+  display: block; font-style: normal; font-size: 11.5px; line-height: 1.45;
+  color: var(--ink-2); margin-top: 4px; font-variant-numeric: tabular-nums;
+}
 .ob-ag .st {
-  margin-left: auto; flex: 0 0 auto; text-align: right;
-  font-size: 11.5px; font-variant-numeric: tabular-nums;
+  margin-left: auto; flex: 0 0 auto; white-space: nowrap;
+  font-size: 11.5px; font-weight: 500;
   border-radius: var(--r-badge); padding: 3px 8px;
-  color: var(--ink-3); background: var(--surface-2);
-  max-width: 54%;
+  color: var(--ink-2); background: var(--surface-2);
 }
 .ob-ag[data-state="yes"] .st { color: var(--pass); background: var(--pass-chip); }
 .ob-ag[data-state="no"]  .st { color: var(--warn); background: var(--warn-chip); }
-.ob-ag .st b { font-weight: 600; }
-.ob-ag .st em { display: block; font-style: normal; color: var(--ink-2); font-size: 11px; }
 /* The reward: rows settle in one at a time when a real probe result lands. */
 .ob-ag.settled { animation: ob-settle .46s var(--spring-snappy) both; animation-delay: calc(var(--i, 0) * 78ms); }
 @keyframes ob-settle { from { opacity: .35; transform: translateY(-4px); } }
@@ -1213,7 +1216,8 @@ table.l tr.click:hover td { background: var(--wash); }
 
 @media (prefers-reduced-motion: reduce) {
   /* End state, immediately. No entrance, no travel, no settle. */
-  .obv, .obv.on .obs, .ob-p.on, .ob-rail .pass-tok, .ob-rail .stop-tok, .ob-ag.settled {
+  .obv, .obv.on .obs, .ob-p.on, .ob-rail .pass-tok, .ob-rail .stop-tok,
+  .ob-ag.settled, .ob-ag[data-state="checking"] .dot {
     animation: none; opacity: 1; transform: none;
   }
   .ob-stage.morph { transition: none; }
@@ -1608,18 +1612,19 @@ $ echo $?
   <div class="ob-stage" id="ob-stage"><div class="ob-scroll" id="ob-scroll">
 
    <section class="ob-p on" id="ob-p0" aria-label="What Daisy is">
-    <svg class="ob-rail" viewBox="0 0 528 76" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-     <path d="M16 50h496" stroke="var(--border-strong)" stroke-width="1" fill="none"/>
+    <svg class="ob-rail" viewBox="0 0 528 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+     <g class="lbl"><text x="2" y="51.5">brief</text><text x="466" y="51.5">shipped</text></g>
+     <path d="M46 48h412" stroke="var(--border-strong)" stroke-width="1" fill="none"/>
      <g stroke="var(--ink-4)" stroke-width="1" fill="none">
-      <path d="M176 26v40"/><path d="M296 26v40"/><path d="M416 26v40"/>
+      <path d="M150 26v40"/><path d="M252 26v40"/><path d="M354 26v40"/>
      </g>
      <g class="lbl" text-anchor="middle">
-      <text x="176" y="18">design</text><text x="296" y="18">contrast</text><text x="416" y="18">physics</text>
+      <text x="150" y="16">design</text><text x="252" y="16">contrast</text><text x="354" y="16">physics</text>
      </g>
      <g style="transform-box: view-box">
-      <rect class="stop-tok stop-a" x="154" y="43.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
-      <rect class="stop-tok stop-b" x="274" y="43.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
-      <rect class="pass-tok" x="470" y="43.5" width="13" height="13" rx="3.5" fill="var(--pass-chip)" stroke="var(--pass)" stroke-width="1"/>
+      <rect class="stop-tok stop-a" x="128" y="41.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
+      <rect class="stop-tok stop-b" x="230" y="41.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
+      <rect class="pass-tok" x="418" y="41.5" width="13" height="13" rx="3.5" fill="var(--pass-chip)" stroke="var(--pass)" stroke-width="1"/>
      </g>
     </svg>
     <h1 id="ob-h0">A brief goes in. Verified software and hardware come out.</h1>
@@ -1666,7 +1671,7 @@ $ echo $?
       <span class="ctrl"><span class="seg" id="ob-seg"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></span></span>
      </div>
      <div class="ob-choice">
-      <span class="cl"><b>Garden</b><span>The public index of verified solutions. Off. Nothing leaves this machine
+      <span class="cl"><b>Garden</b><span>The public index of verified solutions. Off by default. Nothing leaves this machine
        without a recorded grant, and a solution that did not pass every gate cannot be published at all.</span><span id="ob-gnote"></span></span>
       <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to the Garden"><i></i></button></span>
      </div>
@@ -3167,33 +3172,45 @@ $ echo $?
     { name: 'opencode', title: 'OpenCode',    cmd: 'opencode run' }
   ];
   var probe = null;          // null = never answered
+  var asked = false;         // a probe is actually in flight on this machine
+
+  /* Probes take seconds, not milliseconds. Print what was measured, in the
+     unit a human reads without counting zeros. */
+  function took(v) {
+    if (!v) return '';
+    return v >= 1000 ? (v / 1000).toFixed(1) + ' s' : Math.round(v) + ' ms';
+  }
 
   function paintAgents(settle) {
     var box = $('#ob-agents'); if (!box) return;
     box.innerHTML = AGENTS.map(function (a, i) {
-      var r = probe && probe[a.name], state = 'unknown', st;
-      if (!probe) {
-        st = '<b>not checked</b>';
-      } else if (!r) {
-        state = 'gone'; st = '<b>not installed</b>';
-      } else if (r.ok) {
-        state = 'yes';
-        st = '<b>usable</b>' + (r.probe_ms ? '<em>' + esc(Math.round(r.probe_ms)) + ' ms</em>' : '');
-      } else {
+      var r = probe && probe[a.name], state = 'unknown', verdict = 'not checked', why = [];
+      if (!probe && asked) { state = 'checking'; verdict = 'checking…'; }
+      if (probe && !r) {
+        state = 'gone'; verdict = 'not installed';
+      } else if (r && r.ok) {
+        state = 'yes'; verdict = 'usable';
+      } else if (r) {
         state = /not installed/i.test(r.detail || '') ? 'gone' : 'no';
-        st = '<b>' + (state === 'gone' ? 'not installed' : 'not usable') + '</b>' +
-             (r.detail ? '<em>' + esc(r.detail) + '</em>' : '');
+        verdict = state === 'gone' ? 'not installed' : 'not usable';
+      }
+      if (r) {
+        if (r.detail) why.push(esc(r.detail));
+        if (r.probe_ms) why.push(took(r.probe_ms));
       }
       return '<div class="ob-ag' + (settle ? ' settled' : '') + '" data-state="' + state +
              '" style="--i:' + i + '" role="listitem">' +
-             '<span class="dot"></span><span class="nm"><b>' + esc(a.title) + '</b><span>' + esc(a.cmd) + '</span></span>' +
-             '<span class="st">' + st + '</span></div>';
+             '<span class="dot"></span><span class="nm"><b>' + esc(a.title) + '</b><span>' + esc(a.cmd) + '</span>' +
+             (why.length ? '<em>' + why.join(' &middot; ') + '</em>' : '') + '</span>' +
+             '<span class="st">' + verdict + '</span></div>';
     }).join('');
     box.setAttribute('role', 'list');
     var note = $('#ob-note');
     if (note) {
-      note.innerHTML = probe
-        ? 'Answered by the native shell. Daisy will not start a lane whose agent did not answer &mdash; it says which lane cannot run, and why.'
+      note.innerHTML = (!probe && asked)
+        ? 'Probing each installed CLI against a trivial prompt. A few seconds per agent &mdash; a probe that has not returned is not a pass.'
+        : probe
+        ? 'Probed on this machine. Daisy will not start a lane whose agent did not answer &mdash; it names the lane and the reason instead of failing halfway.'
         : (native
             ? 'Waiting on the native shell. Run the command above to see the same answer in a terminal.'
             : 'A browser cannot open a shell, so nothing has been probed. Run the command above, or open Daisy.app &mdash; ' +
@@ -3215,7 +3232,10 @@ $ echo $?
 
   function askNative() {
     if (native && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daisy) {
-      try { window.webkit.messageHandlers.daisy.postMessage({ cmd: 'onboarding.agents' }); } catch (e) {}
+      try {
+        window.webkit.messageHandlers.daisy.postMessage({ cmd: 'onboarding.agents' });
+        asked = true;
+      } catch (e) {}
     }
   }
 
@@ -3254,6 +3274,7 @@ $ echo $?
     }
 
     if (step === 1) { if (!probe) askNative(); paintAgents(false); }
+    if (step === 2) syncChoices();
     try { nextBtn.focus(); } catch (e) {}
   }
 
@@ -3279,10 +3300,15 @@ $ echo $?
   function hide() {
     if (!open) return;
     open = false;
+    /* Focus first, aria-hidden second. Hiding a subtree that still holds focus
+       strands a screen reader on an element it has been told does not exist. */
+    var here = document.activeElement;
+    if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    if (document.activeElement === here && here && ov.contains(here) && here.blur) here.blur();
+    lastFocus = null;
     ov.classList.remove('on');
     ov.setAttribute('aria-hidden', 'true');
     try { localStorage.setItem(KEY, VERSION); } catch (e) {}
-    if (lastFocus) { try { lastFocus.focus(); } catch (e) {} lastFocus = null; }
   }
 
   function finish() { hide(); }
@@ -3305,6 +3331,14 @@ $ echo $?
       }
     }
   }
+
+  /* The app learns its Garden state from the native shell, which answers when
+     it answers. Mirror it rather than snapshotting it once. */
+  (function () {
+    var g = $('#g-auto'); if (!g || !window.MutationObserver) return;
+    new MutationObserver(function () { if (open) syncChoices(); })
+      .observe(g, { attributes: true, attributeFilter: ['disabled', 'aria-checked'] });
+  })();
 
   $('#ob-seg').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;

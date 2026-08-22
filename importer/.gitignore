@@ -1,0 +1,3 @@
+# Imported state is per-machine: it describes what THIS laptop had installed.
+# Committing it would ship one developer's MCP servers to everyone else.
+state/
