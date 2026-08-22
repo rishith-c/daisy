@@ -1,3 +1,12 @@
+# build artifacts
 Daisy.app/
 app/Daisy
 icon/AppIcon.iconset/
+
+# python
+__pycache__/
+*.pyc
+
+# transient run state
+tools/timer_state.json
+tools/timer.log
