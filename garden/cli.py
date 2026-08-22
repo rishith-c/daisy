@@ -18,6 +18,8 @@ from commons.store import connect                    # noqa: E402
 from garden import index                             # noqa: E402
 from garden.identity import providers, publisher     # noqa: E402
 from garden.publish import publish, NotPublishable   # noqa: E402
+from garden.link import (link as do_link, status as link_status,      # noqa: E402
+                         unlink as do_unlink, set_autopublish)
 
 
 def _solution(sid):
@@ -41,6 +43,12 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("whoami")
     sub.add_parser("status")
+    lk = sub.add_parser("link", help="pair this machine with a Garden account")
+    lk.add_argument("--code", required=True, help="6-character code from the Garden site")
+    sub.add_parser("unlink", help="forget the device token and revoke it remotely")
+    ap_ = sub.add_parser("autopublish", help="publish what passes, unattended")
+    g = ap_.add_mutually_exclusive_group(required=True)
+    g.add_argument("--on", action="store_true"); g.add_argument("--off", action="store_true")
     s = sub.add_parser("search")
     s.add_argument("--gate", action="append", default=[])
     s.add_argument("--text", default="")
@@ -64,11 +72,29 @@ def main(argv=None):
             print("  %s" % w["note"])
         return 0
 
+    if a.cmd == "link":
+        print(json.dumps(do_link(a.code), indent=1))
+        return 0
+
+    if a.cmd == "unlink":
+        print(json.dumps(do_unlink(), indent=1))
+        return 0
+
+    if a.cmd == "autopublish":
+        print(json.dumps(set_autopublish(bool(a.on)), indent=1))
+        return 0
+
     if a.cmd == "status":
         path = index.ensure_local()
-        print(json.dumps({"clone": path, "entries": len(index.entries()),
-                          "remote": index.has_remote() or None,
-                          "repo_env": index.DEFAULT_REMOTE or None}, indent=1))
+        st = {"clone": path, "entries": len(index.entries()),
+              "remote": index.has_remote() or None,
+              "repo_env": index.DEFAULT_REMOTE or None,
+              "api": index.API}
+        try:
+            st["link"] = link_status()
+        except Exception as exc:
+            st["link"] = {"linked": False, "why": str(exc)[:70]}
+        print(json.dumps(st, indent=1))
         return 0
 
     if a.cmd == "search":

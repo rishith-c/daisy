@@ -60,6 +60,9 @@ gate "obs — OTLP exporter, tracer and offline spool" \
 gate "scrape — drift detection and selector auto-repair" \
      env PYTHONWARNINGS=ignore $PY -m scrape.test_scrape
 
+gate "garden — device link, consent-gated autonomous publish" \
+     env PYTHONWARNINGS=ignore $PY -m garden.test_garden
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'

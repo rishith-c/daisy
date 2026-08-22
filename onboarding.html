@@ -1,0 +1,531 @@
+<!-- ============================================================
+     Daisy — first run.
+
+     This file is the source of truth. tools/add_onboarding.py slices the three
+     marked sections out of it and injects them into index.html; index.html is
+     never edited by hand. Re-run the generator after editing this file.
+
+     Three screens, not five. The reasoning is in the generator's docstring.
+     ============================================================ -->
+
+<!-- daisy:onboarding:css -->
+<style>
+/* ============================================================
+   daisy:onboarding — first run
+   Tokens are the app's own. Nothing new is declared here that is not
+   layout, and every colour resolves through :root in all three theme
+   states, so dark mode needs no separate block.
+   ============================================================ */
+
+.obv {
+  position: fixed; inset: 0; z-index: 120; display: none;
+  align-items: flex-start; justify-content: center;
+  padding: 0 16px;
+  background: color-mix(in srgb, var(--ink) 26%, transparent);
+  backdrop-filter: blur(4px) saturate(1.08);
+  -webkit-backdrop-filter: blur(4px) saturate(1.08);
+  opacity: 0;
+  transition: opacity .26s var(--out), display .26s allow-discrete;
+}
+.obv.on { display: flex; opacity: 1; }
+@starting-style { .obv.on { opacity: 0; } }
+
+.obs {
+  margin-top: 9vh; width: min(608px, 100%); max-height: 82vh;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  border: .5px solid var(--border-strong);
+  border-radius: var(--r-panel);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+}
+.obv.on .obs { animation: ob-sheet .5s var(--spring-soft) both; }
+/* A surface the operator reached from the keyboard does not animate — the
+   command palette in this app ships the same rule, for the same reason. */
+.obs[data-nav="key"] { animation: none; }
+@keyframes ob-sheet { from { opacity: 0; transform: translateY(14px) scale(.986); } }
+
+/* ---------- chrome ---------- */
+.ob-top {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px 12px 16px;
+  border-bottom: .5px solid var(--border);
+}
+.ob-mark { width: 17px; height: 17px; display: inline-flex; flex: 0 0 17px; }
+.ob-mark svg { width: 100%; height: 100%; display: block; }
+.ob-wm { font-size: 12.5px; font-weight: 600; letter-spacing: -.005em; }
+.ob-steps { display: inline-flex; gap: 4px; margin-left: 10px; }
+.ob-steps i {
+  width: 14px; height: 3px; border-radius: 99px; background: var(--border-strong);
+  transition: background var(--d-hover) var(--out), width .34s var(--spring-snappy);
+}
+.ob-steps i.on { background: var(--ink); width: 22px; }
+.ob-top .ob-skip { margin-left: auto; color: var(--ink-2); }
+
+/* ---------- stage ---------- */
+.ob-stage { position: relative; overflow: hidden; }
+.ob-stage.morph { transition: height .46s var(--spring-soft); }
+.ob-scroll { max-height: calc(82vh - 118px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+.ob-p { display: none; padding: 20px 22px 22px; }
+.ob-p.on { display: block; }
+.ob-p.on.fwd  { animation: ob-fwd  .44s var(--spring-snappy) both; }
+.ob-p.on.back { animation: ob-back .44s var(--spring-snappy) both; }
+@keyframes ob-fwd  { from { opacity: 0; transform: translateX(20px); } }
+@keyframes ob-back { from { opacity: 0; transform: translateX(-20px); } }
+
+.obs h1 { font-size: 21px; line-height: 1.26; font-weight: 600; letter-spacing: -.018em; }
+.obs h2 { font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -.014em; }
+.ob-lede {
+  font-family: var(--serif); font-size: 15px; line-height: 1.58;
+  color: var(--ink-2); margin-top: 9px;
+}
+.ob-lede code, .ob-note code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+
+/* ---------- step 1: the rail ---------- */
+.ob-rail { width: 100%; height: auto; display: block; margin-bottom: 16px; }
+.ob-rail .lbl { font-family: var(--mono); font-size: 9px; fill: var(--ink-3); letter-spacing: .04em; }
+.ob-rail .pass-tok { animation: ob-run .82s var(--spring-snappy) .1s both; }
+.ob-rail .stop-tok { animation: ob-held .42s var(--spring-snappy) both; }
+.ob-rail .stop-a { animation-delay: .30s; }
+.ob-rail .stop-b { animation-delay: .40s; }
+@keyframes ob-run  { from { opacity: 0; transform: translateX(-452px); } 14% { opacity: 1; } }
+@keyframes ob-held { from { opacity: 0; transform: translateX(-11px); } }
+
+.ob-gates { margin-top: 16px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
+.ob-gate { display: flex; align-items: flex-start; gap: 11px; padding: 11px 13px; }
+.ob-gate + .ob-gate { border-top: .5px solid var(--border); }
+.ob-gate .gi { flex: 0 0 15px; color: var(--ink-3); display: inline-flex; margin-top: 1px; }
+.ob-gate .gi svg { width: 15px; height: 15px; }
+.ob-gate .gt { min-width: 0; }
+.ob-gate .gt b { display: block; font-size: 13px; font-weight: 600; }
+.ob-gate .gt span { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.ob-gate .caught {
+  margin-left: auto; flex: 0 0 auto; align-self: center;
+  font-size: 11.5px; color: var(--ink-2);
+  background: var(--surface-2); border-radius: var(--r-badge);
+  padding: 3px 7px; max-width: 46%;
+}
+
+/* ---------- step 2: agents ---------- */
+.ob-agents { margin-top: 15px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
+.ob-ag { display: flex; align-items: center; gap: 10px; padding: 10px 13px; min-height: 46px; }
+.ob-ag + .ob-ag { border-top: .5px solid var(--border); }
+.ob-ag .dot {
+  width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px;
+  background: var(--ink-4);
+  transition: background var(--d-hover) var(--out);
+}
+.ob-ag[data-state="yes"]  .dot { background: var(--pass); }
+.ob-ag[data-state="no"]   .dot { background: var(--warn); }
+.ob-ag[data-state="gone"] .dot { background: var(--ink-4); }
+.ob-ag .nm { min-width: 0; }
+.ob-ag .nm b { display: block; font-size: 13px; font-weight: 600; }
+.ob-ag .nm span { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.ob-ag .st {
+  margin-left: auto; flex: 0 0 auto; text-align: right;
+  font-size: 11.5px; font-variant-numeric: tabular-nums;
+  border-radius: var(--r-badge); padding: 3px 8px;
+  color: var(--ink-3); background: var(--surface-2);
+  max-width: 54%;
+}
+.ob-ag[data-state="yes"] .st { color: var(--pass); background: var(--pass-chip); }
+.ob-ag[data-state="no"]  .st { color: var(--warn); background: var(--warn-chip); }
+.ob-ag .st b { font-weight: 600; }
+.ob-ag .st em { display: block; font-style: normal; color: var(--ink-2); font-size: 11px; }
+/* The reward: rows settle in one at a time when a real probe result lands. */
+.ob-ag.settled { animation: ob-settle .46s var(--spring-snappy) both; animation-delay: calc(var(--i, 0) * 78ms); }
+@keyframes ob-settle { from { opacity: .35; transform: translateY(-4px); } }
+@supports (transition-behavior: allow-discrete) {
+  .ob-ag.settled .st { transition: opacity .3s var(--out), transform .42s var(--spring-snappy); }
+  @starting-style { .ob-ag.settled .st { opacity: 0; transform: scale(.86); } }
+}
+
+.ob-cmd {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px;
+  background: var(--surface-2); border: .5px solid var(--border);
+  border-radius: var(--r-card); padding: 9px 9px 9px 13px;
+}
+.ob-cmd code { font-family: var(--mono); font-size: 12px; color: var(--ink); overflow-x: auto; white-space: nowrap; }
+.ob-cmd button { margin-left: auto; flex: 0 0 auto; height: 26px; padding: 3px 10px; font-size: 12.5px; }
+.ob-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin-top: 10px; }
+
+/* ---------- step 3: the two choices, and the one thing that is not ---------- */
+.ob-choice {
+  display: flex; align-items: center; gap: 16px; padding: 13px 0;
+  border-top: .5px solid var(--border);
+}
+.ob-choice:first-of-type { border-top: none; }
+.ob-choice .cl { min-width: 0; }
+.ob-choice .cl b { display: block; font-size: 13px; font-weight: 600; }
+.ob-choice .cl span { display: block; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); margin-top: 3px; }
+.ob-choice .ctrl { margin-left: auto; flex: 0 0 auto; }
+.ob-fixed {
+  display: flex; align-items: flex-start; gap: 11px; margin-top: 16px;
+  background: var(--surface-2); border: .5px solid var(--border);
+  border-radius: var(--r-card); padding: 12px 14px;
+  font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+}
+.ob-fixed b { color: var(--ink); font-weight: 600; }
+.ob-fixed .fi { flex: 0 0 15px; color: var(--ink-2); display: inline-flex; margin-top: 1px; }
+.ob-fixed .fi svg { width: 15px; height: 15px; }
+
+/* ---------- footer ---------- */
+.ob-foot {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-top: .5px solid var(--border);
+  background: var(--surface);
+}
+.ob-hint { font-size: 12px; color: var(--ink-3); }
+.ob-foot .ob-next { margin-left: auto; }
+.ob-foot .ob-back[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* End state, immediately. No entrance, no travel, no settle. */
+  .obv, .obv.on .obs, .ob-p.on, .ob-rail .pass-tok, .ob-rail .stop-tok, .ob-ag.settled {
+    animation: none; opacity: 1; transform: none;
+  }
+  .ob-stage.morph { transition: none; }
+  .ob-steps i { transition: none; }
+}
+</style>
+<!-- /daisy:onboarding:css -->
+
+<!-- daisy:onboarding:html -->
+<div class="obv" id="obv" role="dialog" aria-modal="true" aria-labelledby="ob-h0" aria-hidden="true">
+ <div class="obs" id="obs">
+  <div class="ob-top">
+   <span class="ob-mark" id="ob-mark" aria-hidden="true"></span>
+   <span class="ob-wm">Daisy</span>
+   <span class="ob-steps" id="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
+   <button class="ghost ob-skip" id="ob-skip">Skip</button>
+  </div>
+
+  <div class="ob-stage" id="ob-stage"><div class="ob-scroll" id="ob-scroll">
+
+   <section class="ob-p on" id="ob-p0" aria-label="What Daisy is">
+    <svg class="ob-rail" viewBox="0 0 528 76" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+     <path d="M16 50h496" stroke="var(--border-strong)" stroke-width="1" fill="none"/>
+     <g stroke="var(--ink-4)" stroke-width="1" fill="none">
+      <path d="M176 26v40"/><path d="M296 26v40"/><path d="M416 26v40"/>
+     </g>
+     <g class="lbl" text-anchor="middle">
+      <text x="176" y="18">design</text><text x="296" y="18">contrast</text><text x="416" y="18">physics</text>
+     </g>
+     <g style="transform-box: view-box">
+      <rect class="stop-tok stop-a" x="154" y="43.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
+      <rect class="stop-tok stop-b" x="274" y="43.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
+      <rect class="pass-tok" x="470" y="43.5" width="13" height="13" rx="3.5" fill="var(--pass-chip)" stroke="var(--pass)" stroke-width="1"/>
+     </g>
+    </svg>
+    <h1 id="ob-h0">A brief goes in. Verified software and hardware come out.</h1>
+    <p class="ob-lede">Daisy drives the coding agents already installed on this Mac, then holds everything they produce
+     to gates that are real programs rather than prompts. Two of the three runs above were stopped. That is the product.</p>
+    <div class="ob-gates">
+     <div class="ob-gate">
+      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.6 4.2h10.8M2.6 8h7.4M2.6 11.8h9" stroke-linecap="round"/></svg></span>
+      <span class="gt"><b>Design lint</b><span>taste/lint.py &middot; 20 named tells</span></span>
+      <span class="caught">caught an indigo primary in this app</span>
+     </div>
+     <div class="ob-gate">
+      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4a5.6 5.6 0 0 1 0 11.2Z" fill="currentColor" stroke="none"/></svg></span>
+      <span class="gt"><b>Contrast</b><span>taste/contrast.py &middot; computed WCAG, both themes</span></span>
+      <span class="caught">caught 3 failures that looked fine</span>
+     </div>
+     <div class="ob-gate">
+      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.4 3v10h11"/><path d="M4.6 10.6 7.2 7.4l2.2 2 3.2-4.6"/></svg></span>
+      <span class="gt"><b>Structural physics</b><span>hardware/margins.py &middot; closed form, no model</span></span>
+      <span class="caught">caught a negative bending margin</span>
+     </div>
+    </div>
+   </section>
+
+   <section class="ob-p" id="ob-p1" aria-label="Agents on this machine">
+    <h2 id="ob-h1">Which agents can this machine actually drive?</h2>
+    <p class="ob-lede">An agent is not a name in a config file, it is a probe. Daisy runs each installed CLI against a
+     trivial prompt and reports what came back, because a factory that assumes its agents are reachable fails halfway
+     with a stack trace instead of saying which lane cannot run.</p>
+    <div class="ob-agents" id="ob-agents"></div>
+    <div class="ob-cmd">
+     <code>python3 labctl.py agents</code>
+     <button id="ob-copy">Copy</button>
+    </div>
+    <p class="ob-note" id="ob-note"></p>
+   </section>
+
+   <section class="ob-p" id="ob-p2" aria-label="Appearance and Garden">
+    <h2 id="ob-h2">Two defaults. Both already chosen.</h2>
+    <p class="ob-lede">Either can be changed later in Settings. If they are already right, press Return.</p>
+    <div style="margin-top:15px">
+     <div class="ob-choice">
+      <span class="cl"><b>Appearance</b><span>Daisy is light-first. Auto follows your Mac.</span></span>
+      <span class="ctrl"><span class="seg" id="ob-seg"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></span></span>
+     </div>
+     <div class="ob-choice">
+      <span class="cl"><b>Garden</b><span>The public index of verified solutions. Off. Nothing leaves this machine
+       without a recorded grant, and a solution that did not pass every gate cannot be published at all.</span><span id="ob-gnote"></span></span>
+      <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to the Garden"><i></i></button></span>
+     </div>
+    </div>
+    <div class="ob-fixed">
+     <span class="fi" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="6.4" rx="1.8"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7" stroke-linecap="round"/></svg></span>
+     <span><b>Gates stay on.</b> They are missing from this list because they are not a setting. A threshold you can
+      quietly relax in a console is not a gate, so they live in version control and change by commit.</span>
+    </div>
+   </section>
+
+  </div></div>
+
+  <div class="ob-foot">
+   <button class="ghost ob-back" id="ob-back" hidden>Back</button>
+   <span class="ob-hint" id="ob-hint">Return to continue &middot; Esc to skip</span>
+   <button class="primary ob-next" id="ob-next">Continue</button>
+  </div>
+ </div>
+</div>
+<!-- /daisy:onboarding:html -->
+
+<!-- daisy:onboarding:js -->
+<script>
+/* daisy:onboarding — first run controller.
+
+   Deliberately outside the app's IIFE: it reaches the app only through
+   controls the app already owns (#segtheme, #g-auto), so the choice made here
+   and the choice made in Settings are the same choice, stored once.
+
+   Re-show it with any of:
+     open "file://$PWD/index.html?onboarding=1"
+     Shift-Cmd-O
+     Cmd-K -> "Show onboarding"
+     window.daisyShowOnboarding()  */
+(function () {
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var ov = $('#obv'); if (!ov) return;
+  var sheet = $('#obs'), stage = $('#ob-stage'), scroll = $('#ob-scroll');
+  var nextBtn = $('#ob-next'), backBtn = $('#ob-back'), skipBtn = $('#ob-skip'), hint = $('#ob-hint');
+  var KEY = 'daisy-onboarded', VERSION = '1';
+  var PANELS = ['#ob-p0', '#ob-p1', '#ob-p2'].map(function (s) { return $(s); });
+  var HEADS = ['ob-h0', 'ob-h1', 'ob-h2'];
+  var LABELS = ['Continue', 'Continue', 'Start'];
+  var step = 0, open = false, navKey = false, lastFocus = null;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var native = navigator.userAgent.indexOf('DaisyNative') !== -1;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+  }
+
+  /* ---------------- agents ----------------
+     `python3 labctl.py agents` probes each installed CLI. A browser cannot
+     shell out, so with no native shell answering this stays unknown and says
+     so. Inventing three green ticks here would be the exact dishonesty the
+     rest of the app exists to prevent. */
+  var AGENTS = [
+    { name: 'claude',   title: 'Claude Code', cmd: 'claude -p' },
+    { name: 'codex',    title: 'Codex',       cmd: 'codex exec' },
+    { name: 'opencode', title: 'OpenCode',    cmd: 'opencode run' }
+  ];
+  var probe = null;          // null = never answered
+
+  function paintAgents(settle) {
+    var box = $('#ob-agents'); if (!box) return;
+    box.innerHTML = AGENTS.map(function (a, i) {
+      var r = probe && probe[a.name], state = 'unknown', st;
+      if (!probe) {
+        st = '<b>not checked</b>';
+      } else if (!r) {
+        state = 'gone'; st = '<b>not installed</b>';
+      } else if (r.ok) {
+        state = 'yes';
+        st = '<b>usable</b>' + (r.probe_ms ? '<em>' + esc(Math.round(r.probe_ms)) + ' ms</em>' : '');
+      } else {
+        state = /not installed/i.test(r.detail || '') ? 'gone' : 'no';
+        st = '<b>' + (state === 'gone' ? 'not installed' : 'not usable') + '</b>' +
+             (r.detail ? '<em>' + esc(r.detail) + '</em>' : '');
+      }
+      return '<div class="ob-ag' + (settle ? ' settled' : '') + '" data-state="' + state +
+             '" style="--i:' + i + '" role="listitem">' +
+             '<span class="dot"></span><span class="nm"><b>' + esc(a.title) + '</b><span>' + esc(a.cmd) + '</span></span>' +
+             '<span class="st">' + st + '</span></div>';
+    }).join('');
+    box.setAttribute('role', 'list');
+    var note = $('#ob-note');
+    if (note) {
+      note.innerHTML = probe
+        ? 'Answered by the native shell. Daisy will not start a lane whose agent did not answer &mdash; it says which lane cannot run, and why.'
+        : (native
+            ? 'Waiting on the native shell. Run the command above to see the same answer in a terminal.'
+            : 'A browser cannot open a shell, so nothing has been probed. Run the command above, or open Daisy.app &mdash; ' +
+              'the native shell answers on <code>window.__daisyOnboarding</code>. An unusable agent is not a blocker here; ' +
+              'it just means that lane will refuse to start rather than fail halfway.');
+    }
+  }
+
+  window.__daisyOnboarding = function (payload) {
+    try {
+      var d = typeof payload === 'string' ? JSON.parse(payload) : payload;
+      var list = (d && d.agents) || (Array.isArray(d) ? d : null);
+      if (!list) return;
+      probe = {};
+      list.forEach(function (e) { if (e && e.name) probe[e.name] = e; });
+      paintAgents(true);
+    } catch (e) { /* keep the honest unknown state */ }
+  };
+
+  function askNative() {
+    if (native && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daisy) {
+      try { window.webkit.messageHandlers.daisy.postMessage({ cmd: 'onboarding.agents' }); } catch (e) {}
+    }
+  }
+
+  /* ---------------- steps ---------------- */
+  function render(dir) {
+    var from = stage.getBoundingClientRect().height;
+    PANELS.forEach(function (p, i) { p.classList.remove('on', 'fwd', 'back'); if (i === step) p.classList.add('on'); });
+    if (!reduced && !navKey && dir) PANELS[step].classList.add(dir > 0 ? 'fwd' : 'back');
+    $$('#ob-steps i').forEach(function (b, i) { b.classList.toggle('on', i === step); });
+    ov.setAttribute('aria-labelledby', HEADS[step]);
+    nextBtn.textContent = LABELS[step];
+    backBtn.hidden = step === 0;
+    hint.textContent = step === 2 ? 'Return to start · Esc to skip' : 'Return to continue · Esc to skip';
+    if (scroll) scroll.scrollTop = 0;
+
+    /* Morph the sheet height so the panels do not jump. Skipped for reduced
+       motion and for a step reached from the keyboard. */
+    stage.classList.remove('morph');
+    stage.style.height = '';
+    if (dir && from > 0 && !reduced && !navKey) {
+      var to = scroll.getBoundingClientRect().height;
+      stage.style.height = from + 'px';
+      void stage.offsetHeight;                 /* commit the start height */
+      stage.classList.add('morph');
+      stage.style.height = to + 'px';
+      var settled = false;
+      var done = function () {
+        if (settled) return;
+        settled = true;
+        stage.removeEventListener('transitionend', done);
+        stage.classList.remove('morph');
+        stage.style.height = '';
+      };
+      stage.addEventListener('transitionend', done);
+      setTimeout(done, 720);
+    }
+
+    if (step === 1) { if (!probe) askNative(); paintAgents(false); }
+    try { nextBtn.focus(); } catch (e) {}
+  }
+
+  function go(n, dir) {
+    if (n > 2) { finish(); return; }
+    step = Math.max(0, Math.min(2, n));
+    render(dir);
+  }
+
+  function show(fromKeyboard) {
+    if (open) return;
+    open = true; navKey = !!fromKeyboard; step = 0;
+    lastFocus = document.activeElement;
+    sheet.setAttribute('data-nav', navKey ? 'key' : 'pointer');
+    ov.setAttribute('aria-hidden', 'false');
+    ov.classList.add('on');
+    var mark = $('#brandmark'), slot = $('#ob-mark');
+    if (mark && slot && !slot.innerHTML) slot.innerHTML = mark.innerHTML;
+    syncChoices();
+    render(0);
+  }
+
+  function hide() {
+    if (!open) return;
+    open = false;
+    ov.classList.remove('on');
+    ov.setAttribute('aria-hidden', 'true');
+    try { localStorage.setItem(KEY, VERSION); } catch (e) {}
+    if (lastFocus) { try { lastFocus.focus(); } catch (e) {} lastFocus = null; }
+  }
+
+  function finish() { hide(); }
+
+  /* ---------------- the two choices ----------------
+     Both are driven through the app's own controls, so Settings and this sheet
+     can never disagree about what was chosen. */
+  function syncChoices() {
+    var appSeg = $('#segtheme button.on');
+    var want = appSeg ? appSeg.getAttribute('data-theme') : 'light';
+    $$('#ob-seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-theme') === want); });
+    var g = $('#g-auto'), mine = $('#ob-garden'), note = $('#ob-gnote');
+    if (g && mine) {
+      mine.setAttribute('aria-checked', g.getAttribute('aria-checked') === 'true' ? 'true' : 'false');
+      mine.disabled = !!g.disabled;
+      if (note) {
+        note.textContent = g.disabled
+          ? 'This machine is not linked to a Garden yet, so the switch is inert rather than pretending. Link it later with garden.cli.'
+          : '';
+      }
+    }
+  }
+
+  $('#ob-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var mode = b.getAttribute('data-theme');
+    var app = $('#segtheme button[data-theme="' + mode + '"]');
+    if (app) app.click(); else document.documentElement.setAttribute('data-theme', mode);
+    syncChoices();
+  });
+
+  $('#ob-garden').addEventListener('click', function () {
+    var mine = $('#ob-garden'); if (mine.disabled) return;
+    var g = $('#g-auto');
+    if (g && !g.disabled) { g.click(); }
+    else { mine.setAttribute('aria-checked', mine.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); }
+    syncChoices();
+  });
+
+  $('#ob-copy').addEventListener('click', function () {
+    var b = $('#ob-copy'), txt = 'python3 labctl.py agents';
+    var done = function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done);
+    else done();
+  });
+
+  nextBtn.addEventListener('click', function () { navKey = false; sheet.setAttribute('data-nav', 'pointer'); go(step + 1, 1); });
+  backBtn.addEventListener('click', function () { navKey = false; sheet.setAttribute('data-nav', 'pointer'); go(step - 1, -1); });
+  skipBtn.addEventListener('click', hide);
+
+  /* ---------------- keyboard ----------------
+     The whole flow is completable without a pointer, and a step reached this
+     way does not animate. */
+  ov.addEventListener('keydown', function (e) {
+    if (!open) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); hide(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); navKey = true; sheet.setAttribute('data-nav', 'key'); go(step + 1, 1); return; }
+    if (e.key === 'ArrowLeft' && step > 0) { e.preventDefault(); navKey = true; sheet.setAttribute('data-nav', 'key'); go(step - 1, -1); return; }
+    if (e.key === 'Enter' && document.activeElement === nextBtn) { navKey = true; sheet.setAttribute('data-nav', 'key'); }
+    if (e.key !== 'Tab') return;
+    var f = $$('button, [href], input, select, [tabindex]:not([tabindex="-1"])', ov)
+      .filter(function (x) { return !x.disabled && !x.hidden && x.offsetParent !== null; });
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'o' || e.key === 'O')) {
+      e.preventDefault(); open ? hide() : show(true);
+    }
+  });
+
+  /* ---------------- when it shows ---------------- */
+  window.daisyShowOnboarding = function () { if (open) hide(); show(false); };
+
+  var forced = /[?&#]onboarding\b/.test(location.search + location.hash);
+  var seen = false;
+  try { seen = localStorage.getItem(KEY) === VERSION; } catch (e) { seen = false; }
+  paintAgents(false);
+  if (forced || !seen) show(false);
+})();
+</script>
+<!-- /daisy:onboarding:js -->
