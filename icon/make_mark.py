@@ -4,7 +4,10 @@
 Same seeded hand-drawn flower as the app icon, but:
   - no background plate
   - strokes/fills use CSS custom properties so it reads in light AND dark
-  - fewer, chunkier petals so it survives at 22px
+  - chunkier petals so it survives at 22px, but 12 of them, not 7: the mark
+    that was actually injected had drifted to a sparse all-yellow flower with
+    daylight between every petal, which reads as a generic bloom rather than a
+    daisy. White petals, yellow centre, no gaps.
 Writes mark.svg and injects it into index.html at the __MARK__ placeholder.
 """
 import math, random, json, os, re
@@ -16,11 +19,11 @@ def j(m=1.2):
     return random.uniform(-m, m)
 
 petals, veins = [], []
-n = 9
+n = 12
 for i in range(n):
-    a = math.radians(i * 360.0 / n + random.uniform(-6, 6))
-    L = random.uniform(41, 46)
-    W = random.uniform(9.5, 12.0)
+    a = math.radians(i * 360.0 / n + random.uniform(-3, 3))
+    L = random.uniform(42, 47)
+    W = random.uniform(11.0, 13.0)
     r0 = 15.0
     ux, uy = math.cos(a), math.sin(a)
     px, py = -uy, ux
