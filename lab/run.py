@@ -337,12 +337,14 @@ def contract_check(html: str) -> tuple:
     return (not miss), miss
 
 
-def crew_lane(run_id: str, brief: str, agents: list, log, chain: dict = None) -> LaneResult:
+def crew_lane(run_id: str, brief: str, agents: list, log, chain: dict = None,
+              project_dir: str = None) -> LaneResult:
     """Run the governed org, or the original two-vendor contract lane."""
     r = LaneResult("crew", ran=True)
     d = _rundir(run_id)
+    agent_cwd = project_dir or d
     if chain is not None:
-        outcome = chain_orchestrate(brief, chain, cwd=d)
+        outcome = chain_orchestrate(brief, chain, cwd=agent_cwd)
         path = os.path.join(d, "chain.json")
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(json.dumps(outcome, indent=1, default=str))
@@ -377,14 +379,14 @@ def crew_lane(run_id: str, brief: str, agents: list, log, chain: dict = None) ->
 
     outs = {}
     for name in agents:
-        ex, probed = executors.pick(name, cwd=d)
+        ex, probed = executors.pick(name, cwd=agent_cwd)
         if not ex:
             log("  %-9s unavailable — %s" % (name, probed[0].detail if probed else "?"))
             r.gates.append(_gate_row("crew.%s.available" % name, False, 0,
                                      probed[0].detail if probed else ""))
             continue
         with tracer().span("agent.invoke", {"agent": name, "lane": "crew"}) as s:
-            res = executors.run(ex, CREW_TASK, cwd=d)
+            res = executors.run(ex, CREW_TASK, cwd=agent_cwd)
             s.set("agent.ok", res["ok"]); s.set("agent.ms", res["ms"])
         html = _extract_html(res["stdout"]) if res["ok"] else ""
         path = os.path.join(d, "badge.%s.html" % name)
@@ -430,10 +432,12 @@ def crew_lane(run_id: str, brief: str, agents: list, log, chain: dict = None) ->
     return r
 
 
-def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
+def software_lane(run_id: str, brief: str, prefer: str, log,
+                  project_dir: str = None) -> LaneResult:
     r = LaneResult("software")
     d = _rundir(run_id)
-    ex, probed = executors.pick(prefer, cwd=d)
+    agent_cwd = project_dir or d
+    ex, probed = executors.pick(prefer, cwd=agent_cwd)
     if not ex:
         r.ran = False
         r.why = "; ".join("%s: %s" % (p.name, p.detail) for p in probed)
@@ -446,7 +450,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
     for attempt in range(1, MAX_RETRIES + 2):
         r.attempts = attempt
         with tracer().span("agent.invoke", {"agent": ex.name, "attempt": attempt}) as s:
-            res = executors.run(ex, prompt, cwd=d)
+            res = executors.run(ex, prompt, cwd=agent_cwd)
             s.set("agent.ok", res["ok"])
             s.set("agent.ms", res["ms"])
         if not res["ok"]:
@@ -523,7 +527,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
             prefer: str = "auto", fixture: str | None = None,
             quiet: bool = False, crew: list = None,
             to_garden: bool = False, port_client: PortClient | None = None,
-            daisy_chain: bool = False) -> dict:
+            daisy_chain: bool = False, project_dir: str = None) -> dict:
     run_id = run_id or time.strftime("%H%M%S")
     d = _rundir(run_id)
     out = []
@@ -535,7 +539,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
 
     started = time.time()
     governance = port_client or PortClient(run_id=run_id)
-    chain = chain_topology() if daisy_chain else None
+    chain = chain_topology(cwd=project_dir) if daisy_chain else None
     port_lanes = [{"name": lane,
                    "agent": ("deterministic" if lane in ("hardware", "scrape")
                              else prefer if lane == "software" else
@@ -588,7 +592,8 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
             results["scrape"] = scrape_lane(run_id, fixture, log)
         if "software" in lanes:
             log("software lane")
-            results["software"] = software_lane(run_id, brief, prefer, log)
+            results["software"] = software_lane(run_id, brief, prefer, log,
+                                                project_dir=project_dir)
         if "crew" in lanes:
             selected = chain["agents"] if chain is not None else (crew or ["claude", "codex"])
             if chain is not None:
@@ -598,7 +603,8 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
                                                node.get("model") or "tool default"))
             else:
                 log("crew lane — two vendors, one contract")
-            results["crew"] = crew_lane(run_id, brief, selected, log, chain=chain)
+            results["crew"] = crew_lane(run_id, brief, selected, log, chain=chain,
+                                        project_dir=project_dir)
 
         all_gates = [g for r in results.values() for g in r.gates]
         failed = [g for g in all_gates if not g["passed"]]
@@ -681,6 +687,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         "admitted_to_commons": admitted,
         "garden": published,
         "artifacts_dir": d,
+        "project_dir": project_dir or "",
     }
     with open(os.path.join(d, "summary.json"), "w", encoding="utf-8") as fh:
         fh.write(json.dumps(summary, indent=1, default=str))

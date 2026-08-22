@@ -35,7 +35,7 @@ class DaisyChainUIGeneratorTests(unittest.TestCase):
     def test_upgrade_wires_real_chain_run_and_reset_without_changing_app_typography(self):
         html = self.generator.upgrade(self.source)
 
-        self.assertIn("cmd: 'chain.run', goal: v", html)
+        self.assertIn("cmd: 'chain.run', goal: goal", html)
         self.assertIn("window.__daisyChainRun", html)
         self.assertIn('id="reset-daisy"', html)
         self.assertIn("window.daisyResetToOnboarding", html)
@@ -62,6 +62,19 @@ class DaisyChainUIGeneratorTests(unittest.TestCase):
         self.assertIn("LANES.run = defaultLane('codex');", html)
         self.assertNotIn("Run brief A — $30 fastener budget", html)
         self.assertNotIn("Run brief B — $18 ceiling", html)
+
+    def test_real_runs_choose_a_project_and_render_immediate_chat_feedback(self):
+        html = self.generator.upgrade(self.source)
+
+        self.assertIn('id="project-choose"', html)
+        self.assertIn("cmd: 'project.choose'", html)
+        self.assertIn("window.__daisyProject", html)
+        self.assertIn("project: PROJECT.path", html)
+        self.assertIn("brief-meta", html)
+        self.assertIn("copyBrief", html)
+        self.assertIn("renderAgentText", html)
+        self.assertIn("showWorking", html)
+        self.assertIn("hideEmptyRun();", html)
 
     def test_upgrade_adds_a_live_sidebar_chain_map_not_a_demo_roster(self):
         html = self.generator.upgrade(self.source)

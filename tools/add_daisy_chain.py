@@ -20,7 +20,8 @@ BASE_GUARD = "daisy:chain-live"
 V2_GUARD = "daisy:real-agent-v2"
 V3_GUARD = "daisy:real-agent-v3"
 V4_GUARD = "daisy:real-agent-v4"
-GUARD = "daisy:real-agent-v5"
+V5_GUARD = "daisy:real-agent-v5"
+GUARD = "daisy:real-agent-v6"
 
 EMPTY_RUN_CSS = r"""/* ---------- empty run ---------- */
 .run-empty {
@@ -41,6 +42,160 @@ EMPTY_RUN_HTML = r'''      <div class="run-empty" id="run-empty" role="status" a
         <h2>What should we build in Daisy?</h2>
         <p>Start with the outcome. Use one local model, or let Daisy Chain coordinate the full crew.</p>
       </div>
+'''
+
+PROJECT_CSS = r""".project-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 190px;
+  height: 28px; padding: 0 9px; border: .5px solid var(--border); border-radius: 8px;
+  background: var(--surface-2); box-shadow: none; color: var(--ink-2); font-size: 12px;
+}
+.project-chip:hover { background: var(--wash-2); color: var(--ink); }
+.project-chip svg { width: 14px; height: 14px; flex: 0 0 14px; }
+.project-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-chip.selected { color: var(--ink); background: color-mix(in srgb, var(--leaf-wash) 52%, var(--surface-2)); }
+.brief-wrap { display: flex; flex-direction: column; align-items: flex-end; max-width: min(78%, 610px); margin-left: auto; }
+.brief-wrap .brief { max-width: 100%; margin-left: 0; border-radius: 18px; padding: 12px 16px; font-size: 14px; }
+.brief-meta { display: flex; align-items: center; gap: 6px; margin: 6px 5px 0 0; color: var(--ink-3); font-size: 11.5px; }
+.brief-copy { width: 22px; height: 20px; padding: 0; border: none; background: transparent; box-shadow: none; color: var(--ink-3); }
+.brief-copy:hover { color: var(--ink); background: var(--wash); }
+.brief-copy svg { width: 13px; height: 13px; }
+.prose > p { margin: 0 0 12px; }
+.prose > p:last-child { margin-bottom: 0; }
+.prose ul, .prose ol { margin: 4px 0 12px 1.2em; padding-left: .8em; }
+.prose li { margin: 3px 0; padding-left: 2px; }
+
+"""
+
+PROJECT_BUTTON = r'''          <button class="project-chip" id="project-choose" title="Choose project folder" aria-label="Choose project folder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.3 4.1h4l1.2 1.4h6.2v6.4H2.3V4.1Z"/></svg><span id="project-label">Choose project</span></button>
+'''
+
+PROJECT_JS = r'''  var PROJECT = { path: '', name: '' }, PENDING_GOAL = '', RUN_ACTIVE = false;
+
+  function paintProject() {
+    var button = $('#project-choose'), label = $('#project-label');
+    if (!button || !label) return;
+    label.textContent = PROJECT.name || 'Choose project';
+    button.classList.toggle('selected', !!PROJECT.path);
+    button.title = PROJECT.path || 'Choose project folder';
+  }
+
+  function setRunBusy(on) {
+    RUN_ACTIVE = !!on;
+    $('#send').disabled = RUN_ACTIVE;
+    $('#amend').disabled = RUN_ACTIVE;
+    if (!RUN_ACTIVE) setTimeout(function () { $('#amend').focus(); }, 0);
+  }
+
+  function copyBrief(value, button) {
+    function done() {
+      button.setAttribute('aria-label', 'Copied');
+      setTimeout(function () { button.setAttribute('aria-label', 'Copy message'); }, 1200);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(done, function () {});
+    }
+  }
+
+  function appendInline(target, text) {
+    var pattern = /(\*\*[^*]+\*\*|`[^`]+`)/g, cursor = 0, match;
+    while ((match = pattern.exec(text))) {
+      if (match.index > cursor) target.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+      var token = match[0], node = document.createElement(token.charAt(0) === '`' ? 'code' : 'strong');
+      node.textContent = token.charAt(0) === '`' ? token.slice(1, -1) : token.slice(2, -2);
+      target.appendChild(node); cursor = match.index + token.length;
+    }
+    if (cursor < text.length) target.appendChild(document.createTextNode(text.slice(cursor)));
+  }
+
+  function renderAgentText(target, text) {
+    target.textContent = '';
+    String(text || '').trim().split(/\n{2,}/).filter(Boolean).forEach(function (block) {
+      var lines = block.split(/\n/), ordered = lines.every(function (line) { return /^\s*\d+[.)]\s+/.test(line); });
+      var unordered = lines.every(function (line) { return /^\s*[-*]\s+/.test(line); });
+      if (ordered || unordered) {
+        var list = document.createElement(ordered ? 'ol' : 'ul');
+        lines.forEach(function (line) {
+          var li = document.createElement('li');
+          appendInline(li, line.replace(ordered ? /^\s*\d+[.)]\s+/ : /^\s*[-*]\s+/, ''));
+          list.appendChild(li);
+        });
+        target.appendChild(list); return;
+      }
+      var p = document.createElement('p');
+      lines.forEach(function (line, index) {
+        if (index) p.appendChild(document.createElement('br'));
+        appendInline(p, line);
+      });
+      target.appendChild(p);
+    });
+  }
+
+  window.__daisyProject = function (payload) {
+    var data;
+    try { data = typeof payload === 'string' ? JSON.parse(payload) : payload; }
+    catch (e) { data = { selected: false, cancelled: true }; }
+    if (data && data.selected && data.path) {
+      PROJECT = { path: data.path, name: data.name || data.path.split('/').pop() };
+      paintProject();
+      if (PENDING_GOAL) { var goal = PENDING_GOAL; PENDING_GOAL = ''; dispatchRun(goal); }
+      return;
+    }
+    PROJECT = { path: '', name: '' }; paintProject();
+    if (data && data.cancelled && PENDING_GOAL) {
+      PENDING_GOAL = ''; clearWorking(); setRunBusy(false);
+      addAgentOutcome({ ok: false, reason: 'Choose a project folder so Daisy knows where its agents may work.' });
+    }
+  };
+
+'''
+
+PROJECT_SEND_JS = r'''  function dispatchRun(goal) {
+    if (!PROJECT.path) {
+      PENDING_GOAL = goal;
+      showWorking('Choose a project folder to begin');
+      window.webkit.messageHandlers.daisy.postMessage({ cmd: 'project.choose' });
+      return;
+    }
+    if (CHAIN_ON) {
+      showWorking('CEO planning in ' + PROJECT.name + ' · Port commits first');
+      window.webkit.messageHandlers.daisy.postMessage({
+        cmd: 'chain.run', goal: goal, project: PROJECT.path
+      });
+      return;
+    }
+    var selected = LANES.run;
+    if (!selected || !selected.model) {
+      setRunBusy(false);
+      toast('<b>No model is selectable.</b> Check agent setup in onboarding.');
+      return;
+    }
+    showWorking((selected.model.label || selected.model.id) + ' is working in ' + PROJECT.name);
+    window.webkit.messageHandlers.daisy.postMessage({
+      cmd: 'agent.run', goal: goal, vendor: selected.model.vendor,
+      model: selected.model.id, effort: selected.effort || '',
+      speed: selected.speed || 'standard', provider: selected.model.provider || '',
+      project: PROJECT.path
+    });
+  }
+
+  function sendAmend() {
+    if (RUN_ACTIVE) return;
+    var inp = $('#amend'), v = inp.value.trim(); if (!v) return;
+    inp.value = ''; $('#send').classList.remove('ready');
+    if (NEW_RUN_EMPTY) {
+      NEW_RUN_EMPTY = false;
+      var title = v.length > 72 ? v.slice(0, 69) + '…' : v;
+      $('#tb-title').textContent = title; markCurrentRun(title);
+    }
+    addBriefToRun(v);
+    if (!native || !window.webkit || !window.webkit.messageHandlers ||
+        !window.webkit.messageHandlers.daisy) {
+      toast('<b>Open Daisy.app to run local agents.</b> A browser cannot start their CLIs.');
+      return;
+    }
+    setRunBusy(true);
+    dispatchRun(v);
+  }
 '''
 
 EMPTY_RUN_JS = r'''  function showEmptyRun() {
@@ -375,6 +530,77 @@ def _add_empty_run(html: str) -> str:
     return html
 
 
+def _add_project_workspace(html: str) -> str:
+    html = _replace_once(html, "/* ---------- composer ---------- */",
+                         PROJECT_CSS + "/* ---------- composer ---------- */",
+                         "project and message styles")
+    attach = ('          <button class="rbtn" title="Attach" aria-label="Attach">'
+              '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" '
+              'stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg></button>\n')
+    html = _replace_once(html, attach, attach + PROJECT_BUTTON, "project chooser")
+    html = _replace_once(html, "  function addBriefToRun(value) {",
+                         PROJECT_JS + "  function addBriefToRun(value) {",
+                         "project controller")
+    old_brief = r'''  function addBriefToRun(value) {
+    hideEmptyRun();
+    var item = document.createElement('div');
+    item.className = 'item';
+    var brief = document.createElement('div');
+    brief.className = 'brief';
+    brief.textContent = value;
+    item.appendChild(brief); col.appendChild(item); follow();
+  }
+'''
+    new_brief = r'''  function addBriefToRun(value) {
+    hideEmptyRun();
+    var item = document.createElement('div'); item.className = 'item';
+    var wrap = document.createElement('div'); wrap.className = 'brief-wrap';
+    var brief = document.createElement('div'); brief.className = 'brief'; brief.textContent = value;
+    var meta = document.createElement('div'); meta.className = 'brief-meta';
+    var time = document.createElement('time');
+    time.dateTime = new Date().toISOString();
+    time.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    var copy = document.createElement('button'); copy.className = 'brief-copy';
+    copy.setAttribute('aria-label', 'Copy message');
+    copy.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.2" y="4.8" width="7.2" height="8" rx="1.5"/><path d="M3.6 10.8h-.3A1.7 1.7 0 0 1 1.6 9.1V3.3a1.7 1.7 0 0 1 1.7-1.7h5.8a1.7 1.7 0 0 1 1.7 1.7v.3"/></svg>';
+    copy.addEventListener('click', function () { copyBrief(value, copy); });
+    meta.appendChild(time); meta.appendChild(copy);
+    wrap.appendChild(brief); wrap.appendChild(meta); item.appendChild(wrap);
+    col.appendChild(item); follow();
+  }
+'''
+    html = _replace_once(html, old_brief, new_brief, "message bubble")
+    html = _replace_once(html, "    prose.textContent = data.stdout || '';",
+                         "    renderAgentText(prose, data.stdout || '');",
+                         "safe agent markdown")
+    html = _replace_once(html,
+                         "  window.__daisyChainRun = function (payload) {\n    clearWorking();",
+                         "  window.__daisyChainRun = function (payload) {\n    clearWorking(); setRunBusy(false);",
+                         "chain completion")
+    html = _replace_once(html,
+                         "  window.__daisyAgentRun = function (payload) {\n    clearWorking();",
+                         "  window.__daisyAgentRun = function (payload) {\n    clearWorking(); setRunBusy(false);",
+                         "agent completion")
+    pattern = r"  function sendAmend\(\) \{.*?\n  \}\n(?=  var chainRefresh)"
+    html, count = re.subn(pattern, PROJECT_SEND_JS, html, count=1, flags=re.S)
+    if count != 1:
+        raise ValueError("send controller was not found exactly once")
+    project_events = r'''  var projectChoose = $('#project-choose');
+  if (projectChoose) projectChoose.addEventListener('click', function () {
+    if (RUN_ACTIVE) { toast('<b>Run in progress.</b> Choose another project after it finishes.'); return; }
+    window.webkit.messageHandlers.daisy.postMessage({ cmd: 'project.choose' });
+  });
+  if (native && window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.daisy) {
+    window.webkit.messageHandlers.daisy.postMessage({ cmd: 'project.status' });
+  }
+  paintProject();
+'''
+    html = _replace_once(html, "  var chainRefresh = $('#chain-refresh');",
+                         project_events + "  var chainRefresh = $('#chain-refresh');",
+                         "project events")
+    return html
+
+
 def upgrade(html: str) -> str:
     """Return the fully upgraded app shell; a second call is a byte-for-byte no-op."""
     if GUARD in html:
@@ -392,7 +618,10 @@ def upgrade(html: str) -> str:
         html = html.replace(V3_GUARD, V4_GUARD, 1)
     if V4_GUARD in html:
         html = _add_empty_run(html)
-        return html.replace(V4_GUARD, GUARD, 1)
+        html = html.replace(V4_GUARD, V5_GUARD, 1)
+    if V5_GUARD in html:
+        html = _add_project_workspace(html)
+        return html.replace(V5_GUARD, GUARD, 1)
 
     if BASE_GUARD not in html:
         html = _replace_once(
@@ -492,7 +721,9 @@ def upgrade(html: str) -> str:
         "alerts")
     html = re.sub(r"^    \{ l: 'Run brief [AB].*?\n", "", html, flags=re.M)
     html = _add_empty_run(html)
-    return html.replace(V4_GUARD, GUARD, 1)
+    html = html.replace(V4_GUARD, V5_GUARD, 1)
+    html = _add_project_workspace(html)
+    return html.replace(V5_GUARD, GUARD, 1)
 
 
 def main(argv=None) -> int:

@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 
-from agents.models import claude_models, codex_models
+from agents.models import claude_models, codex_models, opencode_models
 
 
 class ModelInventoryTests(unittest.TestCase):
@@ -58,9 +58,41 @@ class ModelInventoryTests(unittest.TestCase):
         self.assertEqual(["claude-fable-5", "claude-sonnet-5", "opus"],
                          [m.id for m in models])
         self.assertEqual([False, False, True], [m.current for m in models])
-        self.assertEqual([], models[0].efforts)
-        self.assertEqual([], models[0].speeds)
+        self.assertEqual(["automatic"], models[0].efforts)
+        self.assertEqual(["standard"], models[0].speeds)
         self.assertNotIn("claude-haiku-5", [m.id for m in models])
+
+    def test_opencode_uses_model_specific_variants_from_its_local_catalog(self):
+        with tempfile.TemporaryDirectory() as root:
+            db = os.path.join(root, "opencode.db")
+            con = __import__("sqlite3").connect(db)
+            con.execute("CREATE TABLE message (data TEXT)")
+            con.execute("INSERT INTO message VALUES (?)", (json.dumps({
+                "modelID": "ox-alpha", "providerID": "openrouter"
+            }),))
+            con.execute("INSERT INTO message VALUES (?)", (json.dumps({
+                "modelID": "plain", "providerID": "local"
+            }),))
+            con.commit(); con.close()
+            cache = os.path.join(root, "models.json")
+            with open(cache, "w", encoding="utf-8") as fh:
+                json.dump({
+                    "openrouter": {"models": {"ox-alpha": {
+                        "name": "Ox Alpha", "reasoning_options": [
+                            {"type": "effort", "values": ["low", "high", "max"]}
+                        ]
+                    }}},
+                    "local": {"models": {"plain": {
+                        "name": "Plain Local", "reasoning_options": []
+                    }}},
+                }, fh)
+
+            models = opencode_models(db, cache)
+
+        self.assertEqual(["Ox Alpha", "Plain Local"], [m.label for m in models])
+        self.assertEqual(["low", "high", "max"], models[0].efforts)
+        self.assertEqual(["automatic"], models[1].efforts)
+        self.assertEqual([["standard"], ["standard"]], [m.speeds for m in models])
 
 
 if __name__ == "__main__":

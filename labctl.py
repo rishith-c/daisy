@@ -19,6 +19,16 @@ from lab.chain import topology                 # noqa: E402
 from lab.run import execute                    # noqa: E402
 
 
+def project_cwd(value):
+    """Resolve one explicit project folder without changing process cwd."""
+    if not value:
+        return os.getcwd()
+    resolved = os.path.realpath(os.path.expanduser(value))
+    if not os.path.isdir(resolved):
+        raise ValueError("project is not an existing directory")
+    return resolved
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="labctl", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -28,12 +38,15 @@ def main(argv=None):
     chain_parser = sub.add_parser("chain", help="build a governed org from the agents this Mac can drive")
     chain_parser.add_argument("--json", action="store_true")
     chain_parser.add_argument("--goal", help="run the goal through the governed chain")
+    chain_parser.add_argument("--project")
     agent_parser = sub.add_parser("agent", help="run one exact locally selectable model")
     agent_parser.add_argument("--name", required=True,
                               choices=("claude", "codex", "opencode"))
     agent_parser.add_argument("--model", required=True)
     agent_parser.add_argument("--effort", default="")
+    agent_parser.add_argument("--speed", default="standard")
     agent_parser.add_argument("--provider", default="")
+    agent_parser.add_argument("--project")
     agent_parser.add_argument("--prompt", required=True)
     agent_parser.add_argument("--json", action="store_true")
     r = sub.add_parser("run", help="take a brief through the factory")
@@ -53,6 +66,7 @@ def main(argv=None):
     r.add_argument("--json", action="store_true")
     r.add_argument("--daisy-chain", action="store_true",
                    help="probe all local agents and run them under one Port plan and gate contract")
+    r.add_argument("--project", help="folder the selected agents may inspect and edit")
     a = ap.parse_args(argv)
 
     if a.cmd == "agents":
@@ -73,15 +87,17 @@ def main(argv=None):
         return 0
 
     if a.cmd == "chain":
+        cwd = project_cwd(a.project)
         if a.goal:
-            summary = execute(a.goal, lanes=("crew",), quiet=a.json, daisy_chain=True)
+            summary = execute(a.goal, lanes=("crew",), quiet=a.json,
+                              daisy_chain=True, project_dir=cwd)
             if a.json:
                 print(json.dumps(summary, indent=1, default=str))
             else:
                 print("Daisy Chain run %s — %d gates, %d failed" % (
                     summary["run"], summary["gates"]["total"], summary["gates"]["failed"]))
             return summary["gates"]["failed"]
-        chain = topology()
+        chain = topology(cwd=cwd)
         if a.json:
             print(json.dumps(chain, indent=1))
         else:
@@ -94,6 +110,7 @@ def main(argv=None):
         return 0 if chain["ready"] else 2
 
     if a.cmd == "agent":
+        cwd = project_cwd(a.project)
         available_models = [row for row in inventory().get("models", [])
                             if row.get("vendor") == a.name
                             and row.get("id") == a.model
@@ -105,22 +122,28 @@ def main(argv=None):
         else:
             selected = available_models[0]
             valid_efforts = selected.get("efforts") or []
+            valid_speeds = selected.get("speeds") or []
             if a.effort and a.effort not in valid_efforts:
                 result = {"agent": a.name, "model": a.model, "ok": False,
                           "reason": "effort is not supported by this model",
                           "stdout": "", "stderr": "", "ms": 0}
+            elif a.speed and a.speed not in valid_speeds:
+                result = {"agent": a.name, "model": a.model, "ok": False,
+                          "reason": "speed is not supported by this model",
+                          "stdout": "", "stderr": "", "ms": 0}
             else:
-                ex, probed = executors.pick(a.name, cwd=os.getcwd(), model=a.model,
-                                            provider=a.provider)
+                ex, unavailable = executors.select(a.name)
                 if not ex:
-                    reason = probed[0].detail if probed else "agent unavailable"
                     result = {"agent": a.name, "model": a.model, "ok": False,
-                              "reason": reason, "stdout": "", "stderr": "", "ms": 0}
+                              "reason": unavailable or "agent unavailable",
+                              "stdout": "", "stderr": "", "ms": 0}
                 else:
-                    result = executors.run(ex, a.prompt, cwd=os.getcwd(), model=a.model,
-                                           effort=a.effort, provider=a.provider)
+                    result = executors.run(ex, a.prompt, cwd=cwd, model=a.model,
+                                           effort=a.effort, provider=a.provider,
+                                           speed=a.speed)
                     result.update({"model": a.model, "effort": a.effort,
-                                   "provider": a.provider})
+                                   "speed": a.speed, "provider": a.provider,
+                                   "project": cwd})
         if a.json:
             print(json.dumps(result, indent=1))
         else:
@@ -132,7 +155,7 @@ def main(argv=None):
         lanes += ("crew",)
     s = execute(a.brief, a.run_id, lanes,
                 a.agent, a.fixture, quiet=a.json, crew=a.crew, to_garden=a.garden,
-                daisy_chain=a.daisy_chain)
+                daisy_chain=a.daisy_chain, project_dir=project_cwd(a.project))
     if a.json:
         print(json.dumps(s, indent=1, default=str))
     else:

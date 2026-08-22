@@ -53,7 +53,7 @@ class Executor:
     probe_ms: float = 0.0
 
     def command(self, prompt: str, model: str = "", effort: str = "",
-                provider: str = "") -> list:
+                provider: str = "", speed: str = "") -> list:
         """Build the exact argv for the chosen model; no shell is involved."""
         options = []
         if model:
@@ -63,10 +63,12 @@ class Executor:
                 options.extend(["--model", model])
                 if effort:
                     options.extend(["-c", 'model_reasoning_effort="%s"' % effort])
+                if speed == "fast":
+                    options.extend(["-c", 'service_tier="fast"'])
             elif self.name == "opencode":
                 selected = "%s/%s" % (provider, model) if provider else model
                 options.extend(["--model", selected])
-                if effort:
+                if effort and effort != "automatic":
                     options.extend(["--variant", effort])
         command = []
         for arg in self.argv:
@@ -86,7 +88,7 @@ def _claude_candidate(home: str = None, which=shutil.which) -> Executor:
     the installed NVM Node 22 is supported. An explicit argv keeps the selected
     runtime visible and avoids changing the operator's shell configuration.
     """
-    cli = which("claude") or "claude"
+    cli = which("claude")
     home = home or os.path.expanduser("~")
     compatible = []
     for path in glob(os.path.join(home, ".nvm", "versions", "node", "v*", "bin", "node")):
@@ -95,8 +97,14 @@ def _claude_candidate(home: str = None, which=shutil.which) -> Executor:
             compatible.append((int(match.group(1)), path))
     if compatible:
         node = max(compatible)[1]
+        nvm_cli = os.path.join(os.path.dirname(node), "claude")
+        if os.path.exists(nvm_cli):
+            cli = nvm_cli
+        elif not cli:
+            cli = "claude"
         return Executor("claude", node,
                         [node, cli, "-p", "{prompt}", "--output-format", "text"])
+    cli = cli or "claude"
     return Executor("claude", "claude",
                     ["claude", "-p", "{prompt}", "--output-format", "text"])
 
@@ -108,7 +116,8 @@ def _candidates() -> list[Executor]:
         # considers a trusted directory, and refusing to start is not a failure
         # of the prompt.
         Executor("codex", "codex",
-                 ["codex", "exec", "--skip-git-repo-check", "{prompt}"]),
+                 ["codex", "exec", "--skip-git-repo-check", "--approve-for-me",
+                  "{prompt}"]),
         Executor("opencode", "opencode",
                  ["opencode", "run", "{prompt}"]),
     ]
@@ -230,6 +239,22 @@ def summarize_models(measured: list[Executor]) -> list[Executor]:
     return out
 
 
+def select(name: str, candidates: list[Executor] = None) -> tuple:
+    """Resolve an installed adapter without spending a second model request.
+
+    A user-initiated run is itself the authoritative availability check. The
+    onboarding and Daisy Chain paths still probe because they must compare a
+    roster before choosing; a single selected run reports its own CLI error.
+    """
+    for ex in (candidates if candidates is not None else _candidates()):
+        if ex.name != name:
+            continue
+        if shutil.which(ex.binary):
+            return ex, ""
+        return None, "not installed"
+    return None, "no executor adapter"
+
+
 def pick(prefer: str = "auto", cwd: str = None, model: str = "",
          provider: str = "") -> tuple:
     """Return (executor_or_None, all_probed). Never raises on unavailability."""
@@ -247,12 +272,13 @@ def pick(prefer: str = "auto", cwd: str = None, model: str = "",
 
 def run(ex: Executor, prompt: str, cwd: str = None,
         timeout: int = RUN_TIMEOUT, model: str = "", effort: str = "",
-        provider: str = "") -> dict:
+        provider: str = "", speed: str = "") -> dict:
     """Drive a real agent. Returns what happened; never raises on agent error."""
     t0 = time.perf_counter()
     try:
         p = subprocess.run(ex.command(prompt, model=model, effort=effort,
-                                      provider=provider), capture_output=True, text=True,
+                                      provider=provider, speed=speed),
+                           capture_output=True, text=True,
                            timeout=timeout, cwd=cwd, stdin=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return {"agent": ex.name, "ok": False, "reason": "timeout",

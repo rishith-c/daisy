@@ -12,9 +12,9 @@ vendor and are reported that way rather than flattened into one invented scale.
     ~/.codex/config.toml        model, model_reasoning_effort
     opencode.db  message.data   modelID / providerID actually used
 
-Read-only, like the rest of agents/. Where a vendor exposes no ladder, the
-answer is an empty list — OpenCode has no reasoning-effort concept, and saying
-so is more useful than inventing three tiers for it.
+Read-only, like the rest of agents/. A single ``automatic`` or ``standard``
+entry means the installed adapter exposes no override; it is a real default,
+not a guessed ladder and not a dead ``n/a`` control.
 
     python3 -m agents.models          human-readable
     python3 -m agents.models --json
@@ -33,14 +33,15 @@ HOME = os.path.expanduser("~")
 
 # Ladders are per-vendor because they really are per-vendor. Claude Code and
 # Codex do not agree on the names, the count, or the top of the scale.
-CLAUDE_EFFORTS = []
-CODEX_EFFORTS = ["light", "medium", "high", "xhigh", "max", "ultra"]
+CLAUDE_EFFORTS = ["automatic"]
+CODEX_EFFORTS = ["low", "medium", "high", "xhigh", "max", "ultra"]
 SPEEDS = ["standard", "fast"]
 
-EFFORT_LABEL = {"low": "Low", "light": "Light", "medium": "Medium", "high": "High",
+EFFORT_LABEL = {"automatic": "Automatic", "low": "Low", "light": "Light",
+                "medium": "Medium", "high": "High",
                 "xhigh": "Extra High", "max": "Max", "ultra": "Ultra"}
 EFFORT_NOTE = {"ultra": "Consumes usage limits faster", "max": "Slowest, most thorough"}
-SPEED_NOTE = {"standard": "Default speed", "fast": "1.5× speed, more usage"}
+SPEED_NOTE = {"standard": "Provider default", "fast": "Faster service tier; higher usage"}
 
 @dataclass
 class Model:
@@ -83,7 +84,8 @@ def claude_models(home: str = None) -> list[Model]:
             continue
         seen.add(mid)
         out.append(Model("claude", mid, opt.get("label") or mid, "config",
-                         efforts=[], speeds=[]))
+                         efforts=list(CLAUDE_EFFORTS), speeds=["standard"],
+                         effort="automatic"))
     # Claude's option cache is ephemeral and the CLI may clear it after a run.
     # Session history is durable evidence that a model was genuinely used on
     # this Mac. The live model probe still decides whether it may join a Chain.
@@ -101,7 +103,9 @@ def claude_models(home: str = None) -> list[Model]:
                 continue
             seen.add(mid)
             label = mid.removeprefix("claude-").replace("-", " ").title()
-            out.append(Model("claude", mid, label, "history", efforts=[], speeds=[]))
+            out.append(Model("claude", mid, label, "history",
+                             efforts=list(CLAUDE_EFFORTS), speeds=["standard"],
+                             effort="automatic"))
     # settings.json stores a short alias ("opus"), not an id.
     if current:
         matched = False
@@ -113,7 +117,8 @@ def claude_models(home: str = None) -> list[Model]:
         if not matched:
             out.append(Model("claude", current, current.replace("-", " ").title(),
                              "config", current=True,
-                             efforts=[], speeds=[]))
+                             efforts=list(CLAUDE_EFFORTS), speeds=["standard"],
+                             effort="automatic"))
     return out
 
 
@@ -166,8 +171,22 @@ def codex_models(home: str = None) -> list[Model]:
     return out
 
 
-def opencode_models(db: str = None) -> list[Model]:
+def _opencode_details(cache: dict, provider: str, model: str) -> tuple:
+    provider_row = cache.get(provider) if isinstance(cache, dict) else None
+    models = provider_row.get("models") if isinstance(provider_row, dict) else None
+    row = models.get(model) if isinstance(models, dict) else None
+    if not isinstance(row, dict):
+        return model, ["automatic"]
+    efforts = []
+    for option in row.get("reasoning_options") or []:
+        if option.get("type") == "effort":
+            efforts.extend(str(value) for value in (option.get("values") or []) if value)
+    return str(row.get("name") or model), efforts or ["automatic"]
+
+
+def opencode_models(db: str = None, model_cache: str = None) -> list[Model]:
     db = db or os.path.join(HOME, ".local", "share", "opencode", "opencode.db")
+    model_cache = model_cache or os.path.join(HOME, ".cache", "opencode", "models.json")
     if not os.path.exists(db):
         return []
     uri = "file:%s?immutable=1&mode=ro" % db.replace("?", "%3f").replace("#", "%23")
@@ -176,6 +195,7 @@ def opencode_models(db: str = None) -> list[Model]:
     except sqlite3.Error:
         return []
     out = []
+    cache = _read_json(model_cache)
     try:
         rows = con.execute(
             "SELECT DISTINCT json_extract(data,'$.modelID'), json_extract(data,'$.providerID')"
@@ -183,10 +203,10 @@ def opencode_models(db: str = None) -> list[Model]:
         for mid, prov in rows:
             if not mid:
                 continue
-            # OpenCode routes to whatever provider you point it at, and exposes
-            # no reasoning-effort setting of its own. Empty ladders, honestly.
-            out.append(Model("opencode", str(mid), str(mid), "history",
-                             provider=str(prov or ""), efforts=[], speeds=[]))
+            label, efforts = _opencode_details(cache, str(prov or ""), str(mid))
+            out.append(Model("opencode", str(mid), label, "history",
+                             provider=str(prov or ""), efforts=efforts,
+                             speeds=["standard"], effort=efforts[0]))
     except sqlite3.Error:
         return []
     finally:
@@ -197,7 +217,8 @@ def opencode_models(db: str = None) -> list[Model]:
 def inventory() -> dict:
     models = claude_models() + codex_models() + opencode_models()
     return {
-        "efforts": {"claude": CLAUDE_EFFORTS, "codex": CODEX_EFFORTS, "opencode": []},
+        "efforts": {"claude": CLAUDE_EFFORTS, "codex": CODEX_EFFORTS,
+                    "opencode": ["automatic"]},
         "speeds": SPEEDS,
         "labels": {"effort": EFFORT_LABEL, "effort_note": EFFORT_NOTE, "speed_note": SPEED_NOTE},
         "models": [asdict(m) for m in models],

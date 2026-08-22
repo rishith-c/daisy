@@ -37,11 +37,11 @@ def _identity(node: dict) -> str:
     return str(node.get("id") or node.get("agent") or "")
 
 
-def topology(probes=None, model_inventory=None) -> dict:
+def topology(probes=None, model_inventory=None, cwd: str | None = None) -> dict:
     """Return an auditable role graph; never call an unprobed agent usable."""
     model_inventory = model_inventory if model_inventory is not None else inventory()
     probes = list(probes if probes is not None
-                  else executors.available_models(model_inventory))
+                  else executors.available_models(model_inventory, cwd=cwd))
     usable = [probe for probe in probes if probe.ok]
     agents = list(dict.fromkeys(probe.name for probe in usable))
     models = list(model_inventory.get("models") or [])

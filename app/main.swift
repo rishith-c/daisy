@@ -1,4 +1,5 @@
 import Cocoa
+import UniformTypeIdentifiers
 import WebKit
 
 /// Bridges `window.webkit.messageHandlers.daisy` to the adoption scanner.
@@ -10,16 +11,26 @@ import WebKit
 final class Bridge: NSObject, WKScriptMessageHandler {
     weak var webView: WKWebView?
     static let gardenOrigin = "https://garden-taupe-three.vercel.app"
+    static let projectKey = "daisy.project.path"
 
     func userContentController(_ c: WKUserContentController, didReceive message: WKScriptMessage) {
         guard let body = message.body as? [String: Any], let command = body["cmd"] as? String else { return }
         switch command {
+        case "project.status":
+            emitProject()
+        case "project.choose":
+            chooseProject()
         case "agents":
             run(["python3", "-m", "agents.discover", "--json", "--limit", "8"], callback: "window.__daisyAgents")
         case "onboarding.agents":
             run(["python3", "labctl.py", "agents", "--json"], callback: "window.__daisyOnboarding")
         case "chain.status":
-            run(["python3", "labctl.py", "chain", "--json"], callback: "window.__daisyChainStatus")
+            if let projectPath = selectedProjectPath() {
+                run(["python3", "labctl.py", "chain", "--project", projectPath, "--json"],
+                    callback: "window.__daisyChainStatus")
+            } else {
+                run(["python3", "labctl.py", "chain", "--json"], callback: "window.__daisyChainStatus")
+            }
         case "chain.run":
             guard let raw = body["goal"] as? String else { return }
             let goal = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -27,7 +38,12 @@ final class Bridge: NSObject, WKScriptMessageHandler {
                 emit("window.__daisyChainRun", json: "{\"error\":\"Enter a goal between 1 and 12,000 characters.\"}")
                 return
             }
-            run(["python3", "labctl.py", "run", "--brief", goal, "--lane", "crew", "--daisy-chain", "--json"],
+            guard let projectPath = selectedProjectPath() else {
+                emit("window.__daisyChainRun", json: "{\"error\":\"Choose a project folder before starting a run.\"}")
+                return
+            }
+            run(["python3", "labctl.py", "run", "--brief", goal, "--lane", "crew",
+                 "--daisy-chain", "--project", projectPath, "--json"],
                 callback: "window.__daisyChainRun")
         case "agent.run":
             guard let rawGoal = body["goal"] as? String,
@@ -35,21 +51,29 @@ final class Bridge: NSObject, WKScriptMessageHandler {
                   let model = body["model"] as? String else { return }
             let goal = rawGoal.trimmingCharacters(in: .whitespacesAndNewlines)
             let effort = body["effort"] as? String ?? ""
+            let speed = body["speed"] as? String ?? "standard"
             let provider = body["provider"] as? String ?? ""
             let vendors = Set(["claude", "codex", "opencode"])
-            let efforts = Set(["", "low", "light", "medium", "high", "xhigh", "max", "ultra"])
+            let efforts = Set(["", "automatic", "low", "light", "medium", "high", "xhigh", "max", "ultra"])
+            let speeds = Set(["standard", "fast"])
             let safeID = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._/:"))
             let modelSafe = !model.isEmpty && model.count <= 160 && model.unicodeScalars.allSatisfy(safeID.contains)
             let providerSafe = provider.count <= 80 && provider.unicodeScalars.allSatisfy(safeID.contains)
             guard !goal.isEmpty, goal.count <= 12000, vendors.contains(vendor),
-                  efforts.contains(effort), modelSafe, providerSafe else {
+                  efforts.contains(effort), speeds.contains(speed), modelSafe, providerSafe else {
                 emit("window.__daisyAgentRun", json: "{\"ok\":false,\"reason\":\"The selected agent, model, or goal is invalid.\"}")
                 return
             }
+            guard let projectPath = selectedProjectPath() else {
+                emit("window.__daisyAgentRun", json: "{\"ok\":false,\"reason\":\"Choose a project folder before starting a run.\"}")
+                return
+            }
             run(["python3", "labctl.py", "agent", "--name", vendor, "--model", model,
-                 "--effort", effort, "--provider", provider, "--prompt", goal, "--json"],
+                 "--effort", effort, "--speed", speed, "--provider", provider,
+                 "--prompt", goal, "--project", projectPath, "--json"],
                 callback: "window.__daisyAgentRun")
         case "app.reset":
+            UserDefaults.standard.removeObject(forKey: Bridge.projectKey)
             run(["python3", "-m", "garden.link", "unlink"], callback: "window.__daisyReset")
         case "garden", "garden.status":
             run(["python3", "-m", "garden.link", "status"], callback: "window.__daisyGardenStatus")
@@ -74,13 +98,76 @@ final class Bridge: NSObject, WKScriptMessageHandler {
         }
     }
 
+    func selectedProjectPath() -> String? {
+        guard let path = UserDefaults.standard.string(forKey: Bridge.projectKey),
+              !path.isEmpty else { return nil }
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            UserDefaults.standard.removeObject(forKey: Bridge.projectKey)
+            return nil
+        }
+        return URL(fileURLWithPath: path).standardizedFileURL.path
+    }
+
+    func projectJSON(cancelled: Bool = false) -> String {
+        let path = selectedProjectPath() ?? ""
+        let payload: [String: Any] = [
+            "path": path,
+            "name": path.isEmpty ? "" : URL(fileURLWithPath: path).lastPathComponent,
+            "selected": !path.isEmpty,
+            "cancelled": cancelled,
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let json = String(data: data, encoding: .utf8) else {
+            return "{\"path\":\"\",\"name\":\"\",\"selected\":false}"
+        }
+        return json
+    }
+
+    func emitProject(cancelled: Bool = false) {
+        emit("window.__daisyProject", json: projectJSON(cancelled: cancelled))
+    }
+
+    func chooseProject() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose a project for Daisy"
+        panel.prompt = "Use this folder"
+        panel.message = "Daisy's agents will read and write inside this project."
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowedContentTypes = [.folder]
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = true
+        if let current = selectedProjectPath() {
+            panel.directoryURL = URL(fileURLWithPath: current)
+        }
+        panel.begin { [weak self] response in
+            guard response == .OK, let url = panel.url else {
+                self?.emitProject(cancelled: true)
+                return
+            }
+            let path = url.standardizedFileURL.path
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else {
+                self?.emitProject(cancelled: true)
+                return
+            }
+            UserDefaults.standard.set(path, forKey: Bridge.projectKey)
+            self?.emitProject()
+        }
+    }
+
     /// Run a fixed argument array against the Python packages copied into the
     /// bundle. No command is ever interpreted by a shell.
     func run(_ arguments: [String], callback: String) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let json = Bridge.run(arguments: arguments)
-            guard !json.isEmpty else { return }
-            self?.emit(callback, json: json)
+            let payload = json.isEmpty
+                ? "{\"ok\":false,\"error\":\"Daisy could not complete the local command.\",\"reason\":\"Daisy could not complete the local command. Check the selected project and agent setup.\"}"
+                : json
+            self?.emit(callback, json: payload)
         }
     }
 
