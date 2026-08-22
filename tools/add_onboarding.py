@@ -90,7 +90,10 @@ def replace_existing(html, css, markup, js):
          r'(?=\n\n<script>\n/\* ---------------- import view)', js, "script"),
     )
     for pattern, block, name in replacements:
-        html, count = re.subn(pattern, block, html, count=1, flags=re.S)
+        # A replacement function keeps JavaScript escapes such as ``\b``
+        # literal. Passing the block directly makes re.sub interpret them.
+        html, count = re.subn(pattern, lambda _match, value=block: value,
+                              html, count=1, flags=re.S)
         if count != 1:
             raise SystemExit("existing onboarding %s block was not found exactly once" % name)
     return html

@@ -49,6 +49,8 @@ class OnboardingGeneratorTests(unittest.TestCase):
         self.assertEqual(1, html.count('id="obv"'))
         self.assertEqual(1, html.count("{ l: 'Show onboarding'"))
         self.assertEqual(4, html.count('<section class="ob-p'))
+        self.assertNotIn("\x08", html)
+        self.assertIn(r"[?&#]onboarding\b", html)
 
     def test_generated_flow_exposes_local_and_browser_pairing_paths(self):
         self.run_generator("--replace")
@@ -62,6 +64,7 @@ class OnboardingGeneratorTests(unittest.TestCase):
         self.assertIn("window.__daisyGardenPair", html)
         self.assertIn("window.__daisyGardenStatus", html)
         self.assertIn('maxlength="6"', html)
+        self.assertIn("Not linked. Open Garden", html)
 
 
 if __name__ == "__main__":

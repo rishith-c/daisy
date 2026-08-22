@@ -495,8 +495,12 @@
       auto.setAttribute('aria-checked', gardenState.autopublish ? 'true' : 'false');
       if (pair) pair.textContent = 'Linked';
     } else {
-      status.dataset.state = gardenState.why ? 'error' : '';
-      status.textContent = gardenState.why || 'Not linked. Open Garden, sign in there, and paste its one-time code here.';
+      var why = gardenState.why || '';
+      var firstLink = /no usable credential/i.test(why);
+      status.dataset.state = why && !firstLink ? 'error' : '';
+      status.textContent = firstLink
+        ? 'Not linked. Open Garden, sign in there, and paste its one-time code here.'
+        : (why || 'Not linked. Open Garden, sign in there, and paste its one-time code here.');
       auto.disabled = true;
       auto.setAttribute('aria-checked', 'false');
       if (pair) { pair.disabled = false; pair.textContent = 'Pair this Mac'; }
