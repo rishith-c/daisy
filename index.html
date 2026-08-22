@@ -348,7 +348,7 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%);
           mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%); }
 @media (prefers-reduced-motion: reduce) { #feed { scroll-behavior: auto; } }
-.col { max-width: 720px; margin: 0 auto; padding: 0 30px 0 8px; }
+.col { max-width: 720px; margin: 0 auto; padding: 0 30px 0 8px; container-type: inline-size; }
 
 .item { margin-bottom: 24px; }
 #feed.live .item { animation: itemin .52s var(--snap) both; }
@@ -390,6 +390,36 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 }
 .brief .lbl { font-family: var(--mono); font-size: 10px; color: var(--ink-3);
   letter-spacing: .07em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+
+/* ---------- CREW bay: two agents, one contract ---------- */
+/* The bay lives inside a fixed-width column, so it must respond to its own
+   container rather than the viewport — the same trick the Codex composer uses
+   for its footer. */
+.bay { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@supports not (container-type: inline-size) {
+  @media (max-width: 720px) { .bay { grid-template-columns: 1fr; } }
+}
+@container (max-width: 430px) { .bay { grid-template-columns: 1fr; } }
+.lane {
+  background: var(--surface); border: .5px solid var(--border);
+  border-radius: var(--r-card); box-shadow: var(--shadow-1); overflow: hidden;
+}
+.lane .lh { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: .5px solid var(--border); }
+.lane .lh i { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
+.lane.claude .lh i { background: #C2703C; }
+.lane.codex .lh i { background: #3E8577; }
+.lane .lh b { font-size: 12.5px; font-weight: 600; }
+.lane .lh .m { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); white-space: nowrap; }
+.lane .lb { padding: 10px 12px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); line-height: 1.8; }
+.lane .lb .k { color: var(--ink-3); }
+.lane .lb .v { color: var(--ink); }
+.bay-foot {
+  margin-top: 10px; padding: 10px 14px; border-radius: var(--r-card);
+  background: var(--surface-2); border: .5px solid var(--border);
+  font-size: 12.5px; color: var(--ink-2);
+}
+.bay-foot b { color: var(--ink); font-weight: 600; }
 
 /* ---------- cards ---------- */
 .card {
@@ -1101,6 +1131,7 @@ $ echo $?
       '<div class="res" hidden><b>Approved</b> by rishith · run PATCHed to Port · worktrees spawning</div></div>' },
     { d: 780, kind: 'prose', tag: '<div class="who-tag sys"><i></i>labctl</div>',
       text: 'Worktrees created: <code>runs/1042/web-frontend</code> on Fable 5 and <code>runs/1042/web-api</code> on GPT-5.3 Codex, both pinned to <code>api-contract.json</code>. Every git operation stays with the orchestrator; the agents only edit files. Spans are streaming.' },
+    { d: 820, kind: 'card', html: "<div class=\"bay\"><div class=\"lane codex\"><div class=\"lh\"><i></i><b>web-api</b><span class=\"m\">codex exec &middot; gpt-5.3-codex</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-api</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-api</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">5 endpoints, pinned</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">12 files &middot; +1,204 &minus;86</span></div><div><span class=\"k\">tests</span> &nbsp;<span class=\"v\">18 passed, 0 failed</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div><div class=\"lane claude\"><div class=\"lh\"><i></i><b>web-frontend</b><span class=\"m\">claude -p &middot; fable-5 high</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-frontend</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-frontend</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">same 5 endpoints</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">9 files &middot; +867 &minus;41</span></div><div><span class=\"k\">skills</span> &nbsp;<span class=\"v\">hallmark, design-standards</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div></div><div class=\"bay-foot\">Two vendors, two worktrees, <b>one <code>api-contract.json</code></b>. Neither agent can touch git &mdash; the orchestrator owns every commit, so the diffs stay symmetric and reviewable. They are combined by a contract, not by a conversation.</div>" },
     { d: 900, kind: 'prose', tag: '<div class="who-tag codex"><i></i>Codex · web-api</div>',
       text: 'The contract names five endpoints. I generated route handlers with validation mirroring the response shapes, a seeded fixture layer for the fleet data, and one test per endpoint asserting the exact field set — no extra keys, since the conformance gate diffs both ways.' },
     { d: 620, kind: 'card', html:
