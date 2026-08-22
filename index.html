@@ -637,6 +637,17 @@ body.rail .minimap { padding-left: 26px; }
          letter-spacing: .04em; text-transform: uppercase; font-weight: 500; }
 .mhead:first-child { padding-top: 5px; }
 .mnote { padding: 3px 9px 6px; font-size: 11.5px; color: var(--ink-3); white-space: normal; }
+.chain-mi { height: auto; min-height: 38px; padding-block: 6px; }
+.chain-mi .chain-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.chain-mi .chain-copy b { font-size: 13px; font-weight: 550; }
+.chain-mi .chain-copy small { color: var(--ink-3); font-size: 10.5px; line-height: 1.3; white-space: normal; }
+.chain-mi .tog { margin-left: auto; width: 28px; height: 16px; border-radius: 10px;
+  background: var(--surface-3); border: .5px solid var(--border-strong); padding: 2px; flex: 0 0 28px; }
+.chain-mi .tog::after { content: ''; display: block; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--ink-4); transition: transform var(--d-hover) var(--out), background var(--d-hover) var(--out); }
+.chain-mi[aria-checked="true"] .tog { background: var(--leaf-wash); }
+.chain-mi[aria-checked="true"] .tog::after { transform: translateX(12px); background: var(--pass); }
+.chain-org { padding: 4px 9px 7px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); line-height: 1.55; }
 
 
 /* ---------- Memory view: four tiers and the compaction moment ---------- */
@@ -1991,6 +2002,9 @@ $ echo $?
      concept at all — so picking an OpenCode model disables Effort and Speed
      rather than offering settings that go nowhere. */
   var VENDOR_LABEL = { claude: 'Claude Code', codex: 'Codex', opencode: 'OpenCode' };
+  var CHAIN_KEY = 'daisy-chain-v1';
+  var CHAIN_ON = false, CHAIN_PENDING = false, CHAIN_STATE = null;
+  try { CHAIN_ON = localStorage.getItem(CHAIN_KEY) === 'on'; } catch (e) {}
   // 'run' is what the composer sets. fe/api are the CREW lane defaults and live
   // in Settings — a two-agent contract is a property of the run, not a control
   // you want in front of you every time you type.
@@ -2015,8 +2029,10 @@ $ echo $?
   function paintTrigger(lane) {
     var t = $('.mtrig[data-lane="' + lane + '"]'), s = LANES[lane];
     if (!t) return;
-    $('.mn', t).textContent = s ? (s.model.label || s.model.id) : '—';
-    $('.ef', t).textContent = s && s.effort ? effortLabel(s.effort) : '';
+    $('.mn', t).textContent = CHAIN_ON ? 'Daisy Chain' : (s ? (s.model.label || s.model.id) : '—');
+    $('.ef', t).textContent = CHAIN_ON
+      ? (CHAIN_STATE && CHAIN_STATE.nodes ? CHAIN_STATE.nodes.length + ' agents' : '')
+      : (s && s.effort ? effortLabel(s.effort) : '');
   }
 
   var mmenu, msub, openLane = null, openRow = null;
@@ -2031,6 +2047,7 @@ $ echo $?
     mmenu.addEventListener('click', function (e) {
       var row = e.target.closest('.mi'); if (!row) return;
       e.stopPropagation();
+      if (row.id === 'daisy-chain') { toggleChain(); return; }
       openSub(row.getAttribute('data-row'), row);
     });
     msub.addEventListener('click', function (e) {
@@ -2048,16 +2065,65 @@ $ echo $?
 
   function menuHTML(s) {
     var noLadder = !s.model.efforts.length;
-    return '<button class="mi" data-row="model">Model<span class="val">' +
+    var count = CHAIN_STATE && CHAIN_STATE.nodes ? CHAIN_STATE.nodes.length : 0;
+    var state = CHAIN_PENDING ? 'Scanning this Mac…' :
+      (CHAIN_ON ? count + ' live agents · coordinator → peers → gates' : 'Off · one model owns the run');
+    var org = CHAIN_ON && CHAIN_STATE ? '<div class="chain-org">' +
+      CHAIN_STATE.nodes.map(function (n) { return esc(n.role + '  ' + n.agent + ' / ' + (n.model || 'tool default')); }).join('<br>') +
+      '<br>verdict&nbsp;&nbsp;&nbsp;Port + deterministic gates</div>' : '';
+    return '<button class="mi chain-mi" id="daisy-chain" role="switch" aria-checked="' +
+             (CHAIN_ON ? 'true' : 'false') + '"><span class="chain-copy"><b>Daisy Chain</b><small>' +
+             state + '</small></span><span class="tog" aria-hidden="true"></span></button>' + org +
+           '<div class="msep"></div>' +
+           '<button class="mi" data-row="model"' + (CHAIN_ON ? ' disabled' : '') + '>Model<span class="val">' +
              (s.model.label || s.model.id) + '</span>' + CHEV + '</button>' +
-           '<button class="mi" data-row="effort"' + (noLadder ? ' disabled' : '') + '>Effort<span class="val">' +
+           '<button class="mi" data-row="effort"' + (noLadder || CHAIN_ON ? ' disabled' : '') + '>Effort<span class="val">' +
              (noLadder ? 'n/a' : effortLabel(s.effort)) + '</span>' + CHEV + '</button>' +
-           '<button class="mi" data-row="speed"' + (noLadder ? ' disabled' : '') + '>Speed<span class="val">' +
+           '<button class="mi" data-row="speed"' + (noLadder || CHAIN_ON ? ' disabled' : '') + '>Speed<span class="val">' +
              (noLadder ? 'n/a' : (s.speed === 'fast' ? 'Fast' : 'Standard')) + '</span>' + CHEV + '</button>' +
            '<div class="msep"></div>' +
            '<div class="mnote">' + VENDOR_LABEL[s.model.vendor] + ' &middot; read from ' +
              (s.model.source === 'config' ? 'its config' :
               s.model.source === 'history' ? 'its history' : 'the known roster') + '</div>';
+  }
+
+  function saveChain() {
+    try { localStorage.setItem(CHAIN_KEY, CHAIN_ON ? 'on' : 'off'); } catch (e) {}
+  }
+
+  function refreshChainMenu() {
+    if (openLane && LANES[openLane]) mmenu.innerHTML = menuHTML(LANES[openLane]);
+    paintTrigger('run');
+  }
+
+  window.__daisyChainStatus = function (payload) {
+    try { CHAIN_STATE = typeof payload === 'string' ? JSON.parse(payload) : payload; }
+    catch (e) { CHAIN_STATE = { ready: false, why: 'Daisy returned an unreadable chain plan.', nodes: [] }; }
+    CHAIN_PENDING = false;
+    if (CHAIN_STATE && CHAIN_STATE.ready) {
+      CHAIN_ON = true; saveChain();
+      toast('<b>Daisy Chain ready.</b> ' + CHAIN_STATE.nodes.length +
+            ' probed agents share one Port plan; deterministic gates keep the verdict.');
+    } else {
+      CHAIN_ON = false; saveChain();
+      toast('<b>Daisy Chain stayed off.</b> ' + esc((CHAIN_STATE && CHAIN_STATE.why) || 'Two usable agents are required.'));
+    }
+    refreshChainMenu();
+  };
+
+  function toggleChain() {
+    if (CHAIN_ON || CHAIN_PENDING) {
+      CHAIN_ON = false; CHAIN_PENDING = false; saveChain(); refreshChainMenu();
+      toast('<b>Daisy Chain off.</b> This run returns to one selected model.');
+      return;
+    }
+    if (!native || !window.webkit || !window.webkit.messageHandlers ||
+        !window.webkit.messageHandlers.daisy) {
+      toast('<b>Open Daisy.app to build the chain.</b> A browser cannot probe local agents.');
+      return;
+    }
+    CHAIN_PENDING = true; refreshChainMenu();
+    window.webkit.messageHandlers.daisy.postMessage({ cmd: 'chain.status' });
   }
 
   function subHTML(kind, s) {

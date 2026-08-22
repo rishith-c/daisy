@@ -18,6 +18,8 @@ final class Bridge: NSObject, WKScriptMessageHandler {
             run(["python3", "-m", "agents.discover", "--json", "--limit", "8"], callback: "window.__daisyAgents")
         case "onboarding.agents":
             run(["python3", "labctl.py", "agents", "--json"], callback: "window.__daisyOnboarding")
+        case "chain.status":
+            run(["python3", "labctl.py", "chain", "--json"], callback: "window.__daisyChainStatus")
         case "garden", "garden.status":
             run(["python3", "-m", "garden.link", "status"], callback: "window.__daisyGardenStatus")
         case "garden.pair":

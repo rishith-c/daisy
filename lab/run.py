@@ -55,6 +55,7 @@ from hardware.bracket import Bracket                              # noqa: E402
 from taste.lint import lint                                       # noqa: E402
 from commons.store import Solution, admit, recall, record_reuse, NotVerified  # noqa: E402
 from lab import executors                                         # noqa: E402
+from lab.chain import topology as chain_topology                  # noqa: E402
 from garden import index as garden_index                          # noqa: E402
 from garden.publish import publish as garden_publish, NotPublishable  # noqa: E402
 from port.client import PortClient                                   # noqa: E402
@@ -485,7 +486,8 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
 def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape", "software"),
             prefer: str = "auto", fixture: str | None = None,
             quiet: bool = False, crew: list = None,
-            to_garden: bool = False, port_client: PortClient | None = None) -> dict:
+            to_garden: bool = False, port_client: PortClient | None = None,
+            daisy_chain: bool = False) -> dict:
     run_id = run_id or time.strftime("%H%M%S")
     d = _rundir(run_id)
     out = []
@@ -497,9 +499,11 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
 
     started = time.time()
     governance = port_client or PortClient(run_id=run_id)
+    chain = chain_topology() if daisy_chain else None
     port_lanes = [{"name": lane,
                    "agent": ("deterministic" if lane in ("hardware", "scrape")
-                             else prefer if lane == "software" else "claude")}
+                             else prefer if lane == "software" else
+                             "daisy-chain" if daisy_chain else "claude")}
                   for lane in lanes]
     if not port_lanes:
         port_lanes = [{"name": "orchestrator", "agent": "deterministic"}]
@@ -528,6 +532,8 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
                     "port": {"mode": governance.mode,
                              "plan_sha": committed["plan_sha"]},
                     "committed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+            if chain is not None:
+                plan["daisy_chain"] = chain
             pp = os.path.join(d, "plan.json")
             with open(pp, "w", encoding="utf-8") as fh:
                 fh.write(json.dumps(plan, indent=1))
@@ -548,8 +554,15 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
             log("software lane")
             results["software"] = software_lane(run_id, brief, prefer, log)
         if "crew" in lanes:
-            log("crew lane — two vendors, one contract")
-            results["crew"] = crew_lane(run_id, brief, crew or ["claude", "codex"], log)
+            selected = chain["agents"] if chain is not None else (crew or ["claude", "codex"])
+            if chain is not None:
+                log("Daisy Chain — coordinator, peers, one Port plan, one gate contract")
+                for node in chain["nodes"]:
+                    log("  %-11s %s / %s" % (node["role"], node["agent"],
+                                               node["model"] or "tool default"))
+            else:
+                log("crew lane — two vendors, one contract")
+            results["crew"] = crew_lane(run_id, brief, selected, log)
 
         all_gates = [g for r in results.values() for g in r.gates]
         failed = [g for g in all_gates if not g["passed"]]

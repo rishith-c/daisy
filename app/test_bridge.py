@@ -24,11 +24,12 @@ check("opens Garden outside the web view", 'case "garden.open"' in SOURCE and "N
 check("pins browser auth to the HTTPS Garden origin", 'https://garden-taupe-three.vercel.app' in SOURCE and 'url.scheme == "https"' in SOURCE)
 check("invokes the onboarding agent callback", "window.__daisyOnboarding" in SOURCE)
 check("onboarding probes real executors as JSON", '["python3", "labctl.py", "agents", "--json"]' in SOURCE)
+check("reports a governed Daisy Chain topology", 'case "chain.status"' in SOURCE and '["python3", "labctl.py", "chain", "--json"]' in SOURCE)
 check("invokes the Garden status callback", "window.__daisyGardenStatus" in SOURCE)
 check("invokes the Garden pairing callback", "window.__daisyGardenPair" in SOURCE)
 check("passes the pairing code as one process argument", '["python3", "-m", "garden.link", "pair", "--code", code]' in SOURCE)
 check("uses Process argument arrays", "proc.arguments = arguments" in SOURCE)
 check("never invokes a shell", "/bin/sh" not in SOURCE and "-c\"" not in SOURCE)
 
-print(f"\n{13-len(failed)} passed, {len(failed)} failed")
+print(f"\n{14-len(failed)} passed, {len(failed)} failed")
 raise SystemExit(1 if failed else 0)

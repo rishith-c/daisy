@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from lab import executors                      # noqa: E402
+from lab.chain import topology                 # noqa: E402
 from lab.run import execute                    # noqa: E402
 
 
@@ -23,6 +24,8 @@ def main(argv=None):
     sub = ap.add_subparsers(dest="cmd", required=True)
     agents_parser = sub.add_parser("agents", help="which coding agents can actually be driven")
     agents_parser.add_argument("--json", action="store_true")
+    chain_parser = sub.add_parser("chain", help="build a governed org from the agents this Mac can drive")
+    chain_parser.add_argument("--json", action="store_true")
     r = sub.add_parser("run", help="take a brief through the factory")
     r.add_argument("--brief", required=True)
     r.add_argument("--run-id")
@@ -38,6 +41,8 @@ def main(argv=None):
                    help="publish what passes to the shared Garden index "
                         "(prepares a PR branch; never pushes without --live)")
     r.add_argument("--json", action="store_true")
+    r.add_argument("--daisy-chain", action="store_true",
+                   help="probe all local agents and run them under one Port plan and gate contract")
     a = ap.parse_args(argv)
 
     if a.cmd == "agents":
@@ -56,8 +61,25 @@ def main(argv=None):
                 ("%.0f ms" % e.probe_ms) if e.probe_ms else "-", e.detail))
         return 0
 
-    s = execute(a.brief, a.run_id, tuple(a.lane or ("hardware", "scrape", "software")),
-                a.agent, a.fixture, quiet=a.json, crew=a.crew, to_garden=a.garden)
+    if a.cmd == "chain":
+        chain = topology()
+        if a.json:
+            print(json.dumps(chain, indent=1))
+        else:
+            print("Daisy Chain — %s" % ("ready" if chain["ready"] else "not ready"))
+            for node in chain["nodes"]:
+                print("  %-11s %-10s %s" % (node["role"], node["agent"],
+                                             node["model"] or "tool default"))
+            if chain["why"]:
+                print("  %s" % chain["why"])
+        return 0 if chain["ready"] else 2
+
+    lanes = tuple(a.lane or ("hardware", "scrape", "software"))
+    if a.daisy_chain and "crew" not in lanes:
+        lanes += ("crew",)
+    s = execute(a.brief, a.run_id, lanes,
+                a.agent, a.fixture, quiet=a.json, crew=a.crew, to_garden=a.garden,
+                daisy_chain=a.daisy_chain)
     if a.json:
         print(json.dumps(s, indent=1, default=str))
     else:

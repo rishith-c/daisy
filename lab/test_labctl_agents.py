@@ -28,6 +28,16 @@ class AgentsCommandTests(unittest.TestCase):
             ]
         })
 
+    def test_daisy_chain_adds_the_governed_crew_lane(self):
+        output = io.StringIO()
+        summary = {"gates": {"failed": 0}}
+        with patch("labctl.execute", return_value=summary) as execute, redirect_stdout(output):
+            self.assertEqual(labctl.main(["run", "--brief", "ship it", "--daisy-chain", "--json"]), 0)
+
+        args, kwargs = execute.call_args
+        self.assertIn("crew", args[2])
+        self.assertTrue(kwargs["daisy_chain"])
+
 
 if __name__ == "__main__":
     unittest.main()
