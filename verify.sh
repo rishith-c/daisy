@@ -45,6 +45,9 @@ gate "physics — closed-form margin test suite" \
 gate "precedent — engine + compaction test suite" \
      env PYTHONWARNINGS=ignore $PY -m precedent.test_precedent
 
+gate "agents — adoption of other tools' sessions" \
+     env PYTHONWARNINGS=ignore $PY -m agents.test_discover
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'

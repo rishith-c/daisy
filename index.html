@@ -285,7 +285,7 @@ body.rail aside { margin-left: -248px; opacity: 0; }
 .brand .chev { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink-3); margin-left: -2px; transition: transform var(--d-menu) var(--out); }
 .brand-trigger[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .brand .tools { margin-left: auto; display: flex; gap: 2px; }
-.brand-menu {
+.brand-menu, .tmenu {
   position: absolute; left: 3px; top: 35px; width: 188px; padding: 5px;
   background: var(--glass-strong); border: .5px solid var(--border-strong); border-radius: 12px;
   backdrop-filter: saturate(190%) blur(24px); -webkit-backdrop-filter: saturate(190%) blur(24px);
@@ -293,12 +293,12 @@ body.rail aside { margin-left: -248px; opacity: 0; }
   transform: translateY(-5px) scale(.98); transform-origin: top left;
   transition: visibility 0s linear var(--d-menu), opacity var(--d-menu) var(--out), transform var(--d-menu) var(--out);
 }
-.brand-menu.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
-.brand-menu button {
+.brand-menu.on, .tmenu.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
+.brand-menu button, .tmenu button {
   width: 100%; height: 30px; padding: 0 9px; border: none; background: transparent; box-shadow: none;
   justify-content: flex-start; font-weight: 450;
 }
-.brand-menu button:hover { background: var(--wash); }
+.brand-menu button:hover, .tmenu button:hover { background: var(--wash); }
 .iconbtn {
   /* padding: 0 is load-bearing — the base `button` rule's horizontal padding
      would otherwise eat the 28px box and leave the glyph a couple of px wide. */
@@ -400,7 +400,20 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
   font-size: 15px; font-weight: 600; letter-spacing: -.012em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%;
 }
-.topbar .ell { color: var(--ink-3); letter-spacing: 1px; cursor: pointer; padding: 0 2px; }
+.ellwrap { position: relative; display: inline-flex; -webkit-app-region: no-drag; }
+.tmenu { left: -4px; top: 26px; width: 186px; }
+.topbar .ell {
+  color: var(--ink-3); letter-spacing: 1px; cursor: pointer;
+  height: 24px; padding: 0 5px; font-size: 15px; line-height: 1;
+  border: none; background: transparent; box-shadow: none; border-radius: 6px;
+}
+.topbar .ell:hover { background: var(--wash); color: var(--ink-2); }
+.topbar .ell[aria-expanded="true"] { background: var(--wash-2); color: var(--ink); }
+/* rename happens in place — no modal for a one-field edit */
+.topbar .title.editing {
+  outline: none; background: var(--wash); border-radius: 6px;
+  padding: 2px 6px; margin: -2px -6px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--leaf) 40%, transparent);
+}
 .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 3px; }
 .iconbtn.on { background: var(--wash-2); color: var(--ink); }
 .topbar .right .iconbtn { position: relative; }
@@ -834,6 +847,9 @@ table.l tr.click:hover td { background: var(--wash); }
 .setrow .lb b { font-size: 13.5px; display: block; font-weight: 600; }
 .setrow .lb span { font-size: 12.5px; color: var(--ink-3); }
 .sws { display: flex; gap: 8px; }
+/* read-only gate values — deliberately not a control */
+.gv { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2);
+      background: var(--wash); border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
 .sw { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
   box-shadow: 0 0 0 1px var(--border); transition: transform .26s var(--spring), box-shadow .2s; }
 .sw:hover { transform: scale(1.12); }
@@ -951,7 +967,6 @@ table.l tr.click:hover td { background: var(--wash); }
     </span>
     <div class="brand-menu" id="brand-menu" role="menu" aria-label="Daisy" aria-hidden="true">
       <button role="menuitem" data-brand-action="new">New run</button>
-      <button role="menuitem" data-brand-action="appearance">Appearance</button>
       <button role="menuitem" data-brand-action="about">About Daisy</button>
     </div>
   </div>
@@ -964,7 +979,7 @@ table.l tr.click:hover td { background: var(--wash); }
     <div class="navitem" data-view="artifacts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5"/><path d="M2.5 9.5 6 6.5l3 2.5 2-1.5 2.5 2"/></svg> Artifacts</div>
     <div class="navitem" data-view="autos"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.8V8l2.2 1.4" stroke-linecap="round"/></svg> Automations</div>
     <div class="navitem" data-view="skills"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2.5a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H6a2 2 0 1 1 0-4h4a2 2 0 1 0 0-4H6Z"/></svg> Skills</div>
-    <div class="navitem" data-view="settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.2 9.3 5l3 .3-2.2 2 .6 3-2.7-1.5L5.3 10.3l.6-3-2.2-2 3-.3L8 2.2Z" stroke-linejoin="round"/></svg> Appearance</div>
+    <div class="navitem" data-view="settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.3"/><path d="M12.9 9.8a1.2 1.2 0 0 0 .24 1.32l.05.05a1.45 1.45 0 1 1-2.05 2.05l-.04-.05a1.2 1.2 0 0 0-1.33-.24 1.2 1.2 0 0 0-.72 1.1v.13a1.45 1.45 0 0 1-2.9 0v-.07a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.25l-.05.04a1.45 1.45 0 1 1-2.05-2.05l.05-.04a1.2 1.2 0 0 0 .24-1.33 1.2 1.2 0 0 0-1.1-.72H.98a1.45 1.45 0 0 1 0-2.9h.07a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.25-1.32l-.04-.05A1.45 1.45 0 1 1 3.9 1.99l.05.05a1.2 1.2 0 0 0 1.32.24h.06a1.2 1.2 0 0 0 .72-1.1V1.1a1.45 1.45 0 0 1 2.9 0v.07a1.2 1.2 0 0 0 .72 1.1 1.2 1.2 0 0 0 1.33-.24l.04-.05a1.45 1.45 0 1 1 2.05 2.05l-.05.05a1.2 1.2 0 0 0-.24 1.32v.06a1.2 1.2 0 0 0 1.1.72h.13a1.45 1.45 0 0 1 0 2.9h-.07a1.2 1.2 0 0 0-1.1.72Z" stroke-linejoin="round" transform="translate(.9 .9) scale(.88)"/></svg> Settings <span class="tail">⌘,</span></div>
   </nav>
 
   <div class="scroller">
@@ -993,7 +1008,14 @@ table.l tr.click:hover td { background: var(--wash); }
   <div class="topbar">
     <span class="folder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.8 4.2c0-.8.6-1.4 1.4-1.4h2.4l1.3 1.6h5.9c.8 0 1.4.6 1.4 1.4v5.6c0 .8-.6 1.4-1.4 1.4H3.2c-.8 0-1.4-.6-1.4-1.4V4.2Z" stroke-linejoin="round"/></svg></span>
     <span class="title" id="tb-title">Sensor fleet dashboard + SR-11 mounting bracket</span>
-    <span class="ell">···</span>
+    <span class="ellwrap">
+      <button class="ell" id="tb-ell" aria-label="Run options" aria-haspopup="menu" aria-expanded="false">···</button>
+      <div class="tmenu" id="run-menu" role="menu" aria-label="Run options" aria-hidden="true">
+        <button role="menuitem" data-run-action="rename">Rename run</button>
+        <button role="menuitem" data-run-action="copy">Copy transcript</button>
+        <button role="menuitem" data-run-action="rerun">Re-run this brief</button>
+      </div>
+    </span>
     <div class="right">
       <button class="iconbtn" id="btn-theme" aria-label="Toggle appearance"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke-linecap="round"/></svg><span class="tip">Appearance <kbd>⇧⌘L</kbd></span></button>
       <button class="iconbtn" id="btn-ctx" aria-label="Run context" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M10.2 3v10"/></svg><span class="tip">Run context</span></button>
@@ -1242,7 +1264,8 @@ $ echo $?
 
   <!-- ============ APPEARANCE ============ -->
   <div class="view" id="view-settings"><div class="page"><div class="pcol">
-    <h2>Appearance</h2><div class="lede">daisy-theme-v1 — portable, shareable, versioned with the repo.</div>
+    <h2>Settings</h2><div class="lede">Everything the operator controls. Anything a gate depends on lives in code instead — listed below, read-only, with the file it comes from.</div>
+    <h3>Appearance</h3>
     <div class="setrow"><div class="lb"><b>Theme</b><span>light is the default; dark follows your Mac</span></div>
       <div class="seg" id="segtheme"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></div></div>
     <div class="setrow"><div class="lb"><b>Chat font</b><span>agent narration</span></div>
@@ -1257,8 +1280,24 @@ $ echo $?
       </div></div>
     <div class="setrow"><div class="lb"><b>Motion</b><span>fluid springs, or reduced</span></div>
       <div class="seg" id="segmotion"><button data-motion="full" class="on">Fluid</button><button data-motion="calm">Calm</button></div></div>
+    <h3>Run playback</h3>
     <div class="setrow"><div class="lb"><b>Playback</b><span>run pacing — slow it down when you are narrating</span></div>
       <div class="seg" id="segspeed"><button data-speed="0.5">0.5&times;</button><button data-speed="1" class="on">1&times;</button><button data-speed="2">2&times;</button><button data-speed="4">4&times;</button></div></div>
+    <h3>Default agents</h3>
+    <div class="setrow"><div class="lb"><b>Frontend lane</b><span>drives the composer&rsquo;s picker</span></div>
+      <select id="set-agent-fe"><option>Fable 5 High</option><option>GPT-5.3 Codex</option></select></div>
+    <div class="setrow"><div class="lb"><b>API lane</b><span>drives the composer&rsquo;s picker</span></div>
+      <select id="set-agent-api"><option>GPT-5.3 Codex</option><option>Fable 5 High</option></select></div>
+
+    <h3>Gates</h3>
+    <div class="lede" style="margin:-2px 0 10px">These are not switches. A threshold you can quietly relax in a console is not a
+      gate, so they live in version control and change by commit &mdash; shown here so you can see what the run was held to.</div>
+    <div class="setrow"><div class="lb"><b>Factor of safety</b><span>hardware/margins.py</span></div><code class="gv" id="gv-fos">1.5</code></div>
+    <div class="setrow"><div class="lb"><b>Contrast minimum</b><span>taste/contrast.py &middot; both themes</span></div><code class="gv">4.5:1 text &middot; 3.0:1 hint</code></div>
+    <div class="setrow"><div class="lb"><b>Design tells</b><span>taste/lint.py</span></div><code class="gv">20 named</code></div>
+    <div class="setrow"><div class="lb"><b>Evidence floor</b><span>precedent/engine.py &mdash; below this it says nothing</span></div><code class="gv">0.18</code></div>
+
+    <h3>Theme file</h3>
     <div class="setrow"><div class="lb"><b>Export theme</b><span>daisy-theme-v1 JSON</span></div>
       <button id="copytheme">Copy JSON</button></div>
     <div class="jsonbox" id="jsonbox"></div>
@@ -1958,10 +1997,129 @@ $ echo $?
     var item = e.target.closest('[data-brand-action]'); if (!item) return;
     var action = item.getAttribute('data-brand-action'); closeBrandMenu();
     if (action === 'new') { show('run'); playLive(); }
-    else if (action === 'appearance') show('settings');
     else toast('<b>Daisy.</b> Verified software and hardware from one brief.');
   });
   document.addEventListener('click', function (e) { if (!e.target.closest('.brand')) closeBrandMenu(); });
+
+  /* ---------------- settings: default agents ----------------
+     These mirror the composer's own pickers rather than storing a second
+     copy of the truth — changing one moves the other, in both directions. */
+  (function () {
+    var picks = $$('.picks select');
+    var fe = $('#set-agent-fe'), api = $('#set-agent-api');
+    if (!picks.length || !fe || !api) return;
+    var pairs = [[fe, picks[0], 'Frontend'], [api, picks[1], 'API']];
+    pairs.forEach(function (pair) {
+      var setting = pair[0], composer = pair[1], lane = pair[2];
+      setting.addEventListener('change', function () {
+        composer.selectedIndex = Array.prototype.findIndex.call(
+          composer.options, function (o) { return o.text === lane + ' \u00b7 ' + setting.value; });
+        toast('<b>' + lane + ' lane.</b> ' + setting.value + ' for the next run.');
+      });
+      composer.addEventListener('change', function () {
+        var name = composer.options[composer.selectedIndex].text.split(' \u00b7 ')[1];
+        setting.selectedIndex = Array.prototype.findIndex.call(
+          setting.options, function (o) { return o.text === name; });
+      });
+    });
+  }());
+
+  /* ---------------- run menu (the ... beside the title) ----------------
+     It was a bare span with cursor:pointer and no handler — a control that
+     looks live and does nothing is worse than no control. Three actions,
+     all of which actually do the thing they say. */
+  var runMenu = $('#run-menu'), ellBtn = $('#tb-ell'), tbTitle = $('#tb-title');
+  function closeRunMenu() {
+    runMenu.classList.remove('on');
+    runMenu.setAttribute('aria-hidden', 'true');
+    ellBtn.setAttribute('aria-expanded', 'false');
+  }
+  ellBtn.addEventListener('click', function (e) {
+    e.stopPropagation(); closeBrandMenu();
+    var open = runMenu.classList.toggle('on');
+    runMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    ellBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.ellwrap')) closeRunMenu(); });
+
+  // Rename in place. Commit on Enter or blur, abandon on Escape, and keep the
+  // sidebar row in step — a title that disagrees with its own thread is a bug
+  // a demo audience will spot instantly.
+  function renameRun() {
+    var before = tbTitle.textContent;
+    tbTitle.setAttribute('contenteditable', 'plaintext-only');
+    tbTitle.classList.add('editing');
+    tbTitle.focus();
+    var r = document.createRange(); r.selectNodeContents(tbTitle);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+
+    function finish(save) {
+      tbTitle.removeEventListener('keydown', onKey);
+      tbTitle.removeEventListener('blur', onBlur);
+      tbTitle.removeAttribute('contenteditable');
+      tbTitle.classList.remove('editing');
+      var v = tbTitle.textContent.replace(/\s+/g, ' ').trim();
+      if (!save || !v) { tbTitle.textContent = before; return; }
+      tbTitle.textContent = v;
+      var row = $('.thread.active .txt');
+      if (row) row.textContent = v;
+      toast('<b>Renamed.</b> ' + v);
+    }
+    function onKey(e) {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); }
+    }
+    function onBlur() { finish(true); }
+    tbTitle.addEventListener('keydown', onKey);
+    tbTitle.addEventListener('blur', onBlur);
+  }
+
+  // Serialise the visible run to plain text. execCommand is the fallback
+  // because WKWebView does not always grant the async clipboard.
+  // When the clipboard is refused (a webview without permission, no user
+  // activation), put the text on screen pre-selected instead. A menu item that
+  // says it will do something has to end somewhere useful.
+  function showTranscript(text) {
+    $('#mod-title').textContent = 'Transcript — select and copy';
+    var pre = document.createElement('pre');
+    pre.style.cssText = 'white-space:pre-wrap;font:12.5px/1.55 var(--mono);margin:0;user-select:text';
+    pre.textContent = text;
+    var body = $('#mod-body'); body.innerHTML = ''; body.appendChild(pre);
+    modOv.classList.add('anim'); modOv.classList.add('on');
+    var r = document.createRange(); r.selectNodeContents(pre);
+    var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    toast('<b>Clipboard unavailable.</b> Transcript is selected — press \u2318C.');
+  }
+  function copyTranscript() {
+    var lines = ['# ' + tbTitle.textContent, ''];
+    $$('#col > *').forEach(function (node) {
+      var t = (node.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+      if (t) lines.push(t, '');
+    });
+    var text = lines.join('\n').trim() + '\n';
+    var done = function () { toast('<b>Copied.</b> ' + text.split('\n').length + ' lines of transcript on the clipboard.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text, done); });
+    } else { legacyCopy(text, done); }
+  }
+  function legacyCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+    document.body.removeChild(ta);
+    ok ? done() : showTranscript(text);
+  }
+
+  runMenu.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-run-action]'); if (!item) return;
+    var action = item.getAttribute('data-run-action'); closeRunMenu();
+    if (action === 'rename') renameRun();
+    else if (action === 'copy') copyTranscript();
+    else if (action === 'rerun') { show('run'); playLive(); toast('<b>Re-running.</b> Same brief, same gates.'); }
+  });
 
   /* ---------------- toast ---------------- */
   var toastEl = $('#toast'), tt = null;
@@ -2119,6 +2277,7 @@ $ echo $?
       if (marks[to]) { e.preventDefault(); marks[to].click(); }
       return;
     }
+    if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); show('settings'); return; }
     if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); document.body.classList.toggle('rail'); return; }
     if ((e.metaKey || e.ctrlKey) && e.key === '[') { e.preventDefault(); histGo(-1); return; }
     if ((e.metaKey || e.ctrlKey) && e.key === ']') { e.preventDefault(); histGo(1); return; }
