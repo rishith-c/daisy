@@ -30,6 +30,8 @@ import re
 import shutil
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
+from glob import glob
 from dataclasses import dataclass, field
 
 PROBE = "Reply with exactly: OK"
@@ -46,16 +48,62 @@ class Executor:
     detail: str = ""
     version: str = ""
     model: str = ""
+    effort: str = ""
+    provider: str = ""
     probe_ms: float = 0.0
 
-    def command(self, prompt: str) -> list:
-        return [a.replace("{prompt}", prompt) for a in self.argv]
+    def command(self, prompt: str, model: str = "", effort: str = "",
+                provider: str = "") -> list:
+        """Build the exact argv for the chosen model; no shell is involved."""
+        options = []
+        if model:
+            if self.name == "claude":
+                options.extend(["--model", model])
+            elif self.name == "codex":
+                options.extend(["--model", model])
+                if effort:
+                    options.extend(["-c", 'model_reasoning_effort="%s"' % effort])
+            elif self.name == "opencode":
+                selected = "%s/%s" % (provider, model) if provider else model
+                options.extend(["--model", selected])
+                if effort:
+                    options.extend(["--variant", effort])
+        command = []
+        for arg in self.argv:
+            if arg == "{prompt}":
+                command.extend(options)
+                command.append(prompt)
+            else:
+                command.append(arg.replace("{prompt}", prompt))
+        return command
+
+
+def _claude_candidate(home: str = None, which=shutil.which) -> Executor:
+    """Run Claude with a supported Node when the global Node is too new.
+
+    Claude's executable is a JavaScript file with an env-node shebang. On this
+    Mac the global Node 26 crashes before the CLI can parse arguments, while
+    the installed NVM Node 22 is supported. An explicit argv keeps the selected
+    runtime visible and avoids changing the operator's shell configuration.
+    """
+    cli = which("claude") or "claude"
+    home = home or os.path.expanduser("~")
+    compatible = []
+    for path in glob(os.path.join(home, ".nvm", "versions", "node", "v*", "bin", "node")):
+        match = re.search(r"/v(\d+)(?:\.|/)", path)
+        if match and 20 <= int(match.group(1)) < 25:
+            compatible.append((int(match.group(1)), path))
+    if compatible:
+        node = max(compatible)[1]
+        return Executor("claude", node,
+                        [node, cli, "-p", "{prompt}", "--output-format", "text"])
+    return Executor("claude", "claude",
+                    ["claude", "-p", "{prompt}", "--output-format", "text"])
 
 
 def _candidates() -> list[Executor]:
     return [
-        Executor("claude", "claude",
-                 ["claude", "-p", "{prompt}", "--output-format", "text"]),
+        _claude_candidate(),
         # --skip-git-repo-check because a worktree is not always what codex
         # considers a trusted directory, and refusing to start is not a failure
         # of the prompt.
@@ -97,14 +145,17 @@ def _diagnose(text: str) -> str:
     return ""
 
 
-def probe(ex: Executor, timeout: int = PROBE_TIMEOUT, cwd: str = None) -> Executor:
+def probe(ex: Executor, timeout: int = PROBE_TIMEOUT, cwd: str = None,
+          model: str = "", provider: str = "") -> Executor:
     """Run a trivial prompt and decide whether this agent is usable."""
+    ex.model, ex.provider = model, provider
     if not shutil.which(ex.binary):
         ex.ok, ex.detail = False, "not installed"
         return ex
     t0 = time.perf_counter()
     try:
-        p = subprocess.run(ex.command(PROBE), capture_output=True, text=True,
+        p = subprocess.run(ex.command(PROBE, model=model, provider=provider),
+                           capture_output=True, text=True,
                            timeout=timeout, cwd=cwd, stdin=subprocess.DEVNULL)
         out = (p.stdout or "") + "\n" + (p.stderr or "")
     except subprocess.TimeoutExpired:
@@ -143,9 +194,51 @@ def available(names: list = None, cwd: str = None) -> list[Executor]:
     return out
 
 
-def pick(prefer: str = "auto", cwd: str = None) -> tuple:
+def available_models(model_inventory: dict, cwd: str = None) -> list[Executor]:
+    """Probe every inventory model concurrently and retain exact identities."""
+    rows = [row for row in (model_inventory.get("models") or [])
+            if row.get("vendor") and row.get("id")]
+
+    def measure(row):
+        candidates = {candidate.name: candidate for candidate in _candidates()}
+        ex = candidates.get(str(row.get("vendor")))
+        if not ex:
+            return Executor(str(row.get("vendor")), "", [], ok=False,
+                            detail="no executor adapter", model=str(row.get("id")))
+        return probe(ex, cwd=cwd, model=str(row.get("id")),
+                     provider=str(row.get("provider") or ""))
+
+    if not rows:
+        return []
+    with ThreadPoolExecutor(max_workers=min(6, len(rows))) as pool:
+        return list(pool.map(measure, rows))
+
+
+def summarize_models(measured: list[Executor]) -> list[Executor]:
+    """Collapse exact model probes into truthful onboarding vendor rows."""
+    names = list(dict.fromkeys(row.name for row in measured))
+    out = []
+    for name in names:
+        rows = [row for row in measured if row.name == name]
+        working = [row for row in rows if row.ok]
+        detail = "%d/%d selectable models responded" % (len(working), len(rows))
+        if not working and rows:
+            detail += " — " + (rows[0].detail or "no usable reply")
+        out.append(Executor(
+            name, rows[0].binary if rows else name, [], ok=bool(working),
+            detail=detail, probe_ms=max((row.probe_ms for row in rows), default=0)))
+    return out
+
+
+def pick(prefer: str = "auto", cwd: str = None, model: str = "",
+         provider: str = "") -> tuple:
     """Return (executor_or_None, all_probed). Never raises on unavailability."""
-    probed = available(None if prefer == "auto" else [prefer], cwd=cwd)
+    names = None if prefer == "auto" else [prefer]
+    probed = []
+    for ex in _candidates():
+        if names and ex.name not in names:
+            continue
+        probed.append(probe(ex, cwd=cwd, model=model, provider=provider))
     for ex in probed:
         if ex.ok:
             return ex, probed
@@ -153,11 +246,13 @@ def pick(prefer: str = "auto", cwd: str = None) -> tuple:
 
 
 def run(ex: Executor, prompt: str, cwd: str = None,
-        timeout: int = RUN_TIMEOUT) -> dict:
+        timeout: int = RUN_TIMEOUT, model: str = "", effort: str = "",
+        provider: str = "") -> dict:
     """Drive a real agent. Returns what happened; never raises on agent error."""
     t0 = time.perf_counter()
     try:
-        p = subprocess.run(ex.command(prompt), capture_output=True, text=True,
+        p = subprocess.run(ex.command(prompt, model=model, effort=effort,
+                                      provider=provider), capture_output=True, text=True,
                            timeout=timeout, cwd=cwd, stdin=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return {"agent": ex.name, "ok": False, "reason": "timeout",

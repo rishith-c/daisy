@@ -55,7 +55,8 @@ from hardware.bracket import Bracket                              # noqa: E402
 from taste.lint import lint                                       # noqa: E402
 from commons.store import Solution, admit, recall, record_reuse, NotVerified  # noqa: E402
 from lab import executors                                         # noqa: E402
-from lab.chain import topology as chain_topology                  # noqa: E402
+from lab.chain import (orchestrate as chain_orchestrate,          # noqa: E402
+                       topology as chain_topology)
 from garden import index as garden_index                          # noqa: E402
 from garden.publish import publish as garden_publish, NotPublishable  # noqa: E402
 from port.client import PortClient                                   # noqa: E402
@@ -80,6 +81,7 @@ class LaneResult:
     artifacts: list = field(default_factory=list)
     attempts: int = 0
     reused: dict = field(default_factory=dict)
+    organization: dict = field(default_factory=dict)
 
 
 def _rundir(run_id: str) -> str:
@@ -335,10 +337,44 @@ def contract_check(html: str) -> tuple:
     return (not miss), miss
 
 
-def crew_lane(run_id: str, brief: str, agents: list, log) -> LaneResult:
-    """Two vendors, one contract, judged identically."""
+def crew_lane(run_id: str, brief: str, agents: list, log, chain: dict = None) -> LaneResult:
+    """Run the governed org, or the original two-vendor contract lane."""
     r = LaneResult("crew", ran=True)
     d = _rundir(run_id)
+    if chain is not None:
+        outcome = chain_orchestrate(brief, chain, cwd=d)
+        path = os.path.join(d, "chain.json")
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(outcome, indent=1, default=str))
+        r.gates = list(outcome.get("gates") or [])
+        r.passed = bool(outcome.get("passed")) and all(
+            row.get("passed") for row in r.gates)
+        r.attempts = int(outcome.get("plan_attempts") or 0)
+        r.organization = {
+            "ceo": outcome.get("ceo") or "",
+            "reviewer": outcome.get("reviewer") or "",
+            "assignments": list(outcome.get("assignments") or []),
+            "workers": {
+                name: {"ok": bool(row.get("ok")), "ms": row.get("ms") or 0,
+                       "reason": row.get("reason") or ""}
+                for name, row in (outcome.get("workers") or {}).items()
+            },
+            "review": outcome.get("review") or {},
+        }
+        r.why = "" if r.passed else "; ".join(
+            row.get("detail") or row.get("name", "failed")
+            for row in r.gates if not row.get("passed"))[:300]
+        r.artifacts.append({"path": path, "bytes": os.path.getsize(path),
+                            "ceo": outcome.get("ceo"),
+                            "reviewer": outcome.get("reviewer")})
+        log("  CEO %s assigned %d peer%s; reviewer %s; %s"
+            % (outcome.get("ceo") or "unavailable",
+               len(outcome.get("assignments") or []),
+               "" if len(outcome.get("assignments") or []) == 1 else "s",
+               outcome.get("reviewer") or "unavailable",
+               "gates passed" if r.passed else "stopped at gates"))
+        return r
+
     outs = {}
     for name in agents:
         ex, probed = executors.pick(name, cwd=d)
@@ -511,7 +547,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         "hardware": ("physics.bend", "physics.mass", "physics.thermal"),
         "scrape": ("scrape.schema", "physics.fastener"),
         "software": ("taste.t1",),
-        "crew": ("contract.conformance",),
+        "crew": ("chain.plan.coverage", "chain.synthesis", "chain.review"),
     }
     gate_names = sorted({gate_name for lane in lanes
                          for gate_name in planned_gates.get(lane, ())})
@@ -556,13 +592,13 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         if "crew" in lanes:
             selected = chain["agents"] if chain is not None else (crew or ["claude", "codex"])
             if chain is not None:
-                log("Daisy Chain — coordinator, peers, one Port plan, one gate contract")
+                log("Daisy Chain — CEO, every peer, review, one Port plan, one gate contract")
                 for node in chain["nodes"]:
                     log("  %-11s %s / %s" % (node["role"], node["agent"],
-                                               node["model"] or "tool default"))
+                                               node.get("model") or "tool default"))
             else:
                 log("crew lane — two vendors, one contract")
-            results["crew"] = crew_lane(run_id, brief, selected, log)
+            results["crew"] = crew_lane(run_id, brief, selected, log, chain=chain)
 
         all_gates = [g for r in results.values() for g in r.gates]
         failed = [g for g in all_gates if not g["passed"]]

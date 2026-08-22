@@ -38,6 +38,8 @@ class OnboardingGeneratorTests(unittest.TestCase):
 
     def test_replace_refreshes_existing_onboarding_without_duplication(self):
         code, output = self.run_generator("--replace")
+        with open(self.index, encoding="utf-8") as fh:
+            first = fh.read()
         second_code, second_output = self.run_generator("--replace")
 
         self.assertEqual(0, code)
@@ -46,6 +48,7 @@ class OnboardingGeneratorTests(unittest.TestCase):
         self.assertIn("onboarding replaced", second_output)
         with open(self.index, encoding="utf-8") as fh:
             html = fh.read()
+        self.assertEqual(first, html)
         self.assertEqual(1, html.count('id="obv"'))
         self.assertEqual(1, html.count("{ l: 'Show onboarding'"))
         self.assertEqual(4, html.count('<section class="ob-p'))
@@ -65,6 +68,19 @@ class OnboardingGeneratorTests(unittest.TestCase):
         self.assertIn("window.__daisyGardenStatus", html)
         self.assertIn('maxlength="6"', html)
         self.assertIn("Not linked. Open Garden", html)
+
+    def test_generated_flow_can_erase_daisy_state_and_return_to_onboarding(self):
+        self.run_generator("--replace")
+
+        with open(self.index, encoding="utf-8") as fh:
+            html = fh.read()
+        self.assertIn("window.daisyResetToOnboarding", html)
+        self.assertIn("window.__daisyReset", html)
+        self.assertIn("localStorage.removeItem('daisy-onboarded')", html)
+        self.assertIn("localStorage.removeItem('daisy-chain-v1')", html)
+        self.assertIn("localStorage.removeItem('daisy-theme')", html)
+        self.assertIn("postNative({ cmd: 'app.reset' })", html)
+        self.assertIn("location.reload()", html)
 
 
 if __name__ == "__main__":

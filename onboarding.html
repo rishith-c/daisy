@@ -468,6 +468,25 @@
     catch (e) { return false; }
   }
 
+  /* ---------------- fresh start ----------------
+     Reset only Daisy-owned state. The native half removes the scoped Garden
+     device credential; Google authentication always remains in the browser. */
+  function clearDaisyState() {
+    try { localStorage.removeItem('daisy-onboarded'); } catch (e) {}
+    try { localStorage.removeItem('daisy-chain-v1'); } catch (e) {}
+    try { localStorage.removeItem('daisy-theme'); } catch (e) {}
+  }
+
+  window.__daisyReset = function () {
+    clearDaisyState();
+    location.reload();
+  };
+
+  window.daisyResetToOnboarding = function () {
+    clearDaisyState();
+    if (!postNative({ cmd: 'app.reset' })) location.reload();
+  };
+
   /* ---------------- Garden ----------------
      Google authentication happens in the trusted system browser. The only
      value typed into Daisy is a short-lived six-character pairing code, and

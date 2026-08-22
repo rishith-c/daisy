@@ -84,7 +84,7 @@ def replace_existing(html, css, markup, js):
     """Refresh only the three generated blocks in an already-injected app."""
     replacements = (
         (r'<style>\n/\* ={20,}\n   daisy:onboarding — first run.*?</style>', css, "css"),
-        (r'<div class="obv" id="obv".*?</div>(?=\s*<div class="toast")',
+        (r'<div class="obv" id="obv".*?</div>\s*(?=<div class="toast")',
          markup + "\n\n", "markup"),
         (r'<script>\n/\* daisy:onboarding — first run controller\..*?</script>'
          r'(?=\n\n<script>\n/\* ---------------- import view)', js, "script"),

@@ -8,6 +8,7 @@ vendor and are reported that way rather than flattened into one invented scale.
 
     ~/.claude/settings.json     model
     ~/.claude.json              additionalModelOptionsCache (labels, entitlements)
+    ~/.claude/projects/**/*.jsonl  model ids actually used
     ~/.codex/config.toml        model, model_reasoning_effort
     opencode.db  message.data   modelID / providerID actually used
 
@@ -26,12 +27,13 @@ import os
 import re
 import sqlite3
 from dataclasses import dataclass, asdict, field
+from glob import glob
 
 HOME = os.path.expanduser("~")
 
 # Ladders are per-vendor because they really are per-vendor. Claude Code and
 # Codex do not agree on the names, the count, or the top of the scale.
-CLAUDE_EFFORTS = ["low", "medium", "high", "xhigh", "max"]
+CLAUDE_EFFORTS = []
 CODEX_EFFORTS = ["light", "medium", "high", "xhigh", "max", "ultra"]
 SPEEDS = ["standard", "fast"]
 
@@ -39,16 +41,6 @@ EFFORT_LABEL = {"low": "Low", "light": "Light", "medium": "Medium", "high": "Hig
                 "xhigh": "Extra High", "max": "Max", "ultra": "Ultra"}
 EFFORT_NOTE = {"ultra": "Consumes usage limits faster", "max": "Slowest, most thorough"}
 SPEED_NOTE = {"standard": "Default speed", "fast": "1.5× speed, more usage"}
-
-# Fallbacks, used only when nothing on disk names a model. Marked as such in
-# `source` so the UI never implies it read something it did not.
-CLAUDE_KNOWN = [
-    ("claude-fable-5", "Fable 5"),
-    ("claude-opus-5", "Opus 5"),
-    ("claude-sonnet-5", "Sonnet 5"),
-    ("claude-haiku-4-5-20251001", "Haiku 4.5"),
-]
-
 
 @dataclass
 class Model:
@@ -91,20 +83,37 @@ def claude_models(home: str = None) -> list[Model]:
             continue
         seen.add(mid)
         out.append(Model("claude", mid, opt.get("label") or mid, "config",
-                         efforts=list(CLAUDE_EFFORTS), speeds=list(SPEEDS)))
-    for mid, label in CLAUDE_KNOWN:
-        if mid in seen:
+                         efforts=[], speeds=[]))
+    # Claude's option cache is ephemeral and the CLI may clear it after a run.
+    # Session history is durable evidence that a model was genuinely used on
+    # this Mac. The live model probe still decides whether it may join a Chain.
+    paths = glob(os.path.join(home, ".claude", "projects", "**", "*.jsonl"),
+                 recursive=True)
+    paths.sort(key=lambda path: os.path.getmtime(path), reverse=True)
+    for path in paths[:256]:
+        try:
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                sample = fh.read(262144)
+        except OSError:
             continue
-        seen.add(mid)
-        out.append(Model("claude", mid, label, "known",
-                         efforts=list(CLAUDE_EFFORTS), speeds=list(SPEEDS)))
-
+        for mid in re.findall(r'"model"\s*:\s*"(claude-[A-Za-z0-9._-]+)"', sample):
+            if mid in seen:
+                continue
+            seen.add(mid)
+            label = mid.removeprefix("claude-").replace("-", " ").title()
+            out.append(Model("claude", mid, label, "history", efforts=[], speeds=[]))
     # settings.json stores a short alias ("opus"), not an id.
     if current:
+        matched = False
         for m in out:
             if current in m.id or current.lower() in m.label.lower():
                 m.current = True
+                matched = True
                 break
+        if not matched:
+            out.append(Model("claude", current, current.replace("-", " ").title(),
+                             "config", current=True,
+                             efforts=[], speeds=[]))
     return out
 
 
@@ -132,11 +141,28 @@ def codex_models(home: str = None) -> list[Model]:
         s = re.sub(r"^gpt-", "", mid).replace("-", " ")
         return " ".join(w.capitalize() if w.isalpha() else w for w in s.split())
 
-    out = []
-    if model:
-        out.append(Model("codex", model, pretty(model), "config", current=True,
-                         efforts=list(CODEX_EFFORTS), speeds=list(SPEEDS),
-                         effort=effort))
+    out, seen = [], set()
+    cache = _read_json(os.path.join(home, ".codex", "models_cache.json"))
+    for row in cache.get("models") or []:
+        mid = str(row.get("slug") or "").strip()
+        if not mid or mid in seen or row.get("visibility") != "list":
+            continue
+        seen.add(mid)
+        efforts = [str(item.get("effort")) for item in
+                   (row.get("supported_reasoning_levels") or [])
+                   if item.get("effort")]
+        speeds = ["standard"]
+        if "fast" in (row.get("additional_speed_tiers") or []):
+            speeds.append("fast")
+        current = mid == model
+        out.append(Model("codex", mid, row.get("display_name") or pretty(mid),
+                         "config" if current else "cache", current=current,
+                         efforts=efforts or list(CODEX_EFFORTS), speeds=speeds,
+                         effort=effort if current else ""))
+    if model and model not in seen:
+        out.insert(0, Model("codex", model, pretty(model), "config", current=True,
+                            efforts=list(CODEX_EFFORTS), speeds=list(SPEEDS),
+                            effort=effort))
     return out
 
 

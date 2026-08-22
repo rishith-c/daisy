@@ -638,7 +638,7 @@ body.rail .minimap { padding-left: 26px; }
 .mhead:first-child { padding-top: 5px; }
 .mnote { padding: 3px 9px 6px; font-size: 11.5px; color: var(--ink-3); white-space: normal; }
 .chain-mi { height: auto; min-height: 38px; padding-block: 6px; }
-.chain-mi .chain-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.chain-mi .chain-copy { font-family: var(--sans); display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .chain-mi .chain-copy b { font-size: 13px; font-weight: 550; }
 .chain-mi .chain-copy small { color: var(--ink-3); font-size: 10.5px; line-height: 1.3; white-space: normal; }
 .chain-mi .tog { margin-left: auto; width: 28px; height: 16px; border-radius: 10px;
@@ -1059,6 +1059,46 @@ table.l tr.click:hover td { background: var(--wash); }
 .imp-tabs { margin-bottom: 10px; }
 .imp-empty { padding: 11px 13px; font-size: 12.5px; color: var(--ink-3); }
 
+/* ---------- Daisy Chain: live botanical org map ---------- */
+.chain-shell { margin-top: 18px; border: .5px solid var(--border); border-radius: var(--r-panel);
+  background: color-mix(in srgb, var(--leaf-wash) 28%, var(--bg)); overflow: hidden; }
+.chain-toolbar { min-height: 48px; display: flex; align-items: center; gap: 12px; padding: 10px 13px;
+  border-bottom: .5px solid var(--border); background: color-mix(in srgb, var(--bg) 88%, transparent); }
+.chain-toolbar .chain-state { min-width: 0; flex: 1; }
+.chain-toolbar b { display: block; font-size: 13px; font-weight: 600; }
+.chain-toolbar span { display: block; color: var(--ink-3); font: 10.5px/1.45 var(--mono); }
+.chain-canvas { min-height: 360px; padding: 26px 22px 30px; overflow-x: auto; }
+.chain-empty { max-width: 460px; margin: 88px auto; color: var(--ink-3); }
+.chain-empty b { color: var(--ink); display: block; margin-bottom: 4px; }
+.chain-tree { min-width: 520px; }
+.chain-root { display: flex; justify-content: center; position: relative; z-index: 2; }
+.chain-node { width: 210px; min-height: 82px; padding: 11px 12px; border: .5px solid var(--border-strong);
+  border-radius: var(--r-card); background: var(--bg); box-shadow: var(--shadow-1); position: relative; }
+.chain-node.ceo { border-color: color-mix(in srgb, var(--leaf) 44%, var(--border)); }
+.chain-node .chain-role { color: var(--leaf); font: 600 9.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.chain-node .chain-model { display: block; margin-top: 4px; font-size: 13px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chain-node .chain-meta, .chain-node .chain-task { display: block; margin-top: 2px; color: var(--ink-3);
+  font: 10.5px/1.45 var(--mono); overflow-wrap: anywhere; }
+.chain-node .chain-task { color: var(--ink-2); margin-top: 7px; font-family: var(--sans); }
+.chain-daisy { position: absolute; left: -10px; top: -10px; width: 22px; height: 22px; }
+.chain-daisy svg { width: 100%; height: 100%; display: block; }
+.chain-stem { width: 1px; height: 38px; margin: 0 auto; background: var(--leaf); opacity: .58; }
+.chain-branches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 26px 14px;
+  position: relative; padding-top: 28px; }
+.chain-branches::before { content: ''; position: absolute; top: 0; left: max(105px, calc(50% / var(--chain-count)));
+  right: max(105px, calc(50% / var(--chain-count))); height: 1px; background: var(--leaf); opacity: .48; }
+.chain-branch { display: flex; justify-content: center; position: relative; }
+.chain-branch::before { content: ''; position: absolute; width: 1px; height: 28px; top: -28px;
+  background: var(--leaf); opacity: .48; }
+.chain-health { position: absolute; right: 10px; top: 10px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border-strong); box-shadow: 0 0 0 3px var(--surface-2); }
+.chain-health.ready, .chain-health.done { background: var(--pass); }
+.chain-health.working { background: var(--daisy-deep); }
+.chain-health.failed { background: var(--fail); }
+.chain-foot { padding: 10px 13px; border-top: .5px solid var(--border); color: var(--ink-3);
+  font: 10.5px/1.45 var(--mono); background: var(--bg); }
+
 /* ---------- overlays ---------- */
 .ov { position: fixed; inset: 0; z-index: 90; display: none; align-items: flex-start; justify-content: center;
   background: color-mix(in srgb, var(--ink) 22%, transparent); backdrop-filter: blur(3px) saturate(1.1); }
@@ -1392,6 +1432,7 @@ table.l tr.click:hover td { background: var(--wash); }
 
   <nav id="nav" role="tablist" aria-label="Sections">
     <div class="navitem on" data-view="run"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.2 2.8a1.7 1.7 0 0 1 2.4 2.4L6 12.8l-3.2.8.8-3.2 7.6-7.6Z" stroke-linejoin="round"/></svg> New run <span class="tail">⌘N</span></div>
+    <div class="navitem" data-view="chain"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2.2v3.2M8 5.4 3.5 8.2v3.4M8 5.4l4.5 2.8v3.4"/><circle cx="8" cy="2.2" r="1.2"/><circle cx="3.5" cy="12.5" r="1.2"/><circle cx="12.5" cy="12.5" r="1.2"/></svg> Daisy Chain</div>
     <div class="navitem" data-view="runs"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg> Runs</div>
     <div class="navitem" data-view="review"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.5h9l-2-2M13.5 10.5h-9l2 2"/></svg> Review queue <span class="dot"></span></div>
     <div class="navitem" data-view="precedent"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5l6-3.2Z" stroke-linejoin="round"/><path d="M8 6.4 11 8v2.6L8 12.2 5 10.6V8l3-1.6Z"/></svg> Precedent</div>
@@ -1484,6 +1525,17 @@ table.l tr.click:hover td { background: var(--wash); }
       </div>
     </div>
   </div>
+
+  <!-- ============ DAISY CHAIN ============ -->
+  <div class="view" id="view-chain"><div class="page"><div class="pcol">
+    <h2>Daisy Chain</h2>
+    <div class="lede">One CEO model divides the goal across every usable local model. The branches work in parallel, a peer reviews the synthesis, and Port plus deterministic gates own the verdict.</div>
+    <div class="chain-shell">
+      <div class="chain-toolbar"><div class="chain-state"><b id="chain-title">Scanning this Mac</b><span id="chain-subtitle">Only agents that answer a live probe appear here.</span></div><button id="chain-refresh">Refresh</button></div>
+      <div class="chain-canvas" id="chain-map" aria-live="polite"></div>
+      <div class="chain-foot">Port plan → CEO assignments → parallel branches → peer review → deterministic gates</div>
+    </div>
+  </div></div></div>
 
   <!-- ============ RUNS ============ -->
   <div class="view" id="view-runs"><div class="page"><div class="pcol">
@@ -1762,6 +1814,11 @@ $ echo $?
     <div class="setrow"><div class="lb"><b>Index</b><span>public, readable with no account</span></div>
       <span class="gv" id="g-entries">&mdash;</span></div>
 
+    <!-- daisy:chain-reset -->
+    <h3>Fresh start</h3>
+    <div class="setrow"><div class="lb"><b>Erase local setup</b><span>unlink this Mac from Garden, clear Daisy preferences, and show onboarding again</span></div>
+      <button id="reset-daisy">Reset Daisy&hellip;</button></div>
+
     <h3>Gates</h3>
     <div class="lede" style="margin:-2px 0 10px">These are not switches. A threshold you can quietly relax in a console is not a
       gate, so they live in version control and change by commit &mdash; shown here so you can see what the run was held to.</div>
@@ -1894,10 +1951,6 @@ $ echo $?
  </div>
 </div>
 
-
-
-
-
 <div class="toast" id="toast"></div>
 <div class="peek" id="peek"></div>
 
@@ -1917,7 +1970,7 @@ $ echo $?
   var PRECEDENT_DEMO = [{"label":"exact repeat","q":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:12, Inter used with no paired display face in layout.tsx:8, and emoji standing in for icons in the status column","ms":15.2,"sig":["taste.t1=gross"],"tier":"fingerprint","hits":[{"run":"0384","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:34, Inter used with no paired display face in layout.tsx:34, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}},{"run":"0316","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:143, Inter used with no paired display face in layout.tsx:143, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}}]},{"label":"paraphrase","q":"my bracket bends way too much under the tip load, stress is over what the material takes","ms":83.2,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.624,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.327,"bm25":0.0,"recency":0.998,"evidence":0.665}},{"run":"0205","score":0.62,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.341,"bm25":0.0,"recency":0.793,"evidence":0.669}}]},{"label":"text-poor, gates match","q":"something is off with the part","ms":15.3,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.641,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.357,"bm25":0.0,"recency":0.998,"evidence":0.675}},{"run":"0205","score":0.613,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.355,"bm25":0.0,"recency":0.793,"evidence":0.674}}]},{"label":"novel failure","q":"the ci runner ran out of disk space while installing playwright browsers","ms":13.9,"sig":["infra.disk=gross"],"tier":null,"hits":[]}];  // taste-ok: fixture quoting the tell
   var MEMORY_STATS = {"generated":"2026-08-22 12:12","live":true,"events":320,"facts":62,"summaries":10,"residue":212,"runs":10,"sources":10,"fact_kinds":{"approval":5,"decision":13,"gate":21,"repair":4,"write":19},"residue_reasons":{"deterministic":31,"squeezed":181},"bytes_before":214283,"bytes_after":45874,"compression":4.7,"index_kb":17.8,"float_mb":0.58,"db_mb":1.6,"audit":{"compactions":10,"events":320,"events_retained":108,"events_dropped":212,"residue_rows":212,"residue_live_pointers":212,"facts":62,"facts_in_context":62,"facts_tier0_only":0,"facts_unreachable":0,"context_coverage":1.0,"total_coverage":1.0,"reconciles":true,"ratio":4.7},"biggest":{"source":"claude:449783f3-e475-4","span":[1,264],"events":264,"retained":52,"dropped":212,"ratio":5.4,"probe":100},"chips":{"facts":["taste.t1 \u00b7 fail","\u2026veloper/daisy/README.md \u00b7 created","brief: SR-11 bracket, 2\u2026","scrape \u00b7 gate-set","hardware \u00b7 resume-findi"],"kept":["This is pure ideation \u2014 the out\u2026","<task-notification> <task-id>w4\u2026","**The tournament is done, and t\u2026","<task-notification> <task-id>w0\u2026","<task-notification> <task-id>w8\u2026"],"dropped":["Workflow: Workflow","Skill: artifact-design","ToolSearch: computer-use","SendUserFile: SendUserFile","ToolSearch: select:WebSearch","Skill: superpowers:brainstorming","Agent: Research Codex app light\u2026","Agent: Research award-winning M\u2026","Agent: Research vector memory a\u2026","Now the full verification pass \u2026","Agent: Research fluid native-fe\u2026","Typo in the path \u2014 retrying wit\u2026","No site is open in this tab. Us\u2026","so it cann ot be a mac app and \u2026","read ~/Developer/daisy/icon/dai\u2026","mcp__Claude_Browser__computer: \u2026","mcp__Claude_Browser__navigate: \u2026","mcp__Claude_Browser__read_page:\u2026"]},"demo":[{"label":"exact path","q":"index.html","gates":[],"ms":13.3,"scanned":284,"held":[{"tier":1,"kind":"write","subject":"~/Developer/daisy/index.html","value":"created","score":0.4885,"parts":{"exact":0.85,"cover":0.0,"cosine":0.453,"evidence":0.488}}],"forgotten":[{"score":0.3133,"claim":"Bash: python3 - <<'PYEOF' p = 'index.html' h = open(p).read()  # minimap: distribute proportion\u2026","reason":"squeezed","event":"6b6c3666198b","chars":406,"at":"11:59"},{"score":0.3113,"claim":"Bash: python3 - <<'PYEOF' p = 'index.html' h = open(p).read()  # palette: no animation (keyboar\u2026","reason":"squeezed","event":"ee37bd83179f","chars":406,"at":"11:59"}]},{"label":"gate signature","q":"something is off with the frontend","gates":["taste.t1"],"ms":15.6,"scanned":284,"held":[{"tier":2,"kind":"summary","subject":"This is pure ideation \u2014 the output is ideas, not code \u2014 so per t","value":"probe 100%","score":0.3373,"parts":{"exact":0.0,"cover":0.0,"cosine":0.337,"evidence":0.337}},{"tier":1,"kind":"gate","subject":"taste.t1","value":"fail","score":0.2881,"parts":{"exact":0.0,"cover":1.0,"cosine":0.105,"evidence":0.288}}],"forgotten":[{"score":0.2692,"claim":"Typo in the path \u2014 retrying with the correct one.","reason":"squeezed","event":"e64b103513b6","chars":49,"at":"11:59"}]},{"label":"paraphrase","q":"inlining the hand drawn icon into the sidebar brand","gates":[],"ms":12.4,"scanned":284,"held":[{"tier":2,"kind":"summary","subject":"This is pure ideation \u2014 the output is ideas, not code \u2014 so per t","value":"probe 100%","score":0.293,"parts":{"exact":0.0,"cover":0.0,"cosine":0.293,"evidence":0.293}}],"forgotten":[{"score":0.8417,"claim":"Now inlining the hand-drawn icon into the app's sidebar brand:","reason":"squeezed","event":"24fd3da5631a","chars":62,"at":"11:59"},{"score":0.2624,"claim":"Now the full verification pass in the browser:","reason":"squeezed","event":"b903953f40e5","chars":46,"at":"11:59"}]},{"label":"novel","q":"kubernetes pod evicted due to memory pressure on the node","gates":[],"ms":12.1,"scanned":284,"held":[],"forgotten":[]}]};
   var PRECEDENT_STATS = {"generated":"2026-08-22 04:33","cases":1284,"families":7,"fix_rate":90.0,"recall_ms":15.9,"fingerprint_ms":0.012,"index_kb":80,"float_mb":2.6,"quant_x":32,"db_mb":5.6,"compact_before":23450,"compact_after":983,"compact_x":24,"compact_ms":29,"probe_score":100,"probe_n":8,"top_families":[{"family":"F-11 thin-web bending","seen":329,"fixed":309,"how":"algebra","sig":"physics.bend=marginal"},{"family":"F-24 stale-scrape","seen":311,"fixed":298,"how":"resume-findings","sig":"scrape.freshness=gross"},{"family":"F-03 slop-palette","seen":211,"fixed":205,"how":"resume-findings","sig":"taste.t1=gross"},{"family":"F-31 selector-break","seen":169,"fixed":158,"how":"human","sig":"scrape.schema=gross"},{"family":"F-19 contract-drift","seen":115,"fixed":112,"how":"resume-findings","sig":"contract.conformance=gross"},{"family":"F-42 budget-overrun","seen":77,"fixed":74,"how":"human","sig":"budget.total=short"}]};
-  var MODEL_INVENTORY = {"efforts": {"claude": ["low", "medium", "high", "xhigh", "max"], "codex": ["light", "medium", "high", "xhigh", "max", "ultra"], "opencode": []}, "speeds": ["standard", "fast"], "labels": {"effort": {"low": "Low", "light": "Light", "medium": "Medium", "high": "High", "xhigh": "Extra High", "max": "Max", "ultra": "Ultra"}, "effort_note": {"ultra": "Consumes usage limits faster", "max": "Slowest, most thorough"}, "speed_note": {"standard": "Default speed", "fast": "1.5\u00d7 speed, more usage"}}, "models": [{"vendor": "claude", "id": "claude-fable-5", "label": "Fable", "source": "config", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-opus-5", "label": "Opus 5", "source": "known", "current": true, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-sonnet-5", "label": "Sonnet 5", "source": "known", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-haiku-4-5-20251001", "label": "Haiku 4.5", "source": "known", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.6-sol", "label": "5.6 Sol", "source": "config", "current": true, "efforts": ["light", "medium", "high", "xhigh", "max", "ultra"], "speeds": ["standard", "fast"], "effort": "xhigh", "provider": ""}, {"vendor": "opencode", "id": "x-preview-f-free", "label": "x-preview-f-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}, {"vendor": "opencode", "id": "stealth/ox-alpha", "label": "stealth/ox-alpha", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "openrouter"}, {"vendor": "opencode", "id": "nemotron-3.5-lightning-free", "label": "nemotron-3.5-lightning-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}]};
+  var MODEL_INVENTORY = {"efforts": {"claude": [], "codex": ["light", "medium", "high", "xhigh", "max", "ultra"], "opencode": []}, "speeds": ["standard", "fast"], "labels": {"effort": {"low": "Low", "light": "Light", "medium": "Medium", "high": "High", "xhigh": "Extra High", "max": "Max", "ultra": "Ultra"}, "effort_note": {"ultra": "Consumes usage limits faster", "max": "Slowest, most thorough"}, "speed_note": {"standard": "Default speed", "fast": "1.5\u00d7 speed, more usage"}}, "models": [{"vendor": "claude", "id": "claude-fable-5", "label": "Fable 5", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-opus-5", "label": "Opus 5", "source": "history", "current": true, "efforts": [], "speeds": [], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-opus-4-8", "label": "Opus 4 8", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-opus-4-7", "label": "Opus 4 7", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-sonnet-5", "label": "Sonnet 5", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.6-sol", "label": "GPT-5.6-Sol", "source": "config", "current": true, "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"], "speeds": ["standard", "fast"], "effort": "xhigh", "provider": ""}, {"vendor": "codex", "id": "gpt-5.6-terra", "label": "GPT-5.6-Terra", "source": "cache", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max", "ultra"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.6-luna", "label": "GPT-5.6-Luna", "source": "cache", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.5", "label": "GPT-5.5", "source": "cache", "current": false, "efforts": ["low", "medium", "high", "xhigh"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.4", "label": "GPT-5.4", "source": "cache", "current": false, "efforts": ["low", "medium", "high", "xhigh"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.4-mini", "label": "GPT-5.4-Mini", "source": "cache", "current": false, "efforts": ["low", "medium", "high", "xhigh"], "speeds": ["standard"], "effort": "", "provider": ""}, {"vendor": "opencode", "id": "x-preview-f-free", "label": "x-preview-f-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}, {"vendor": "opencode", "id": "stealth/ox-alpha", "label": "stealth/ox-alpha", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "openrouter"}, {"vendor": "opencode", "id": "nemotron-3.5-lightning-free", "label": "nemotron-3.5-lightning-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}]};
   var ADOPTED_SNAPSHOT = {"generated": "2026-08-22 09:49:24", "counts": {"claude": 28, "codex": 26, "opencode": 4}, "live": 1, "processes": {"cli": {"claude": 0, "codex": 3, "opencode": 2}, "desktop": {"claude": 1, "codex": 1}}, "total": 58, "sessions": [{"vendor": "claude", "state": "live", "project": "daisy", "model": "claude-opus-5", "messages": 30, "tokens": 0}, {"vendor": "claude", "state": "idle", "project": "Prometheus_Vault", "model": "claude-fable-5", "messages": 13, "tokens": 0}, {"vendor": "codex", "state": "idle", "project": "Developer", "model": "openai", "messages": 13, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "tes", "model": "1.18.15", "messages": 0, "tokens": 2791360}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}]};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -2063,11 +2116,64 @@ $ echo $?
   var TICK = '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></svg>';
   var CHEV = '<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4 10 7.5 6.5 11"/></svg>';
 
+  var CHAIN_ORG = null, CHAIN_CONTEXT = '';
+
+  function requestChainMap() {
+    var map = $('#chain-map');
+    if (map) map.innerHTML = '<div class="chain-empty"><b>Scanning this Mac…</b>Waiting for installed agents to answer a live probe.</div>';
+    if (!native || !window.webkit || !window.webkit.messageHandlers ||
+        !window.webkit.messageHandlers.daisy) {
+      CHAIN_STATE = { ready: false, nodes: [], why: 'Open Daisy.app to probe local agent CLIs.' };
+      renderChainMap();
+      return;
+    }
+    CHAIN_CONTEXT = 'view';
+    window.webkit.messageHandlers.daisy.postMessage({ cmd: 'chain.status' });
+  }
+
+  function renderChainMap() {
+    var map = $('#chain-map'), title = $('#chain-title'), subtitle = $('#chain-subtitle');
+    if (!map) return;
+    var state = CHAIN_STATE || { ready: false, nodes: [], why: 'Topology has not been probed yet.' };
+    var nodes = state.nodes || [];
+    if (!state.ready || nodes.length < 2) {
+      title.textContent = 'Chain unavailable';
+      subtitle.textContent = state.why || 'At least two usable models are required.';
+      map.innerHTML = '<div class="chain-empty"><b>No live organization yet</b>' +
+        esc(state.why || 'At least two usable models are required.') + '</div>';
+      return;
+    }
+    title.textContent = nodes.length + ' models · 1 CEO';
+    subtitle.textContent = 'Live topology · one accountable root · ' + (nodes.length - 1) + ' direct branches';
+    var assignments = {};
+    ((CHAIN_ORG && CHAIN_ORG.assignments) || []).forEach(function (row) { assignments[row.agent] = row.task; });
+    var workers = (CHAIN_ORG && CHAIN_ORG.workers) || {};
+    function nodeCard(node, root) {
+      var id = node.id || node.agent;
+      var work = workers[id], health = work ? (work.ok ? 'done' : 'failed') : 'ready';
+      var model = (node.provider ? node.provider + '/' : '') + (node.model || 'tool default');
+      var task = assignments[id] ? '<span class="chain-task">' + esc(assignments[id]) + '</span>' : '';
+      return '<div class="chain-node ' + (root ? 'ceo' : '') + '">' +
+        (root ? '<span class="chain-daisy" aria-hidden="true">' + DAISY_MARK() + '</span>' : '') +
+        '<span class="chain-health ' + health + '" aria-label="' + health + '"></span>' +
+        '<span class="chain-role">' + esc(root ? 'CEO' : node.role) + '</span>' +
+        '<span class="chain-model">' + esc(model) + '</span>' +
+        '<span class="chain-meta">' + esc(node.agent + (node.effort ? ' · ' + node.effort : '') +
+          (node.probe_ms ? ' · probe ' + node.probe_ms + ' ms' : '')) + '</span>' + task + '</div>';
+    }
+    var ceo = nodes[0], peers = nodes.slice(1);
+    map.innerHTML = '<div class="chain-tree" style="--chain-count:' + peers.length + '">' +
+      '<div class="chain-root">' + nodeCard(ceo, true) + '</div><div class="chain-stem" aria-hidden="true"></div>' +
+      '<div class="chain-branches" role="list">' + peers.map(function (node) {
+        return '<div class="chain-branch" role="listitem">' + nodeCard(node, false) + '</div>';
+      }).join('') + '</div></div>';
+  }
+
   function menuHTML(s) {
     var noLadder = !s.model.efforts.length;
     var count = CHAIN_STATE && CHAIN_STATE.nodes ? CHAIN_STATE.nodes.length : 0;
     var state = CHAIN_PENDING ? 'Scanning this Mac…' :
-      (CHAIN_ON ? count + ' live agents · coordinator → peers → gates' : 'Off · one model owns the run');
+      (CHAIN_ON ? count + ' live agents · CEO → every available peer → review → gates' : 'Off · one model owns the run');
     var org = CHAIN_ON && CHAIN_STATE ? '<div class="chain-org">' +
       CHAIN_STATE.nodes.map(function (n) { return esc(n.role + '  ' + n.agent + ' / ' + (n.model || 'tool default')); }).join('<br>') +
       '<br>verdict&nbsp;&nbsp;&nbsp;Port + deterministic gates</div>' : '';
@@ -2100,14 +2206,18 @@ $ echo $?
     try { CHAIN_STATE = typeof payload === 'string' ? JSON.parse(payload) : payload; }
     catch (e) { CHAIN_STATE = { ready: false, why: 'Daisy returned an unreadable chain plan.', nodes: [] }; }
     CHAIN_PENDING = false;
+    renderChainMap();
     if (CHAIN_STATE && CHAIN_STATE.ready) {
-      CHAIN_ON = true; saveChain();
-      toast('<b>Daisy Chain ready.</b> ' + CHAIN_STATE.nodes.length +
-            ' probed agents share one Port plan; deterministic gates keep the verdict.');
+      if (CHAIN_CONTEXT === 'enable') {
+        CHAIN_ON = true; saveChain();
+        toast('<b>Daisy Chain ready.</b> ' + CHAIN_STATE.nodes.length +
+              ' probed models share one Port plan; deterministic gates keep the verdict.');
+      }
     } else {
       CHAIN_ON = false; saveChain();
-      toast('<b>Daisy Chain stayed off.</b> ' + esc((CHAIN_STATE && CHAIN_STATE.why) || 'Two usable agents are required.'));
+      if (CHAIN_CONTEXT === 'enable') toast('<b>Daisy Chain stayed off.</b> ' + esc((CHAIN_STATE && CHAIN_STATE.why) || 'Two usable models are required.'));
     }
+    CHAIN_CONTEXT = '';
     refreshChainMenu();
   };
 
@@ -2122,7 +2232,7 @@ $ echo $?
       toast('<b>Open Daisy.app to build the chain.</b> A browser cannot probe local agents.');
       return;
     }
-    CHAIN_PENDING = true; refreshChainMenu();
+    CHAIN_PENDING = true; CHAIN_CONTEXT = 'enable'; refreshChainMenu();
     window.webkit.messageHandlers.daisy.postMessage({ cmd: 'chain.status' });
   }
 
@@ -2226,7 +2336,7 @@ $ echo $?
 
   function initPicker() {
     if (!modelsFor().length) return;
-    LANES.run = defaultLane('claude');
+    LANES.run = defaultLane('codex');
     LANES.fe = defaultLane('claude');
     LANES.api = defaultLane('codex');
     buildMenus();
@@ -2664,7 +2774,24 @@ $ echo $?
   }
 
   var script = STEPS;
+  /* daisy:chain-live */
+  var NEW_RUN_EMPTY = true;
+
+  function newBlankRun(focusComposer) {
+    clearTimeout(timer);
+    clearWorking();
+    col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
+    feed.classList.remove('live');
+    following = true; $('#jump').classList.remove('on');
+    $('#btn-bell').style.color = '';
+    $('#tb-title').textContent = 'New run';
+    $$('.thread').forEach(function (t) { t.classList.remove('active'); });
+    NEW_RUN_EMPTY = true;
+    if (focusComposer !== false) setTimeout(function () { $('#amend').focus(); }, 0);
+  }
+
   function playLive(variant) {
+    NEW_RUN_EMPTY = false;
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
     feed.classList.add('live');
     following = true; $('#jump').classList.remove('on');
@@ -2684,6 +2811,7 @@ $ echo $?
   }
 
   function snapshot(id) {
+    NEW_RUN_EMPTY = false;
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = STEPS.length;
     feed.classList.remove('live');
     script = STEPS;
@@ -2718,7 +2846,7 @@ $ echo $?
   }
 
   /* ---------------- views ---------------- */
-  var VIEW_ORDER = ['run','runs','review','precedent','memory','artifacts','autos','skills','import','settings'];
+  var VIEW_ORDER = ['run','chain','runs','review','precedent','memory','artifacts','autos','skills','import','settings'];
   var curView = 'run';
   // Back/forward walk the views actually visited, not VIEW_ORDER — the arrows
   // in the title bar are history, so a jump from Skills to Runs must come back
@@ -2744,6 +2872,7 @@ $ echo $?
       });
       if (name === 'precedent') renderPrecedent();
       if (name === 'memory') renderMemory();
+      if (name === 'chain') requestChainMap();
       countUp();
     };
     // Same-document view transition: the panes cross-fade and slide in the
@@ -3153,7 +3282,7 @@ $ echo $?
     if (ap) { ap.disabled = true; ap.textContent = 'Approved'; toast('<b>Approved.</b> ' + ap.getAttribute('data-approve')); return; }
   });
 
-  $('#btn-bell').addEventListener('click', function () { closeBrandMenu(); openRun('1042'); toast('<b>1 alert.</b> gate_failures ≥ 2 fired on run 1042 — the escalation card is in the feed.'); });
+  $('#btn-bell').addEventListener('click', function () { closeBrandMenu(); toast('<b>No alerts.</b> New gate failures will appear here after a real run.'); });
   var ctxPanel = $('#ctx');
   $('#btn-ctx').addEventListener('click', function () {
     var on = ctxPanel.classList.toggle('on');
@@ -3173,9 +3302,9 @@ $ echo $?
   $('#tb-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
   $('#tb-back').addEventListener('click', function () { histGo(-1); });
   $('#tb-fwd').addEventListener('click', function () { histGo(1); });
-  $('#tb-new').addEventListener('click', function () { show('run'); playLive(); });
+  $('#tb-new').addEventListener('click', function () { show('run'); newBlankRun(); });
   $('#rt-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
-  $('#rt-new').addEventListener('click', function () { show('run'); playLive(); });
+  $('#rt-new').addEventListener('click', function () { show('run'); newBlankRun(); });
   syncHist();
   $('#btn-search').addEventListener('click', function () { closeBrandMenu(); palOpen(); });
 
@@ -3194,7 +3323,7 @@ $ echo $?
   brandMenu.addEventListener('click', function (e) {
     var item = e.target.closest('[data-brand-action]'); if (!item) return;
     var action = item.getAttribute('data-brand-action'); closeBrandMenu();
-    if (action === 'new') { show('run'); playLive(); }
+    if (action === 'new') { show('run'); newBlankRun(); }
     else toast('<b>Daisy.</b> Verified software and hardware from one brief.');
   });
   document.addEventListener('click', function (e) { if (!e.target.closest('.brand')) closeBrandMenu(); });
@@ -3341,6 +3470,29 @@ $ echo $?
     else if (action === 'rerun') { show('run'); playLive(); toast('<b>Re-running.</b> Same brief, same gates.'); }
   });
 
+  /* No demo chats survive into the shipped workspace. */
+  function clearDemoWorkspace() {
+    var list = $('.scroller');
+    if (list) list.innerHTML = '<div class="sect">Your runs</div><div class="sidebar-empty">No runs yet</div>';
+    var runs = $('#view-runs .pcol');
+    if (runs) runs.innerHTML = '<h2>Runs</h2><div class="lede">No runs yet. Start with a brief; Daisy will show only work this app actually ran.</div>';
+  }
+
+  /* Daisy-owned local reset. A second click prevents accidental unlinking. */
+  var resetDaisy = $('#reset-daisy'), resetArmed = false, resetTimer = null;
+  if (resetDaisy) resetDaisy.addEventListener('click', function () {
+    if (!resetArmed) {
+      resetArmed = true; resetDaisy.textContent = 'Click again to reset';
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(function () {
+        resetArmed = false; resetDaisy.textContent = 'Reset Daisy…';
+      }, 5000);
+      return;
+    }
+    resetDaisy.disabled = true; resetDaisy.textContent = 'Resetting…';
+    if (window.daisyResetToOnboarding) window.daisyResetToOnboarding();
+  });
+
   /* ---------------- toast ---------------- */
   var toastEl = $('#toast'), tt = null;
   function toast(html) {
@@ -3349,21 +3501,121 @@ $ echo $?
   }
 
   /* ---------------- composer ---------------- */
+  function addBriefToRun(value) {
+    var item = document.createElement('div');
+    item.className = 'item';
+    var brief = document.createElement('div');
+    brief.className = 'brief';
+    brief.textContent = value;
+    item.appendChild(brief); col.appendChild(item); follow();
+  }
+
+  function addChainOutcome(data) {
+    var item = document.createElement('div');
+    item.className = 'item';
+    var card = document.createElement('div');
+    card.className = 'card';
+    var crew = data && data.lanes && data.lanes.crew;
+    var gates = (crew && crew.gates) || [];
+    var failed = gates.filter(function (g) { return !g.passed; });
+    card.innerHTML = '<div class="chead"><span class="ci">DC</span><div><b></b><div class="sub"></div></div>' +
+      '<div class="act"><span class="tag"></span></div></div><div class="res" style="display:block"></div>';
+    card.querySelector('.chead b').textContent = 'Daisy Chain · ' + (data.run || 'run');
+    card.querySelector('.sub').textContent = gates.length + ' deterministic gates · Port ' +
+      (((data.governance || {}).mode) || 'unavailable') + ' · ' + (((data.governance || {}).status) || 'unknown');
+    var tag = card.querySelector('.tag');
+    tag.className = 'tag ' + (failed.length ? 'fail' : 'pass');
+    tag.textContent = failed.length ? failed.length + ' FAILED' : 'REVIEWED';
+    card.querySelector('.res').textContent = failed.length
+      ? failed.map(function (g) { return g.name + (g.detail ? ': ' + g.detail : ''); }).join(' · ')
+      : 'The CEO assigned every available peer, reconciled their work, and a peer reviewed it. Release still waits at Port approval.';
+    item.appendChild(card); col.appendChild(item); follow();
+  }
+
+  window.__daisyChainRun = function (payload) {
+    clearWorking();
+    var data;
+    try { data = typeof payload === 'string' ? JSON.parse(payload) : payload; }
+    catch (e) { data = { error: 'Daisy returned an unreadable run summary.' }; }
+    if (!data || data.error) {
+      toast('<b>Daisy Chain stopped.</b> ' + esc((data && data.error) || 'No run summary returned.'));
+      return;
+    }
+    var crew = data.lanes && data.lanes.crew;
+    if (crew && crew.organization) { CHAIN_ORG = crew.organization; renderChainMap(); }
+    addChainOutcome(data);
+  };
+
+  function addAgentOutcome(data) {
+    var item = document.createElement('div');
+    item.className = 'item';
+    if (!data || !data.ok) {
+      var stopped = document.createElement('div');
+      stopped.className = 'prose';
+      stopped.textContent = (data && data.reason) || 'The selected agent returned no usable response.';
+      item.appendChild(stopped); col.appendChild(item); follow();
+      return;
+    }
+    var head = document.createElement('div');
+    head.className = 'who-line';
+    head.textContent = String(data.agent || 'agent').toUpperCase() + ' · ' + (data.model || 'tool default');
+    var prose = document.createElement('div');
+    prose.className = 'prose selectable';
+    prose.textContent = data.stdout || '';
+    item.appendChild(head); item.appendChild(prose); col.appendChild(item); follow();
+  }
+
+  window.__daisyAgentRun = function (payload) {
+    clearWorking();
+    var data;
+    try { data = typeof payload === 'string' ? JSON.parse(payload) : payload; }
+    catch (e) { data = { ok: false, reason: 'Daisy returned an unreadable agent response.' }; }
+    addAgentOutcome(data);
+  };
+
+  function markCurrentRun(title) {
+    var list = $('.scroller'); if (!list) return;
+    list.innerHTML = '';
+    var section = document.createElement('div'); section.className = 'sect'; section.textContent = 'Current';
+    var row = document.createElement('div'); row.className = 'thread active';
+    var pip = document.createElement('span'); pip.className = 'pip run';
+    var text = document.createElement('span'); text.className = 'txt'; text.textContent = title;
+    row.appendChild(pip); row.appendChild(text); list.appendChild(section); list.appendChild(row);
+  }
+
   function sendAmend() {
     var inp = $('#amend'), v = inp.value.trim(); if (!v) return;
     inp.value = ''; $('#send').classList.remove('ready');
-    // A brief that names a budget is a NEW run, not an amendment — and a
-    // tighter ceiling has to reach a different conclusion.
-    var m = /\$\s?(\d+(?:\.\d+)?)/.exec(v);
-    if (m && /budget|ceiling|fastener|cost|\$/i.test(v)) {
-      var ceiling = parseFloat(m[1]);
-      show('run');
-      playLive(ceiling < 22 ? 'budget' : null);
-      toast('<b>New run.</b> Same brief at a $' + m[1] + ' ceiling — the plan and the physics are unchanged, so anything that differs is the economics.');
+    if (NEW_RUN_EMPTY) {
+      NEW_RUN_EMPTY = false;
+      var title = v.length > 72 ? v.slice(0, 69) + '…' : v;
+      $('#tb-title').textContent = title; markCurrentRun(title);
+    }
+    addBriefToRun(v);
+    if (!native || !window.webkit || !window.webkit.messageHandlers ||
+        !window.webkit.messageHandlers.daisy) {
+      toast('<b>Open Daisy.app to run local agents.</b> A browser cannot start their CLIs.');
       return;
     }
-    toast('<b>Queued as an amendment.</b> The current agent turn finishes first, then labctl resumes both sessions with: “' + v.replace(/</g, '&lt;') + '”');
+    if (CHAIN_ON) {
+      showWorking('CEO planning · Port commits before agents run');
+      window.webkit.messageHandlers.daisy.postMessage({ cmd: 'chain.run', goal: v });
+      return;
+    }
+    var selected = LANES.run;
+    if (!selected || !selected.model) {
+      toast('<b>No model is selectable.</b> Check agent setup in onboarding.');
+      return;
+    }
+    showWorking('asking ' + (selected.model.label || selected.model.id));
+    window.webkit.messageHandlers.daisy.postMessage({
+      cmd: 'agent.run', goal: v, vendor: selected.model.vendor,
+      model: selected.model.id, effort: selected.effort || '',
+      provider: selected.model.provider || ''
+    });
   }
+  var chainRefresh = $('#chain-refresh');
+  if (chainRefresh) chainRefresh.addEventListener('click', requestChainMap);
   $('#send').addEventListener('click', sendAmend);
   $('#amend').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.keyCode === 13) sendAmend(); });
   // Codex greys the send control until there is something to send
@@ -3442,8 +3694,6 @@ $ echo $?
   /* ---------------- command palette ---------------- */
   var palOv = $('#pal-ov'), palIn = $('#pal-in'), palList = $('#pal-list');
   var CMDS = [
-    { l: 'Run brief A — $30 fastener budget', h: '⏎', f: function () { show('run'); playLive(); } },
-    { l: 'Run brief B — $18 ceiling (escalates on cost)', h: '', f: function () { show('run'); playLive('budget'); } },
     { l: 'Open escalated run 1039', h: '', f: function () { openRun('1039'); } },
     { l: 'Precedent — failure families', h: '', f: function () { show('precedent'); } },
     { l: 'Review queue', h: '', f: function () { show('review'); } },
@@ -3487,7 +3737,7 @@ $ echo $?
   palOv.addEventListener('click', function (e) { if (e.target === palOv) palClose(); });
 
   document.addEventListener('keydown', function (e) {
-    if ((e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); show('run'); playLive(); return; }
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); show('run'); newBlankRun(); return; }
     // j/k through the run outline, the way a terminal person expects.
     // Must ignore modified keys, or it swallows cmd-K before the palette sees it.
     if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey &&
@@ -3609,7 +3859,9 @@ $ echo $?
   });
 
   applyTheme();
-  playLive();
+  clearDemoWorkspace();
+  newBlankRun(false);
+  /* daisy:real-agent-v4 */
 
   /* ---------------- the mark ---------------- */
   function DAISY_MARK() { return "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><path d=\"M64.9 44.2Q81.5 36.2 95.0 50.4Q80.5 62.2 64.4 56.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M66.6 53.0Q82.6 53.6 87.2 69.4Q68.2 76.0 59.1 62.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M62.5 60.2Q77.0 71.6 75.0 90.3Q56.7 84.3 52.6 65.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M55.8 65.4Q62.9 80.9 48.6 91.8Q39.1 80.2 45.5 65.0\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M47.7 65.3Q46.2 84.9 27.6 89.1Q23.3 71.2 38.5 60.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M39.9 61.3Q29.0 74.3 11.2 71.7Q18.5 56.2 34.1 53.6\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M35.4 55.5Q20.6 63.0 6.6 52.0Q18.2 37.2 34.2 44.9\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M34.2 48.2Q16.7 45.5 10.6 26.6Q28.9 25.4 38.9 37.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M39.0 39.9Q24.7 26.8 25.4 10.6Q43.9 16.6 46.9 34.9\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M45.4 34.3Q38.3 19.4 52.1 6.2Q62.7 18.7 54.5 34.7\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M52.8 34.6Q54.1 18.0 73.2 14.3Q75.2 29.7 61.3 38.8\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M60.3 36.4Q70.8 22.0 89.3 26.4Q82.9 43.0 66.0 47.2\" fill=\"var(--bg)\" stroke=\"var(--ink-3)\" stroke-width=\"3.4\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><path d=\"M67.2 50.0Q65.5 56.0 63.1 61.0Q58.1 64.2 53.0 67.1Q46.9 66.3 41.2 65.3Q38.2 59.8 34.9 55.5Q34.6 50.5 34.0 44.2Q38.1 39.8 41.2 34.7Q47.0 34.1 53.0 32.7Q57.9 36.1 62.5 39.5Q65.3 44.2 67.2 50.0Z\" fill=\"var(--daisy)\" stroke=\"var(--daisy-deep)\" stroke-width=\"3.2\" stroke-linejoin=\"round\"/></svg>"; }
@@ -3732,6 +3984,25 @@ $ echo $?
     try { window.webkit.messageHandlers.daisy.postMessage(message); return true; }
     catch (e) { return false; }
   }
+
+  /* ---------------- fresh start ----------------
+     Reset only Daisy-owned state. The native half removes the scoped Garden
+     device credential; Google authentication always remains in the browser. */
+  function clearDaisyState() {
+    try { localStorage.removeItem('daisy-onboarded'); } catch (e) {}
+    try { localStorage.removeItem('daisy-chain-v1'); } catch (e) {}
+    try { localStorage.removeItem('daisy-theme'); } catch (e) {}
+  }
+
+  window.__daisyReset = function () {
+    clearDaisyState();
+    location.reload();
+  };
+
+  window.daisyResetToOnboarding = function () {
+    clearDaisyState();
+    if (!postNative({ cmd: 'app.reset' })) location.reload();
+  };
 
   /* ---------------- Garden ----------------
      Google authentication happens in the trusted system browser. The only

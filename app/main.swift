@@ -20,6 +20,37 @@ final class Bridge: NSObject, WKScriptMessageHandler {
             run(["python3", "labctl.py", "agents", "--json"], callback: "window.__daisyOnboarding")
         case "chain.status":
             run(["python3", "labctl.py", "chain", "--json"], callback: "window.__daisyChainStatus")
+        case "chain.run":
+            guard let raw = body["goal"] as? String else { return }
+            let goal = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !goal.isEmpty, goal.count <= 12000 else {
+                emit("window.__daisyChainRun", json: "{\"error\":\"Enter a goal between 1 and 12,000 characters.\"}")
+                return
+            }
+            run(["python3", "labctl.py", "run", "--brief", goal, "--lane", "crew", "--daisy-chain", "--json"],
+                callback: "window.__daisyChainRun")
+        case "agent.run":
+            guard let rawGoal = body["goal"] as? String,
+                  let vendor = body["vendor"] as? String,
+                  let model = body["model"] as? String else { return }
+            let goal = rawGoal.trimmingCharacters(in: .whitespacesAndNewlines)
+            let effort = body["effort"] as? String ?? ""
+            let provider = body["provider"] as? String ?? ""
+            let vendors = Set(["claude", "codex", "opencode"])
+            let efforts = Set(["", "low", "light", "medium", "high", "xhigh", "max", "ultra"])
+            let safeID = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._/:"))
+            let modelSafe = !model.isEmpty && model.count <= 160 && model.unicodeScalars.allSatisfy(safeID.contains)
+            let providerSafe = provider.count <= 80 && provider.unicodeScalars.allSatisfy(safeID.contains)
+            guard !goal.isEmpty, goal.count <= 12000, vendors.contains(vendor),
+                  efforts.contains(effort), modelSafe, providerSafe else {
+                emit("window.__daisyAgentRun", json: "{\"ok\":false,\"reason\":\"The selected agent, model, or goal is invalid.\"}")
+                return
+            }
+            run(["python3", "labctl.py", "agent", "--name", vendor, "--model", model,
+                 "--effort", effort, "--provider", provider, "--prompt", goal, "--json"],
+                callback: "window.__daisyAgentRun")
+        case "app.reset":
+            run(["python3", "-m", "garden.link", "unlink"], callback: "window.__daisyReset")
         case "garden", "garden.status":
             run(["python3", "-m", "garden.link", "status"], callback: "window.__daisyGardenStatus")
         case "garden.pair":

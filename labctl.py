@@ -14,6 +14,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from lab import executors                      # noqa: E402
+from agents.models import inventory            # noqa: E402
 from lab.chain import topology                 # noqa: E402
 from lab.run import execute                    # noqa: E402
 
@@ -26,6 +27,15 @@ def main(argv=None):
     agents_parser.add_argument("--json", action="store_true")
     chain_parser = sub.add_parser("chain", help="build a governed org from the agents this Mac can drive")
     chain_parser.add_argument("--json", action="store_true")
+    chain_parser.add_argument("--goal", help="run the goal through the governed chain")
+    agent_parser = sub.add_parser("agent", help="run one exact locally selectable model")
+    agent_parser.add_argument("--name", required=True,
+                              choices=("claude", "codex", "opencode"))
+    agent_parser.add_argument("--model", required=True)
+    agent_parser.add_argument("--effort", default="")
+    agent_parser.add_argument("--provider", default="")
+    agent_parser.add_argument("--prompt", required=True)
+    agent_parser.add_argument("--json", action="store_true")
     r = sub.add_parser("run", help="take a brief through the factory")
     r.add_argument("--brief", required=True)
     r.add_argument("--run-id")
@@ -46,7 +56,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
 
     if a.cmd == "agents":
-        measured = executors.available()
+        measured = executors.summarize_models(
+            executors.available_models(inventory(), cwd=os.getcwd()))
         if a.json:
             print(json.dumps({"agents": [
                 {"name": e.name, "ok": e.ok, "detail": e.detail, "probe_ms": e.probe_ms}
@@ -62,6 +73,14 @@ def main(argv=None):
         return 0
 
     if a.cmd == "chain":
+        if a.goal:
+            summary = execute(a.goal, lanes=("crew",), quiet=a.json, daisy_chain=True)
+            if a.json:
+                print(json.dumps(summary, indent=1, default=str))
+            else:
+                print("Daisy Chain run %s — %d gates, %d failed" % (
+                    summary["run"], summary["gates"]["total"], summary["gates"]["failed"]))
+            return summary["gates"]["failed"]
         chain = topology()
         if a.json:
             print(json.dumps(chain, indent=1))
@@ -73,6 +92,40 @@ def main(argv=None):
             if chain["why"]:
                 print("  %s" % chain["why"])
         return 0 if chain["ready"] else 2
+
+    if a.cmd == "agent":
+        available_models = [row for row in inventory().get("models", [])
+                            if row.get("vendor") == a.name
+                            and row.get("id") == a.model
+                            and (row.get("provider") or "") == a.provider]
+        if not available_models:
+            result = {"agent": a.name, "model": a.model, "ok": False,
+                      "reason": "model is not in this Mac's selectable inventory",
+                      "stdout": "", "stderr": "", "ms": 0}
+        else:
+            selected = available_models[0]
+            valid_efforts = selected.get("efforts") or []
+            if a.effort and a.effort not in valid_efforts:
+                result = {"agent": a.name, "model": a.model, "ok": False,
+                          "reason": "effort is not supported by this model",
+                          "stdout": "", "stderr": "", "ms": 0}
+            else:
+                ex, probed = executors.pick(a.name, cwd=os.getcwd(), model=a.model,
+                                            provider=a.provider)
+                if not ex:
+                    reason = probed[0].detail if probed else "agent unavailable"
+                    result = {"agent": a.name, "model": a.model, "ok": False,
+                              "reason": reason, "stdout": "", "stderr": "", "ms": 0}
+                else:
+                    result = executors.run(ex, a.prompt, cwd=os.getcwd(), model=a.model,
+                                           effort=a.effort, provider=a.provider)
+                    result.update({"model": a.model, "effort": a.effort,
+                                   "provider": a.provider})
+        if a.json:
+            print(json.dumps(result, indent=1))
+        else:
+            print(result.get("stdout") or result.get("reason") or "no output")
+        return 0 if result.get("ok") else 2
 
     lanes = tuple(a.lane or ("hardware", "scrape", "software"))
     if a.daisy_chain and "crew" not in lanes:
