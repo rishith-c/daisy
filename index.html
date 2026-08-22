@@ -331,10 +331,11 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
   padding: 24px 0 24px 14px;
 }
 .mm {
-  position: absolute; left: 14px;
+  position: absolute; left: 14px; top: 0;
   width: 12px; height: 2px; border-radius: 1px; background: var(--border-strong);
   border: none; padding: 0; box-shadow: none;
-  transition: width var(--d-menu) var(--out), background var(--d-hover) var(--out), top .4s var(--out);
+  transition: width var(--d-menu) var(--out), background var(--d-hover) var(--out),
+              transform .4s var(--out);
 }
 .mm:hover { width: 21px; background: var(--ink-3); }
 .mm:focus-visible { outline: none; width: 21px; background: var(--leaf); }
@@ -1197,20 +1198,21 @@ $ echo $?
     var total = col.scrollHeight || 1;
     // clientHeight is 0 before the pane has been laid out; falling through to
     // that produced a negative span and parked every mark off-screen.
-    var box = mm.clientHeight || feed.clientHeight || 0;
-    if (box <= 48) {
-      if (!relayoutQueued) {
-        relayoutQueued = true;
-        requestAnimationFrame(function () { relayoutQueued = false; layoutMarks(); });
-      }
-      return;
+    // clientHeight is 0 before the pane has been laid out. Never bail on that:
+    // fall back to a sane height so the outline is always usable, and queue a
+    // correction for when real dimensions exist.
+    var measured = mm.clientHeight || feed.clientHeight || 0;
+    var box = measured || 420;
+    if (measured <= 48 && !relayoutQueued) {
+      relayoutQueued = true;
+      requestAnimationFrame(function () { relayoutQueued = false; layoutMarks(); });
     }
-    var span = box - 48;
+    var span = Math.max(60, box - 48);
     marks.forEach(function (b, i) {
       var el = col.children[i];
       if (!el) return;
       var frac = (el.offsetTop + el.offsetHeight / 2) / total;
-      b.style.top = Math.max(0, 24 + Math.max(0, Math.min(1, frac)) * span) + 'px';
+      b.style.transform = 'translateY(' + Math.max(0, 24 + Math.max(0, Math.min(1, frac)) * span).toFixed(1) + 'px)';
     });
   }
 
