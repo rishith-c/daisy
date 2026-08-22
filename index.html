@@ -577,6 +577,26 @@ select:focus-visible { outline: 2px solid var(--leaf); }
 .send:hover { background: var(--ink); filter: brightness(1.25); }
 .send svg { width: 15px; height: 15px; }
 
+/* jump-to-latest */
+.jump {
+  position: absolute; left: 50%; bottom: 96px; z-index: 20;
+  transform: translate(-50%, 10px) scale(.96); opacity: 0; pointer-events: none;
+  background: var(--ink); color: var(--bg); border-color: transparent;
+  box-shadow: var(--shadow-2); font-size: 12.5px;
+  transition: opacity .2s var(--out), transform .42s var(--spring-snappy);
+}
+.jump.on { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
+.jump:hover { background: var(--ink); filter: brightness(1.2); }
+
+/* working indicator */
+.working { display: flex; align-items: center; gap: 9px; color: var(--ink-3); font-size: 12.5px; font-family: var(--mono); }
+.working .dots { display: inline-flex; gap: 3px; }
+.working .dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-4); display: block;
+  animation: bounce 1.15s var(--soft) infinite; }
+.working .dots i:nth-child(2) { animation-delay: .13s; }
+.working .dots i:nth-child(3) { animation-delay: .26s; }
+@keyframes bounce { 0%,60%,100% { transform: none; opacity: .45; } 30% { transform: translateY(-3px); opacity: 1; } }
+
 /* toast */
 .toast {
   position: fixed; bottom: 100px; left: 50%; z-index: 80;
@@ -793,6 +813,7 @@ table.l tr.click:hover td { background: var(--wash); }
       <div class="minimap" id="minimap" role="navigation" aria-label="Run outline"></div>
       <div id="feed" class="live" role="log" aria-live="polite" aria-relevant="additions" aria-label="Run activity"><div class="col" id="col"></div></div>
     </div>
+    <button class="jump" id="jump" aria-label="Jump to latest">Jump to latest ↓</button>
     <div class="dock">
       <div class="composer">
         <input type="text" id="amend" placeholder="Brief anything — a new run, or an amendment to this one" aria-label="Brief or amendment">
@@ -1110,6 +1131,19 @@ table.l tr.click:hover td { background: var(--wash); }
   var col = $('#col'), feed = $('#feed'), mm = $('#minimap');
   var idx = 0, timer = null, marks = [];
 
+  /* Never yank the view away from someone who scrolled up to read. Auto-follow
+     only while they are already at the bottom — and offer a way back. */
+  var following = true;
+  function nearBottom() { return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 90; }
+  function follow() { if (following) feed.scrollTop = feed.scrollHeight; }
+  feed.addEventListener('scroll', function () {
+    var at = nearBottom();
+    if (at !== following) {
+      following = at;
+      $('#jump').classList.toggle('on', !at);
+    }
+  }, { passive: true });
+
   function addMark(kind) {
     var b = document.createElement('button');
     b.className = 'mm here' + (kind === 'fail' ? ' gfail' : kind === 'pass' ? ' gpass' : '');
@@ -1210,12 +1244,31 @@ table.l tr.click:hover td { background: var(--wash); }
     if (r) { r.hidden = false; }
   }
 
+  var workEl = null;
+  function showWorking(label) {
+    if (workEl) workEl.remove();
+    workEl = document.createElement('div');
+    workEl.className = 'item working';
+    workEl.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span>' + label + '</span>';
+    col.appendChild(workEl);
+    follow();
+  }
+  function clearWorking() { if (workEl) { workEl.remove(); workEl = null; } }
+
+  var WORK_LABEL = {
+    prose: 'thinking', card: 'writing files', fail: 'running gates',
+    pass: 'running gates', precedent: 'searching precedent',
+    gate: 'preparing an approval', done: 'sealing the run',
+  };
+
   function next() {
-    if (idx >= script.length) return;
+    if (idx >= script.length) { clearWorking(); return; }
     var s = script[idx++];
+    if (!reduced && motionOn() && s.d > 500) showWorking(WORK_LABEL[s.kind] || 'working');
     timer = setTimeout(function () {
+      clearWorking();
       var item = place(s, false);
-      feed.scrollTop = feed.scrollHeight;
+      follow();
       if (s.wait) {
         var b = $('#' + s.wait, item);
         if (b) { b.addEventListener('click', function () { settle(b); feed.scrollTop = feed.scrollHeight; next(); }, { once: true }); return; }
@@ -1228,6 +1281,7 @@ table.l tr.click:hover td { background: var(--wash); }
   function playLive(variant) {
     clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
     feed.classList.add('live');
+    following = true; $('#jump').classList.remove('on');
     $('#btn-bell').style.color = '';
     if (variant === 'budget') {
       // same plan, same physics, different economics
