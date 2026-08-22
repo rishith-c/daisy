@@ -355,8 +355,11 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
   font-family: var(--mono); font-size: .8em; background: var(--surface-2);
   border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--ink-2);
 }
-.prose .w { animation: wordin .5s var(--expo) both; display: inline; }
+.prose .w { animation: wordin .17s cubic-bezier(.2,0,0,1) both; display: inline; }
 @keyframes wordin { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .prose .w { animation-duration: 60ms; filter: none !important; animation-delay: 0ms !important; }
+}
 
 .who-tag {
   display: inline-flex; align-items: center; gap: 7px; margin-bottom: 9px;
@@ -392,14 +395,23 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 .chead .ci svg { width: 24px; height: 24px; }
 .chead b { font-size: var(--t-chat); font-weight: 600; letter-spacing: -.008em; display: block; }
 .chead .sub { font-size: var(--t-chat-sm); color: var(--ink-3); margin-top: 1px; font-family: var(--mono); }
-.chead .act { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+.chead .sub .hov { display: none; align-items: center; gap: 4px; font-family: var(--sans); }
+.card.reviewable:hover .chead .sub .dflt,
+.card.reviewable:focus-within .chead .sub .dflt { display: none; }
+.card.reviewable:hover .chead .sub .hov,
+.card.reviewable:focus-within .chead .sub .hov { display: inline-flex; }
+.card.reviewable { cursor: default; }
+.card.reviewable:hover { background: color-mix(in srgb, var(--wash) 45%, var(--surface)); }
+.chead .act { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.chead > div:not(.act) { min-width: 0; }
 .plus { color: var(--add-ink); font-weight: 500; } .minus { color: var(--del-ink); font-weight: 500; }
 
 button {
   font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: -.005em;
   background: var(--bg); color: var(--ink);
   border: .5px solid var(--border-strong); border-radius: var(--r-btn);
-  padding: 5px 11px;
+  padding: 5px 11px; white-space: nowrap; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   transition: background var(--d-hover) var(--out), border-color var(--d-hover) var(--out),
               transform var(--d-press) var(--out), box-shadow var(--d-hover) var(--out), color var(--d-hover) var(--out);
   box-shadow: var(--shadow-1);
@@ -541,7 +553,7 @@ table.m td.nm { color: var(--ink); }
 }
 .composer input::placeholder { color: var(--ink-3); }
 .crow { display: flex; align-items: center; gap: 8px; }
-.rbtn { width: 28px; height: 28px; border-radius: 50%; padding: 0; display: inline-flex;
+.rbtn { width: 28px; height: 28px; padding: 0; border-radius: 50%; padding: 0; display: inline-flex;
   align-items: center; justify-content: center; color: var(--ink-2); box-shadow: none;
   background: none; border-color: transparent; }
 .rbtn:hover { background: var(--surface-2); }
@@ -558,7 +570,7 @@ select {
 select:hover { background: var(--surface-2); border-color: var(--border); }
 select:focus-visible { outline: 2px solid var(--leaf); }
 .send {
-  width: 30px; height: 30px; border-radius: 50%; padding: 0;
+  width: 28px; height: 28px; padding: 0; border-radius: 50%; padding: 0;
   background: var(--ink); color: var(--bg); border-color: transparent;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -673,6 +685,38 @@ table.l tr.click:hover td { background: var(--wash); }
 .diff .d { background: var(--del-bg); color: var(--del-ink); }
 .diff .c { color: var(--ink-3); }
 .diff .hk { color: var(--info); padding-top: 8px; font-weight: 600; }
+
+/* ---------- view transitions ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .3s; }
+  :root[data-vt="fwd"]::view-transition-old(root) { animation: vt-out-l .26s var(--out) both; }
+  :root[data-vt="fwd"]::view-transition-new(root) { animation: vt-in-r  .34s var(--out) both; }
+  :root[data-vt="back"]::view-transition-old(root){ animation: vt-out-r .26s var(--out) both; }
+  :root[data-vt="back"]::view-transition-new(root){ animation: vt-in-l  .34s var(--out) both; }
+}
+@keyframes vt-out-l { to { opacity: 0; transform: translateX(-14px); } }
+@keyframes vt-in-r  { from { opacity: 0; transform: translateX(16px); } }
+@keyframes vt-out-r { to { opacity: 0; transform: translateX(14px); } }
+@keyframes vt-in-l  { from { opacity: 0; transform: translateX(-16px); } }
+
+/* ---------- entry via transition + @starting-style ----------
+   Transitions retarget smoothly when interrupted; keyframes restart at zero. */
+@supports (transition-behavior: allow-discrete) {
+  .card, .pill, .brief {
+    transition: opacity .34s var(--out), transform .42s var(--spring-snappy),
+                filter .34s var(--out), box-shadow var(--d-hover) var(--out);
+  }
+  @starting-style {
+    .card, .pill, .brief { opacity: 0; transform: translateY(9px); filter: blur(2px); }
+  }
+}
+
+/* ---------- eased stagger on rows: bunch toward the end, like a fanned hand ---------- */
+.card .row, .card .grow {
+  animation: rowin .34s var(--out) both;
+  animation-delay: calc(var(--i, 0) * 26ms);
+}
+@keyframes rowin { from { opacity: 0; transform: translateY(-3px); } }
 
 @media (max-width: 820px) { aside { display: none; } .minimap { display: none; } }
 @media (prefers-reduced-motion: reduce) {
@@ -927,12 +971,12 @@ table.l tr.click:hover td { background: var(--wash); }
     { d: 900, kind: 'prose', tag: '<div class="who-tag codex"><i></i>Codex · web-api</div>',
       text: 'The contract names five endpoints. I generated route handlers with validation mirroring the response shapes, a seeded fixture layer for the fleet data, and one test per endpoint asserting the exact field set — no extra keys, since the conformance gate diffs both ways.' },
     { d: 620, kind: 'card', html:
-      '<div class="card"><div class="chead"><span class="ci">±</span><div><b>Edited 12 files</b><div class="sub"><span class="plus">+1,204</span> <span class="minus">−86</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="0">Review</button></div></div>' +
+      '<div class="card reviewable"><div class="chead"><span class="ci">±</span><div><b>Edited 12 files</b><div class="sub"><span class="dflt"><span class="plus">+1,204</span> <span class="minus">−86</span></span><span class="hov">Review changes ↗</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="0">Review</button></div></div>' +
       files([{d:'runs/1042/web-api/app/api/parts/',n:'route.ts',a:214,r:12},{d:'runs/1042/web-api/app/api/fleet/',n:'route.ts',a:186},{d:'runs/1042/web-api/lib/',n:'contract-guard.ts',a:141,r:8},{d:'runs/1042/web-api/tests/',n:'contract.spec.ts',a:232,r:30},{d:'runs/1042/web-api/lib/',n:'fixtures.ts',a:178},{d:'runs/1042/web-api/',n:'vitest.config.ts',a:24,r:6}], 'f1') + '</div>' },
     { d: 900, kind: 'prose', tag: '<div class="who-tag claude"><i></i>Fable 5 · web-frontend</div>',
       text: 'Design DNA from the scraped reference is pinned in this worktree’s <code>CLAUDE.md</code> — type pairing, spacing scale, palette derivation. I built the fleet table, freshness header, and margin panel against the contract shapes. One variant was generated with the design skills deliberately withheld; that one goes to the gate first.' },
     { d: 620, kind: 'card', html:
-      '<div class="card"><div class="chead"><span class="ci">±</span><div><b>Edited 9 files</b><div class="sub"><span class="plus">+867</span> <span class="minus">−41</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="1">Review</button></div></div>' +
+      '<div class="card reviewable"><div class="chead"><span class="ci">±</span><div><b>Edited 9 files</b><div class="sub"><span class="dflt"><span class="plus">+867</span> <span class="minus">−41</span></span><span class="hov">Review changes ↗</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="1">Review</button></div></div>' +
       files([{d:'runs/1042/web-frontend/app/',n:'page.tsx',a:248,r:22},{d:'runs/1042/web-frontend/components/',n:'FleetTable.tsx',a:196},{d:'runs/1042/web-frontend/styles/',n:'tokens.css',a:84,r:19},{d:'runs/1042/web-frontend/components/',n:'FreshnessBadge.tsx',a:61},{d:'runs/1042/web-frontend/components/',n:'MarginPanel.tsx',a:152}], 'f2') + '</div>' },
     { d: 860, kind: 'fail', html:
       '<div class="card"><div class="chead"><span class="ci">T</span><div><b>Taste gate · tier 1 design-lint</b><div class="sub">grep/AST · 20 named tells · 0 tokens · 41 ms</div></div><div class="act"><span class="tag fail">FAIL · 3</span></div></div>' +
@@ -1077,18 +1121,30 @@ table.l tr.click:hover td { background: var(--wash); }
   feed.addEventListener('scroll', onFeedScroll);
   window.addEventListener('resize', layoutMarks);
 
+  /* Word-level reveal. Two things matter and both are easy to get wrong:
+     - APPEND nodes; `innerHTML +=` restarts every prior word's animation.
+     - Cap the stagger against a wall clock, or word 400 waits 16 seconds. */
+  var STAGGER = 38, BUDGET = 300, MINSTEP = 4;
   function streamProse(el, html) {
-    if (reduced || document.documentElement.getAttribute('data-motion') === 'calm') { el.innerHTML = html; return; }
-    var parts = html.split(/(\s+)/);
+    if (reduced || !motionOn()) { el.innerHTML = html; return; }
+    var parts = html.match(/\S+\s*|\s+/g) || [html];
     el.innerHTML = '';
-    var i = 0, chunk = 3;
+    var i = 0, nextFree = 0, t0 = performance.now();
     (function tick() {
-      var buf = '';
-      for (var k = 0; k < chunk && i < parts.length; k++, i++) buf += parts[i];
-      var span = document.createElement('span');
-      span.className = 'w';
-      span.innerHTML = buf;
-      el.appendChild(span);
+      var burst = Math.min(3, parts.length - i);
+      var now = performance.now() - t0;
+      var start = Math.max(nextFree, now), step = STAGGER;
+      if (start + (burst - 1) * STAGGER > now + BUDGET && burst > 1) {
+        step = start < now + BUDGET ? Math.max(MINSTEP, (now + BUDGET - start) / (burst - 1)) : MINSTEP;
+      }
+      nextFree = start + burst * step;
+      for (var k = 0; k < burst; k++, i++) {
+        var s = document.createElement('span');
+        s.className = 'w';
+        s.style.animationDelay = Math.max(0, Math.round(start - now + k * step)) + 'ms';
+        s.innerHTML = parts[i];
+        el.appendChild(s);
+      }
       if (i < parts.length) setTimeout(tick, 26);
     })();
   }
@@ -1105,6 +1161,7 @@ table.l tr.click:hover td { background: var(--wash); }
       item.innerHTML = step.kind === 'precedent' ? precedentCard() : step.html;
       col.appendChild(item);
     }
+    $$('.row, .grow', item).forEach(function (r, i) { r.style.setProperty('--i', Math.min(i, 8)); });
     addMark(step.kind);
     if (step.bell) $('#btn-bell').style.color = 'var(--warn)';
     if (instant && step.wait) { var b = $('#' + step.wait, item); if (b) settle(b); }
@@ -1172,11 +1229,30 @@ table.l tr.click:hover td { background: var(--wash); }
   }
 
   /* ---------------- views ---------------- */
+  var VIEW_ORDER = ['run','runs','review','precedent','artifacts','autos','skills','settings'];
+  var curView = 'run';
   function show(name) {
-    $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
-    $$('.navitem').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-view') === name); });
-    if (name === 'precedent') renderPrecedent();
+    if (name === curView) return;
+    var back = VIEW_ORDER.indexOf(name) < VIEW_ORDER.indexOf(curView);
+    curView = name;
+    var swap = function () {
+      $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
+      $$('.navitem').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-view') === name); });
+      if (name === 'precedent') renderPrecedent();
+      countUp();
+    };
+    // Same-document view transition: the panes cross-fade and slide in the
+    // direction of travel, off the main thread, with a hard fallback.
+    if (document.startViewTransition && !reduced && motionOn()) {
+      document.documentElement.dataset.vt = back ? 'back' : 'fwd';
+      var t = document.startViewTransition(swap);
+      if (t && t.finished && t.finished.then) {
+        t.finished.then(function () { delete document.documentElement.dataset.vt; },
+                        function () { delete document.documentElement.dataset.vt; });
+      }
+    } else swap();
   }
+  function motionOn() { return document.documentElement.getAttribute('data-motion') !== 'calm'; }
   $('#nav').addEventListener('click', function (e) {
     var a = e.target.closest('.navitem'); if (!a) return;
     var v = a.getAttribute('data-view');
@@ -1235,6 +1311,34 @@ table.l tr.click:hover td { background: var(--wash); }
       '<div class="res" style="display:block">Rank normalization would rate the least-bad candidate 1.0 and cite it confidently. Anchoring on absolute evidence is what lets the factory return <b>nothing</b> &mdash; and mean it.</div></div>';
   }
 
+  /* Count-up on measured figures. Cheap, and it makes the numbers read as
+     computed rather than typed. Skipped entirely under reduced motion. */
+  function countUp() {
+    if (reduced || !motionOn()) return;
+    $$('.mo').forEach(function (el) {
+      if (el.dataset.ticked) return;
+      var m = /^([\d,]+)$/.exec(el.textContent.trim());
+      if (!m) return;
+      var target = parseInt(m[1].replace(/,/g, ''), 10);
+      if (!(target > 12)) return;
+      el.dataset.ticked = '1';
+      var final = target.toLocaleString();
+      // If the tab is hidden, rAF never fires — write the real value and stop.
+      // A count-up that freezes at 0 is worse than no count-up at all.
+      if (document.hidden) { el.textContent = final; return; }
+      var t0 = performance.now(), dur = 900, done = false;
+      var settle = function () { if (!done) { done = true; el.textContent = final; } };
+      setTimeout(settle, dur + 400);                       // safety net
+      document.addEventListener('visibilitychange', settle, { once: true });
+      (function step(now) {
+        if (done) return;
+        var k = Math.min(1, (now - t0) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - k, 4))).toLocaleString();
+        if (k < 1) requestAnimationFrame(step); else settle();
+      })(t0);
+    });
+  }
+
   /* ---------------- interactions ---------------- */
   document.body.addEventListener('click', function (e) {
     var t = e.target.closest('[data-toggle]');
@@ -1248,9 +1352,23 @@ table.l tr.click:hover td { background: var(--wash); }
     var r = e.target.closest('[data-run]');
     if (r && !e.target.closest('button')) { openRun(r.getAttribute('data-run')); return; }
     if (e.target.id === 'replay') { playLive(); return; }
-    if (e.target.closest('[data-undo]')) { toast('<b>Undo is a git operation.</b> labctl owns git — agents never touch it. Reverted through the orchestrator, diff preserved in the flight recorder.'); return; }
+    var u = e.target.closest('[data-undo]');
+    if (u) {
+      var re = u.dataset.state === 'undone';
+      u.dataset.state = re ? '' : 'undone';
+      u.textContent = re ? 'Undo' : 'Reapply';
+      toast(re
+        ? '<b>Reapplied.</b> The orchestrator re-applied the patch; the flight recorder keeps both states.'
+        : '<b>Undo is a git operation.</b> labctl owns git — agents never touch it. Reverted through the orchestrator, diff preserved in the flight recorder.');
+      return;
+    }
     var d = e.target.closest('[data-diff]');
     if (d) { openDiff(+d.getAttribute('data-diff') || 0); return; }
+    var rc = e.target.closest('.card.reviewable .chead');
+    if (rc && !e.target.closest('button')) {
+      var btn = rc.parentNode.querySelector('[data-diff]');
+      if (btn) { openDiff(+btn.getAttribute('data-diff') || 0); return; }
+    }
     var ap = e.target.closest('[data-approve]');
     if (ap) { ap.disabled = true; ap.textContent = 'Approved'; toast('<b>Approved.</b> ' + ap.getAttribute('data-approve')); return; }
   });
