@@ -31,6 +31,7 @@ Zero third-party dependencies.
 
 from __future__ import annotations
 
+import atexit
 import bisect
 import math
 import threading
@@ -38,8 +39,8 @@ import time
 
 from .otlp import attributes, exporter, metric_payload
 
-# OTLP AggregationTemporality.
-DELTA, CUMULATIVE = 1, 2
+# OTLP AggregationTemporality — 1 is DELTA, 2 is CUMULATIVE.
+CUMULATIVE = 2
 
 # Gate durations span the taste linter (single-digit ms) and a rebuilt
 # frontend (tens of seconds), so the buckets are log-ish across four decades.
@@ -235,6 +236,12 @@ def record_repair(gate: str, kind: str) -> None:
 
 def record_tokens(agent: str, direction: str, n: int) -> None:
     AGENT_TOKENS.add(n, {"agent": agent, "direction": direction})
+
+
+# A run that records gate outcomes and exits without calling flush() would
+# otherwise ship nothing at all — and the last thing recorded before an exit
+# is usually the interesting one. No-ops when no sample was ever taken.
+atexit.register(REGISTRY.export)
 
 
 def registry() -> Registry:

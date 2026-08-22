@@ -13,9 +13,7 @@ only one of them means the dashboard will have anything on it.
 from __future__ import annotations
 
 import argparse
-import json
 import os
-import sys
 import time
 
 from . import events, metrics, otlp, trace

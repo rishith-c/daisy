@@ -34,6 +34,7 @@ import queue
 import threading
 import time
 import traceback
+from collections import deque
 from dataclasses import dataclass, field
 
 from .otlp import Delivery, attributes, exporter, log_payload, trace_payload
@@ -45,7 +46,7 @@ SPAN_KIND = {"internal": 1, "server": 2, "client": 3, "producer": 4, "consumer":
 # OTLP StatusCode.
 UNSET, OK, ERROR = 0, 1, 2
 
-# OTLP SeverityNumber, the four values a build system actually uses.
+# OTLP SeverityNumber, the levels a build system actually uses.
 SEVERITY = {"DEBUG": 5, "INFO": 9, "WARN": 13, "ERROR": 17, "FATAL": 21}
 
 # A stack trace per span is the difference between a 4 KB payload and a 400 KB
@@ -100,10 +101,6 @@ class Span:
             "exception.stacktrace": stack[:STACK_CHARS],
         })
         return self
-
-    @property
-    def duration_ms(self) -> float:
-        return (self.end_ns - self.start_ns) / 1e6
 
     def to_otlp(self) -> dict:
         out = {
@@ -167,14 +164,15 @@ class Batcher:
     """
 
     def __init__(self, exp=None, max_queue: int = 2048, max_batch: int = 128,
-                 interval: float = 2.0, on_tick=None):
+                 interval: float = 2.0):
         self.q: queue.Queue = queue.Queue(maxsize=max_queue)
         self.max_batch = max_batch
         self.interval = interval
-        self.on_tick = on_tick
         self.dropped = 0
         self.submitted = {"traces": 0, "logs": 0}
-        self.exports: list[Delivery] = []
+        # Bounded: a long run would otherwise accumulate one Delivery per
+        # batch forever, and nothing ever reads more than the recent tail.
+        self.exports: deque[Delivery] = deque(maxlen=64)
         self._exp = exp
         self._thread: threading.Thread | None = None
         self._lock = threading.Lock()
@@ -197,7 +195,6 @@ class Batcher:
         """Block until everything queued so far has been handed to the exporter."""
         if self._thread is None:
             self._ship(self._drain())
-            self._tick()
             return True
         marker = _Flush()
         try:
@@ -221,12 +218,10 @@ class Batcher:
                 item = self.q.get(timeout=self.interval)
             except queue.Empty:
                 self._ship(buf)
-                self._tick()
                 continue
             if isinstance(item, _Flush):
                 self._drain_into(buf)
                 self._ship(buf)
-                self._tick()
                 item.done.set()
                 continue
             signal, obj = item
@@ -273,15 +268,6 @@ class Batcher:
             finally:
                 items.clear()
 
-    def _tick(self) -> None:
-        if self.on_tick is None:
-            return
-        try:
-            self.on_tick()
-        except Exception:
-            pass
-
-
 # ---------------------------------------------------------------------------
 # the tracer
 # ---------------------------------------------------------------------------
@@ -290,7 +276,6 @@ class Tracer:
     """Spans in, batched OTLP out."""
 
     def __init__(self, exp=None, batcher: Batcher | None = None):
-        self._exp = exp
         self.batcher = batcher or Batcher(exp=exp)
         self.batcher.start()
 

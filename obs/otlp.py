@@ -31,7 +31,6 @@ import math
 import os
 import platform
 import threading
-import time
 import urllib.error
 import urllib.request
 from collections import namedtuple
@@ -100,12 +99,6 @@ class Config:
         if self.key:
             h["signoz-ingestion-key"] = self.key
         return h
-
-    def source(self) -> str:
-        """Human-readable account of where the endpoint came from, for the CLI."""
-        if not self.endpoint:
-            return "unset — offline, spooling to %s" % self.spool_dir
-        return self.endpoint
 
 
 def from_env(env: dict | None = None) -> Config:

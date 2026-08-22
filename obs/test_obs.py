@@ -11,6 +11,7 @@ red CI run into a wifi problem.
 
 from __future__ import annotations
 
+import atexit
 import contextlib
 import io
 import json
@@ -19,15 +20,15 @@ import shutil
 import tempfile
 import time
 
-from .events import (GATE_FAIL, HUMAN_ESCALATION, SCRAPE_REPAIR, gate,
-                     gate_fail, human_escalation, scrape_repair)
-from .metrics import (EVENTS, GATE_RUNS, Counter, Histogram, Registry, _key,
-                      export as export_metrics)
+from .events import (GATE_FAIL, HUMAN_ESCALATION, KINDS, SCRAPE_REPAIR,
+                     gate, gate_fail, human_escalation, scrape_repair)
+from .metrics import (EVENTS, GATE_RUNS, REGISTRY, Counter, Histogram, Registry,
+                      _key, export as export_metrics)
 from .otlp import (Config, Delivery, Exporter, SIGNALS, _base, anyvalue,
                    attributes, configure, from_env, log_payload, metric_payload,
                    read_spool, replay, resource, trace_payload)
-from .trace import (ERROR, OK, UNSET, Batcher, Span, Tracer, current,
-                    new_span_id, new_trace_id, tracer)
+from .trace import (ERROR, OK, Batcher, Tracer, current, new_span_id,
+                    new_trace_id, tracer)
 
 PASS, FAIL = 0, 0
 
@@ -371,6 +372,8 @@ def test_metrics():
 
 def test_events():
     print("\nevents — failure and repair as signals, not prose")
+    check("the event taxonomy is closed and enumerable",
+          KINDS == (GATE_FAIL, SCRAPE_REPAIR, HUMAN_ESCALATION), str(KINDS))
     before = EVENTS.get({"event.kind": GATE_FAIL})
     s = gate_fail("physics.bend", 0.72, "web too thin")
     check("gate.fail is a span, named for the kind", s.name == GATE_FAIL, s.name)
@@ -636,6 +639,9 @@ def main():
     # to write into a directory that no longer exists.
     configure(Config(spool_dir=sandbox))
     tracer().flush(2.0)
+    # This process recorded a few hundred fake samples. Nobody wants them
+    # shipped anywhere when the interpreter exits.
+    atexit.unregister(REGISTRY.export)
     shutil.rmtree(sandbox, ignore_errors=True)
     print("\n%d passed, %d failed" % (PASS, FAIL))
     return 1 if FAIL else 0

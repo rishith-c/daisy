@@ -51,6 +51,9 @@ gate "agents — adoption of other tools' sessions" \
 gate "commons — verified solution reuse across agents" \
      env PYTHONWARNINGS=ignore $PY -m commons.test_commons
 
+gate "obs — OTLP exporter, tracer and offline spool" \
+     env PYTHONWARNINGS=ignore $PY -m obs.test_obs
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'
