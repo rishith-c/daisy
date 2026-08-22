@@ -12,7 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 idx = os.path.join(ROOT, "index.html")
 h = open(idx, encoding="utf-8").read()
 
-if "Bright Data · bolt table" in h:
+if "Bright Data &middot; bolt table" in h:
     print("already present")
     raise SystemExit(0)
 

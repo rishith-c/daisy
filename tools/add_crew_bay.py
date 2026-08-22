@@ -13,14 +13,16 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 idx = os.path.join(ROOT, "index.html")
 h = open(idx, encoding="utf-8").read()
 
-if "crew-bay" in h:
+if "CREW bay: two agents" in h:
     print("already present")
     raise SystemExit(0)
 
 css = """
 /* ---------- CREW bay: two agents, one contract ---------- */
+/* The bay lives inside a fixed-width column, so it must respond to its own
+   container rather than the viewport. */
 .bay { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 720px) { .bay { grid-template-columns: 1fr; } }
+@container (max-width: 430px) { .bay { grid-template-columns: 1fr; } }
 .lane {
   background: var(--surface); border: .5px solid var(--border);
   border-radius: var(--r-card); box-shadow: var(--shadow-1); overflow: hidden;
