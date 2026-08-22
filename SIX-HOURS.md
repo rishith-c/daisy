@@ -124,8 +124,18 @@ Worth listing because they're the reason to write tests at all:
    trivially passed by finding its own answer key.
 4. Count-up tickers froze at 0 forever if the tab was hidden when they started.
 5. List tables overflowed their container at narrow widths.
+6. **⌘K was dead.** The `j`/`k` outline navigation I added matched `k` without
+   excluding modifiers, so it swallowed the event and called `preventDefault()`
+   before the palette handler ran — the command palette broken by its own
+   shortcut. Nothing on screen suggested it; only a scripted keypress found it.
+7. Minimap marks took **negative** offsets when laid out before the pane had a
+   height, parking every mark off-screen.
+8. Run ids were being thousands-separated by the count-up ticker ("1,042"),
+   because it matched any numeric cell rather than statistics only.
+9. Seven WCAG contrast failures — see the tier-2 section above.
 
-35/35 precedent tests and 26/26 taste tests pass now.
+35/35 precedent tests and 26/26 taste tests pass, plus a scripted interaction
+sweep over every view, control, and keyboard path. `./verify.sh` is green.
 
 ## 6. What I did NOT do
 
