@@ -227,6 +227,31 @@ TASK = (
 )
 
 
+# The smallest thing that could honestly be called a component. An agent that
+# returns a filename, an apology, or a truncated fragment must fail on that
+# fact, not be handed to a design linter — the linter would judge whatever it
+# was given and report findings about nothing.
+MIN_BYTES = 400
+
+
+def artifact_sane(html: str, need: tuple = ("pass", "fail", "pending")) -> tuple:
+    """(ok, reason). Structural, not aesthetic — no taste judgement here."""
+    t = (html or "").strip()
+    if len(t) < MIN_BYTES:
+        return False, "only %d bytes; not a component" % len(t)
+    low = t.lower()
+    if "<" not in t or ">" not in t:
+        return False, "no markup at all"
+    if low.count("<") < 6:
+        return False, "%d tags; too thin to be the asked-for component" % low.count("<")
+    if "<style" not in low and "style=" not in low:
+        return False, "no styling of any kind"
+    missing = [w for w in need if w not in low]
+    if missing:
+        return False, "does not mention the required state(s): %s" % ", ".join(missing)
+    return True, ""
+
+
 def _extract_html(text: str) -> str:
     """Agents wrap output in prose and fences however they feel. Take the
     largest plausible HTML block rather than trusting the format."""
@@ -270,8 +295,31 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
             break
 
         html = _extract_html(res["stdout"])
-        path = os.path.join(d, "badge.html")
+        # Keep every attempt, not just the one that passed. A retry loop that
+        # overwrites its own evidence cannot be audited — "it failed then it
+        # passed" is a claim until the rejected artifact is still on disk next
+        # to the findings that rejected it.
+        path = os.path.join(d, "badge.attempt%d.html" % attempt)
         open(path, "w", encoding="utf-8").write(html)
+
+        # Structure before taste. A linter asked to judge a stub will answer
+        # about the stub, and the loop would spend its retries on that answer.
+        with gate("artifact.sane", {"attempt": attempt}) as gs:
+            sane, why = artifact_sane(html)
+            gs.margin = float(len(html))
+            if not sane:
+                gs.fail(len(html), why)
+        r.gates.append(_gate_row("artifact.sane", sane, len(html),
+                                 why or "attempt %d" % attempt))
+        if not sane:
+            log("  attempt %d: artifact.sane -> REJECTED (%s)" % (attempt, why))
+            if attempt > MAX_RETRIES:
+                r.why = why
+                break
+            prompt = (TASK + "\n\nYour previous reply was rejected before it was "
+                      "even reviewed: " + why + ". Return the complete HTML "
+                      "document itself, nothing else.")
+            continue
 
         with gate("taste.t1", {"attempt": attempt}) as g:
             findings = lint(html, "badge.html")
@@ -280,12 +328,20 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
                 g.fail(len(findings), "%d findings" % len(findings))
         r.gates.append(_gate_row("taste.t1", not findings, len(findings),
                                  "attempt %d" % attempt))
+        with open(os.path.join(d, "findings.attempt%d.json" % attempt), "w",
+                  encoding="utf-8") as fh:
+            json.dump([{"gate": f.gate, "name": f.name, "line": f.line,
+                        "excerpt": f.excerpt, "why": f.why} for f in findings],
+                      fh, indent=1)
         log("  attempt %d: taste.t1 -> %d finding%s"
             % (attempt, len(findings), "" if len(findings) == 1 else "s"))
 
         if not findings:
             r.passed = True
-            r.artifacts.append({"path": path, "bytes": len(html)})
+            final = os.path.join(d, "badge.html")
+            shutil.copyfile(path, final)
+            r.artifacts.append({"path": final, "bytes": len(html),
+                                "accepted_on_attempt": attempt})
             break
         if attempt > MAX_RETRIES:
             r.why = "%d findings after %d attempts" % (len(findings), attempt)
