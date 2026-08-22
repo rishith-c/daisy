@@ -1121,8 +1121,7 @@ table.l tr.click:hover td { background: var(--wash); }
           <button class="rbtn" title="Attach" aria-label="Attach"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
           <span class="access"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.6 14 13H2L8 2.6Z" stroke-linejoin="round"/><path d="M8 6.6v3M8 11.3v.1" stroke-linecap="round"/></svg> Gates armed</span>
           <div class="picks">
-            <button class="mtrig" data-lane="fe" aria-haspopup="menu" aria-expanded="false"><span class="ln">Frontend</span><span class="mn">—</span><span class="ef"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
-            <button class="mtrig" data-lane="api" aria-haspopup="menu" aria-expanded="false"><span class="ln">API</span><span class="mn">—</span><span class="ef"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+            <button class="mtrig" data-lane="run" aria-haspopup="menu" aria-expanded="false"><span class="mn">—</span><span class="ef"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
             <button class="rbtn" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="4" height="7" rx="2"/><path d="M3.6 7.4a4.4 4.4 0 0 0 8.8 0M8 11.8V14" stroke-linecap="round"/></svg></button>
             <button class="send" id="send" title="Send" aria-label="Send"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5v-9M4.2 7.2 8 3.4l3.8 3.8"/></svg></button>
           </div>
@@ -1415,7 +1414,10 @@ $ echo $?
      concept at all — so picking an OpenCode model disables Effort and Speed
      rather than offering settings that go nowhere. */
   var VENDOR_LABEL = { claude: 'Claude Code', codex: 'Codex', opencode: 'OpenCode' };
-  var LANES = { fe: null, api: null };
+  // 'run' is what the composer sets. fe/api are the CREW lane defaults and live
+  // in Settings — a two-agent contract is a property of the run, not a control
+  // you want in front of you every time you type.
+  var LANES = { run: null, fe: null, api: null };
 
   function modelsFor() { return MODEL_INVENTORY.models || []; }
 
@@ -1517,7 +1519,11 @@ $ echo $?
     return out;
   }
 
-  function place(el, anchorRect, toLeft) {
+  // Named placeMenu, not place: the feed already declares place(step, instant)
+  // later in this file, and the later declaration wins. Calling this one then
+  // pushed the menu element through the feed renderer as if it were a step,
+  // which is how clicking the model picker printed 'undefined' into the run.
+  function placeMenu(el, anchorRect, toLeft) {
     el.style.visibility = 'hidden'; el.classList.add('on');
     var w = el.offsetWidth, hgt = el.offsetHeight;
     var left = toLeft ? anchorRect.left - w - 6 : anchorRect.left;
@@ -1534,7 +1540,7 @@ $ echo $?
     if (openRow) openRow.classList.remove('open');
     openRow = row; row.classList.add('open');
     msub.innerHTML = subHTML(kind, LANES[openLane]);
-    place(msub, row.getBoundingClientRect(), true);
+    placeMenu(msub, row.getBoundingClientRect(), true);
   }
 
   function choose(kind, val) {
@@ -1554,8 +1560,10 @@ $ echo $?
     msub.classList.remove('on');
     if (openRow) { openRow.classList.remove('open'); openRow = null; }
     var st = LANES[openLane];
-    toast('<b>' + (openLane === 'fe' ? 'Frontend' : 'API') + ' lane.</b> ' +
-          (st.model.label || st.model.id) + (st.effort ? ' &middot; ' + effortLabel(st.effort) : '') +
+    var who = openLane === 'run' ? 'Model' :
+              (openLane === 'fe' ? 'Frontend lane' : 'API lane');
+    toast('<b>' + who + '.</b> ' + (st.model.label || st.model.id) +
+          (st.effort ? ' &middot; ' + effortLabel(st.effort) : '') +
           (st.speed === 'fast' ? ' &middot; fast' : ''));
   }
 
@@ -1569,10 +1577,11 @@ $ echo $?
 
   function initPicker() {
     if (!modelsFor().length) return;
+    LANES.run = defaultLane('claude');
     LANES.fe = defaultLane('claude');
     LANES.api = defaultLane('codex');
     buildMenus();
-    ['fe', 'api'].forEach(paintTrigger);
+    ['run'].forEach(paintTrigger);
     $$('.mtrig').forEach(function (t) {
       t.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -1582,7 +1591,7 @@ $ echo $?
         openLane = lane;
         t.setAttribute('aria-expanded', 'true');
         mmenu.innerHTML = menuHTML(LANES[lane]);
-        place(mmenu, t.getBoundingClientRect(), false);
+        placeMenu(mmenu, t.getBoundingClientRect(), false);
       });
     });
   }
@@ -2355,6 +2364,7 @@ $ echo $?
   }
 
   function syncSettingsFromLane(lane) {
+    if (!SET_SEL[lane]) return;          // 'run' has no settings row
     var sel = $(SET_SEL[lane]), s = LANES[lane];
     if (sel && s) sel.value = s.model.id;
   }

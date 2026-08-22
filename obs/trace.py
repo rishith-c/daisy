@@ -173,6 +173,7 @@ class Batcher:
         self.interval = interval
         self.on_tick = on_tick
         self.dropped = 0
+        self.submitted = {"traces": 0, "logs": 0}
         self.exports: list[Delivery] = []
         self._exp = exp
         self._thread: threading.Thread | None = None
@@ -184,6 +185,8 @@ class Batcher:
         """Never blocks, never raises. False means the queue was full."""
         try:
             self.q.put_nowait((signal, obj))
+            with self._lock:
+                self.submitted[signal] += 1
             return True
         except queue.Full:
             with self._lock:
