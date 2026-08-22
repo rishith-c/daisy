@@ -11,9 +11,17 @@ One brief in → verified software **and** verified hardware out. Claude Code an
 ```
 index.html          the whole app — one file, zero dependencies, zero network
 precedent/          the Precedent Engine (see below) — pure stdlib Python
+taste/              the tier-1 design lint — the taste gate, as a program
 app/                native macOS wrapper (Swift + WKWebView)
 icon/               generators for the hand-drawn daisy icon and brand mark
 tools/              stats builder, six-hour refinement timer
+verify.sh           every gate Daisy claims to enforce, run against Daisy
+```
+
+Run all of it:
+
+```bash
+./verify.sh          # exit code = number of failing gates
 ```
 
 ## The app
@@ -32,6 +40,34 @@ A command center in the Codex-desktop design language, **light-first**: serif ag
 Values are taken from the real Codex webview palette rather than approximated: `--color-token-*` chains, the `0 0 0 .5px` elevation-stroke recipe, `rounded-lg` = 10px cards against a 20px composer, `superellipse(1.5)` corners, git-decoration diff colours (`#00a240` / `#ba2623` light), 28px buttons, 36px file rows, and `cursor: default` — because Mac apps don't use pointing-hand cursors.
 
 Motion follows the same discipline: `ease-out` for enter and exit and never `ease-in`; springs generated from Apple's `.spring(duration:bounce:)` mapping; View Transitions for directional view changes; `@starting-style` transitions rather than keyframes so interrupted animations retarget instead of restarting; a wall-clock stagger budget so streaming never builds an invisible queue. The command palette deliberately has **no** open animation — it's used dozens of times a day, and Raycast ships it that way for the same reason.
+
+---
+
+## The taste gate
+
+`taste/lint.py` — tier 1 of the three-tier taste ladder, and a real program rather
+than a prompt. Pure stdlib, milliseconds, zero tokens. Twenty named tells, each
+reported with `file:line` and a reason:
+
+```
+taste.t1  FAIL  tokens.css  —  2 findings
+  gate 3   indigo primary         tokens.css:12   the Tailwind default accent; the most common generated-UI tell
+  gate 11  unpaired default face  layout.tsx:8    a lone Inter stack with no paired display face
+```
+
+Named gates, not a score. "Your design scores 6.5/10" gives an agent nothing to act
+on; `gate 3 at tokens.css:12` can be injected straight back into a resumed session.
+The exit code is the finding count, so it drops into a gate runner unchanged.
+
+**Daisy is held to it.** `python3 -m taste.lint index.html` returns 0 findings, and
+one of the 26 linter tests is exactly that assertion. A gate you exempt yourself from
+is not a gate.
+
+Running it against itself immediately found two bugs in the linter: it was flagging
+typographic glyphs (`✓`, `σ`, `≥`) as emoji when those inherit `currentColor` and are
+not the tell, and it had no suppression mechanism, so a file that *documents* the
+tells could never pass. Both fixed; fixtures that quote a tell now carry an explicit
+`taste-ok` marker.
 
 ---
 
@@ -81,6 +117,7 @@ python3 -m precedent.cli recall "my bracket bends too much" --gate physics.bend=
 python3 -m precedent.cli recall "pod evicted, memory pressure" --gate infra.oom=0.0   # -> no precedent
 python3 -m precedent.cli sql "SELECT family, COUNT(*) n FROM cases GROUP BY family"
 python3 -m precedent.test_precedent                   # 35 tests
+python3 -m taste.test_lint                            # 26 tests
 ```
 
 The `sql` subcommand is *memory as code*: an agent can interrogate its own past directly, read-only, instead of being handed retrieved chunks.
