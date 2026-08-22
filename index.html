@@ -928,6 +928,23 @@ table.l tr.click:hover td { background: var(--wash); }
 /* read-only gate values — deliberately not a control */
 .gv { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2);
       background: var(--wash); border-radius: 6px; padding: 4px 8px; white-space: nowrap; }
+/* A switch, not a checkbox: this one turns on unattended publishing, and it
+   should look like the consequential control it is. */
+.toggle {
+  width: 42px; height: 25px; padding: 0; border-radius: 999px; flex: 0 0 42px;
+  background: var(--wash-2); border: .5px solid var(--border-strong); box-shadow: none;
+  position: relative; cursor: pointer;
+  transition: background var(--d-hover) var(--out), border-color var(--d-hover) var(--out);
+}
+.toggle i {
+  position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%;
+  background: var(--bg); box-shadow: 0 1px 2px rgba(0,0,0,.18);
+  transition: transform var(--d-menu) var(--out);
+}
+.toggle[aria-checked="true"] { background: var(--ink); border-color: transparent; }
+.toggle[aria-checked="true"] i { transform: translateX(17px); }
+.toggle[disabled] { opacity: .45; cursor: default; }
+.toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 34%, transparent); }
 .sw { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
   box-shadow: 0 0 0 1px var(--border); transition: transform .26s var(--spring), box-shadow .2s; }
 .sw:hover { transform: scale(1.12); }
@@ -1370,6 +1387,20 @@ $ echo $?
     <div class="setrow"><div class="lb"><b>API lane</b><span>drives the composer&rsquo;s picker</span></div>
       <select id="set-agent-api"><option>GPT-5.3 Codex</option><option>Fable 5 High</option></select></div>
 
+    <h3>Garden</h3>
+    <div class="lede" style="margin:-2px 0 10px">The public index of verified solutions. Before a lane re-solves
+      anything it looks here first; after a lane passes, what it learned can go back. Nothing leaves this machine
+      without a recorded grant, and a solution that did not pass every gate cannot be published at all.</div>
+    <div class="setrow"><div class="lb"><b>This machine</b><span id="g-linkspan">checking&hellip;</span></div>
+      <span class="gv" id="g-link">&mdash;</span></div>
+    <div class="setrow"><div class="lb"><b>Publish what passes</b><span>autonomous &mdash; consent and gates are still
+      checked on every single publish</span></div>
+      <button class="toggle" id="g-auto" role="switch" aria-checked="false" aria-label="Publish what passes"><i></i></button></div>
+    <div class="setrow"><div class="lb"><b>Consent</b><span>artifact &middot; target garden</span></div>
+      <span class="gv" id="g-consent">&mdash;</span></div>
+    <div class="setrow"><div class="lb"><b>Index</b><span>public, readable with no account</span></div>
+      <span class="gv" id="g-entries">&mdash;</span></div>
+
     <h3>Gates</h3>
     <div class="lede" style="margin:-2px 0 10px">These are not switches. A threshold you can quietly relax in a console is not a
       gate, so they live in version control and change by commit &mdash; shown here so you can see what the run was held to.</div>
@@ -1413,6 +1444,68 @@ $ echo $?
 
   /* ---------------- brand mark (hand-drawn daisy, inline) ---------------- */
   $('#brandmark').innerHTML = DAISY_MARK();
+
+  /* ---------------- garden ----------------
+     State comes from `python3 -m garden.cli status` via the native shell; a
+     browser has no way to read ~/.daisy, so it says so rather than guessing.
+     The toggle is disabled until the machine is actually linked, because an
+     autopublish switch on an unlinked machine is a control that does nothing. */
+  var GARDEN = null;
+
+  function paintGarden() {
+    var link = $('#g-link'), span = $('#g-linkspan'), auto = $('#g-auto'),
+        cons = $('#g-consent'), ent = $('#g-entries');
+    if (!link) return;
+    if (!GARDEN) {
+      link.textContent = native ? 'checking…' : 'run labctl to see';
+      span.textContent = native ? '' : 'live state needs the desktop app';
+      auto.setAttribute('aria-checked', 'false');
+      auto.disabled = true;
+      return;
+    }
+    var linked = !!GARDEN.linked;
+    link.textContent = linked ? (GARDEN.account || 'linked') : 'not linked';
+    span.textContent = linked
+      ? ('device ' + (GARDEN.fingerprint || '') + (GARDEN.last_publish ? ' · last published ' + GARDEN.last_publish : ''))
+      : 'python3 -m garden.cli link --code <code from the site>';
+    auto.disabled = !linked;
+    auto.setAttribute('aria-checked', GARDEN.autopublish ? 'true' : 'false');
+    cons.textContent = GARDEN.consent ? 'granted' : 'not granted';
+    ent.textContent = (GARDEN.entries == null ? '—' : GARDEN.entries + ' solutions');
+  }
+
+  window.__daisyGarden = function (payload) {
+    try {
+      GARDEN = typeof payload === 'string' ? JSON.parse(payload) : payload;
+    } catch (e) { GARDEN = null; }
+    paintGarden();
+  };
+
+  (function () {
+    var t = $('#g-auto');
+    if (!t) return;
+    t.addEventListener('click', function () {
+      if (t.disabled) return;
+      var on = t.getAttribute('aria-checked') !== 'true';
+      t.setAttribute('aria-checked', on ? 'true' : 'false');
+      if (GARDEN) GARDEN.autopublish = on;
+      if (native && window.webkit && window.webkit.messageHandlers &&
+          window.webkit.messageHandlers.daisy) {
+        try {
+          window.webkit.messageHandlers.daisy.postMessage(
+            { cmd: 'garden.autopublish', on: on });
+        } catch (e) {}
+      }
+      toast(on
+        ? '<b>Publishing what passes.</b> Consent and gates are still checked on every publish.'
+        : '<b>Autonomous publishing off.</b> Nothing leaves this machine.');
+    });
+    if (native && window.webkit && window.webkit.messageHandlers &&
+        window.webkit.messageHandlers.daisy) {
+      try { window.webkit.messageHandlers.daisy.postMessage({ cmd: 'garden' }); } catch (e) {}
+    }
+    paintGarden();
+  }());
 
   /* ---------------- model picker ----------------
      Codex's shape: one pill that opens Model / Effort / Speed, each cascading

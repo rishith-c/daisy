@@ -30,11 +30,48 @@ import json
 import os
 import re
 import subprocess
+import urllib.error
+import urllib.parse
+import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_CLONE = os.path.join(ROOT, ".garden")
 SOLUTIONS = "solutions"
 DEFAULT_REMOTE = os.environ.get("GARDEN_REPO", "")   # e.g. rishith-c/garden
+API = os.environ.get("GARDEN_API", "https://garden-taupe-three.vercel.app")
+
+
+def api_search(gates: list, base: str = None, timeout: float = 6.0) -> list[dict]:
+    """Ask Garden's own API for solutions to a gate.
+
+    Deliberately not the git host's API. Garden serves pre-sharded static JSON
+    with no key and no rate limit; the alternative throttles anonymous callers
+    at 60 requests an hour, which is a ceiling on exactly the traffic this is
+    for. One request per gate, ~1.6 KB, CDN-cached.
+
+    A 404 is a real answer and returns []: nobody has published a verified fix
+    for that gate. It is not an error to retry, and treating it as one would
+    turn "this is new work" into "the network is flaky".
+    """
+    base = (base or API).rstrip("/")
+    out, seen = [], set()
+    for g in gates or []:
+        url = "%s/api/v1/gate/%s.json" % (base, urllib.parse.quote(g, safe=""))
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as r:
+                data = json.load(r)
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                continue
+            continue
+        except Exception:
+            continue          # offline is not the same as absent; caller falls back
+        for s in data.get("solutions", []):
+            if s.get("id") in seen:
+                continue
+            seen.add(s.get("id"))
+            out.append(s)
+    return out
 
 
 def clone_path() -> str:
