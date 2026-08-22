@@ -1,0 +1,18 @@
+{
+  "q": "SELECT family, COUNT(*) AS seen, SUM(resolved) AS fixed, ROUND(AVG(importance),2) AS weight FROM cases WHERE sig LIKE '%taste%' OR sig LIKE '%physics%' GROUP BY family ORDER BY seen DESC",
+  "ms": 91.3,
+  "rows": [
+    {
+      "family": "F-11 thin-web bending",
+      "seen": 329,
+      "fixed": 309,
+      "weight": 0.7
+    },
+    {
+      "family": "F-03 slop-palette",
+      "seen": 211,
+      "fixed": 205,
+      "weight": 0.45
+    }
+  ]
+}
