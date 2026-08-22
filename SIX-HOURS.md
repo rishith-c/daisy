@@ -79,7 +79,25 @@ Ratio is reported, the probe score is the gate.
 Measured: 1,284 cases, 16 ms hybrid recall, 80 KB index vs 2.6 MB float (32×),
 24× run compaction at 100% probe score.
 
-## 4. Bugs the tests caught
+## 4. The taste gate, made real
+
+`taste/lint.py` — tier 1 of the taste ladder as an actual program rather than a
+prompt. Twenty named tells, each with `file:line` and a reason, exit code = finding
+count. Named gates instead of a score, because "6.5/10" gives an agent nothing to
+act on while `gate 3 at tokens.css:12` can be injected straight back into a resumed
+session.
+
+Then I pointed it at Daisy. It found two bugs — **in itself**: it was flagging
+typographic glyphs (`✓`, `σ`, `≥`, `·`) as emoji, when those inherit `currentColor`
+and are precisely not the tell; and it had no suppression mechanism, so a file that
+documents the tells could never pass. Both fixed. Daisy now returns **0 findings**,
+and one of the 26 linter tests asserts exactly that. A gate you exempt yourself from
+is not a gate.
+
+`./verify.sh` runs every gate — the lint over the UI, both suites, the archive
+stats, the it-can-say-no behaviour, and a no-third-party-requests check. All green.
+
+## 5. Bugs the tests caught
 
 Worth listing because they're the reason to write tests at all:
 
@@ -93,9 +111,9 @@ Worth listing because they're the reason to write tests at all:
 4. Count-up tickers froze at 0 forever if the tab was hidden when they started.
 5. List tables overflowed their container at narrow widths.
 
-35/35 tests pass now.
+35/35 precedent tests and 26/26 taste tests pass now.
 
-## 5. What I did NOT do
+## 6. What I did NOT do
 
 - **No GitHub push.** Creating a public repo publishes your work, and you said you
   couldn't approve anything for six hours. It's all committed locally — 10 commits
@@ -109,5 +127,6 @@ Worth listing because they're the reason to write tests at all:
 - `~/Developer/daisy` — the repo, 10 commits
 - `Daisy.app` — the native Mac app, running, with the hand-drawn icon
 - Artifact: the same link as before, republished
+- `./verify.sh` — every gate, one command
 - `python3 -m precedent.cli bench` — the numbers above, reproducible
-- `python3 -m precedent.test_precedent` — 35 tests
+- 61 tests across the two suites
