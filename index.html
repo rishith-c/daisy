@@ -900,14 +900,24 @@ table.l tr.click:hover td { background: var(--wash); }
 
   <!-- ============ AUTOMATIONS ============ -->
   <div class="view" id="view-autos"><div class="page"><div class="pcol">
-    <h2>Automations</h2><div class="lede">Scheduled background runs. Results never ship — they land in the review queue.</div>
+    <h2>Automations</h2><div class="lede">Scheduled background runs. Results never ship &mdash; they land in the review queue for a person, exactly like a run you started yourself.</div>
     <div class="tbl"><table class="l">
-      <tr><th>Automation</th><th>Schedule</th><th>Last result</th><th>Lands in</th></tr>
-      <tr><td class="s">Nightly scrape refresh</td><td class="mo">02:00 daily</td><td><span class="tag warn">SCHEMA DRIFT</span></td><td>Review queue</td></tr>
-      <tr><td class="s">Taste rubric re-distill</td><td class="mo">Sun 03:00</td><td><span class="tag pass">NO CHANGE</span></td><td>Review queue</td></tr>
-      <tr><td class="s">Margin re-sweep on catalog change</td><td class="mo">on scrape diff</td><td><span class="tag pass">FoS 1.62 HELD</span></td><td>Review queue</td></tr>
-      <tr><td class="s">Dead-scraper watchdog</td><td class="mo">every 15 min</td><td><span class="tag pass">2 HEALTHY</span></td><td>SigNoz → escalation</td></tr>
+      <tr><th>Automation</th><th>Schedule</th><th>Last run</th><th>Result</th><th>Next</th><th>Lands in</th></tr>
+      <tr><td class="s">Nightly scrape refresh</td><td class="mo">02:00 daily</td><td class="mo">9h ago</td><td><span class="tag warn">SCHEMA DRIFT</span></td><td class="mo">in 15h</td><td>Review queue</td></tr>
+      <tr><td class="s">Taste rubric re-distill</td><td class="mo">Sun 03:00</td><td class="mo">4d ago</td><td><span class="tag pass">NO CHANGE</span></td><td class="mo">in 3d</td><td>Review queue</td></tr>
+      <tr><td class="s">Margin re-sweep on catalog change</td><td class="mo">on scrape diff</td><td class="mo">9h ago</td><td><span class="tag pass">FoS 1.62 HELD</span></td><td class="mo">on next diff</td><td>Review queue</td></tr>
+      <tr><td class="s">Dead-scraper watchdog</td><td class="mo">every 15 min</td><td class="mo">4m ago</td><td><span class="tag pass">2 HEALTHY</span></td><td class="mo">in 11m</td><td>SigNoz &rarr; escalation</td></tr>
+      <tr><td class="s">Precedent compaction</td><td class="mo">on run close</td><td class="mo">6m ago</td><td><span class="tag pass">24&times; &middot; PROBE 100%</span></td><td class="mo">next run</td><td>Archive</td></tr>
     </table></div>
+
+    <h3>Why they cannot ship on their own</h3>
+    <div class="card"><div class="chead"><span class="ci">&#9888;</span><div style="min-width:0"><b>Same gates, same approval</b>
+      <div class="sub">an automation is a run with a cron trigger, not a privileged path</div></div>
+      <div class="act"><span class="tag info">GOVERNED</span></div></div>
+      <div class="grow"><span class="gn">runs the full gate set</span><span class="gd">taste, contract, physics, freshness &mdash; nothing is skipped for being unattended</span><span class="gm ok">&#10003;</span></div>
+      <div class="grow"><span class="gn">cannot self-approve</span><span class="gd">the scoped agent token has no approval action</span><span class="gm ok">&#10003;</span></div>
+      <div class="grow"><span class="gn">lands in the queue</span><span class="gd">results wait for a person exactly like an interactive run</span><span class="gm ok">&#10003;</span></div>
+      <div class="res" style="display:block">The nightly scrape found a schema drift at 02:00 and did <b class="no">not</b> act on it. It is sitting in the review queue with a diff attached, which is the correct behaviour for something that ran while nobody was watching.</div></div>
   </div></div></div>
 
   <!-- ============ SKILLS ============ -->
