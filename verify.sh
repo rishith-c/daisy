@@ -39,6 +39,9 @@ gate "taste.t2 — computed contrast, both themes" \
 gate "taste — linter test suite" \
      env PYTHONWARNINGS=ignore $PY -m taste.test_lint
 
+gate "physics — closed-form margin test suite" \
+     env PYTHONWARNINGS=ignore $PY -m hardware.test_margins
+
 gate "precedent — engine + compaction test suite" \
      env PYTHONWARNINGS=ignore $PY -m precedent.test_precedent
 
@@ -48,6 +51,21 @@ if [ -f precedent/precedent.db ]; then
   printf '  PASS\n'
 else
   printf '  SKIP (run: %s -m precedent.seed precedent/precedent.db)\n' "$PY"
+fi
+
+printf '\n▸ physics — no scrape, no certification\n'
+if $PY -c "
+import sys; sys.path.insert(0,'.')
+from hardware.margins import evaluate, NoGroundTruth
+try:
+    evaluate(2.4, 90, 18, 3.2, 'PETG', 1.5, [], 2)
+    sys.exit(1)
+except NoGroundTruth:
+    sys.exit(0)
+" 2>/dev/null; then
+  printf '  PASS  an empty scrape refuses to certify\n'
+else
+  printf '  FAIL  certified a part with no ground truth\n'; fails=$((fails + 1))
 fi
 
 printf '\n▸ precedent — it is allowed to say no\n'
