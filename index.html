@@ -1193,215 +1193,116 @@ table.l tr.click:hover td { background: var(--wash); }
    ============================================================ */
 
 .obv {
+  --bg: #fff; --surface: #fff; --surface-2: #f6f7f4;
+  --ink: #171917; --ink-2: #686d68; --ink-3: #858a85; --ink-4: #c2c6c2;
+  --border: rgba(23,25,23,.09); --border-strong: rgba(23,25,23,.15);
   position: fixed; inset: 0; z-index: 120; display: none;
-  align-items: flex-start; justify-content: center;
-  padding: 0 16px;
-  background: color-mix(in srgb, var(--ink) 26%, transparent);
-  backdrop-filter: blur(4px) saturate(1.08);
-  -webkit-backdrop-filter: blur(4px) saturate(1.08);
-  opacity: 0;
-  transition: opacity .26s var(--out), display .26s allow-discrete;
+  background: #fff; color: var(--ink); opacity: 0;
+  transition: opacity .28s var(--out), display .28s allow-discrete;
 }
-.obv.on { display: flex; opacity: 1; }
+.obv.on { display: block; opacity: 1; }
 @starting-style { .obv.on { opacity: 0; } }
 
 .obs {
-  margin-top: 9vh; width: min(608px, 100%); max-height: 82vh;
-  display: flex; flex-direction: column;
-  background: var(--bg);
-  border: .5px solid var(--border-strong);
-  border-radius: var(--r-panel);
-  box-shadow: var(--shadow-3);
-  overflow: hidden;
-}
-.obv.on .obs { animation: ob-sheet .5s var(--spring-soft) both; }
-/* A surface the operator reached from the keyboard does not animate — the
-   command palette in this app ships the same rule, for the same reason. */
-.obv.on .obs[data-nav="key"] { animation: none; }
-@keyframes ob-sheet { from { opacity: 0; transform: translateY(14px) scale(.986); } }
-
-/* ---------- chrome ---------- */
-.ob-top {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 14px 12px 16px;
-  border-bottom: .5px solid var(--border);
-}
-.ob-mark { width: 17px; height: 17px; display: inline-flex; flex: 0 0 17px; }
-.ob-mark svg { width: 100%; height: 100%; display: block; }
-.ob-wm { font-size: 12.5px; font-weight: 600; letter-spacing: -.005em; }
-.ob-steps { display: inline-flex; gap: 4px; margin-left: 10px; }
-.ob-steps i {
-  width: 14px; height: 3px; border-radius: 99px; background: var(--border-strong);
-  transition: background var(--d-hover) var(--out), width .34s var(--spring-snappy);
-}
-.ob-steps i.on { background: var(--ink); width: 22px; }
-.ob-top .ob-skip { margin-left: auto; color: var(--ink-2); }
-
-/* ---------- stage ---------- */
-.ob-stage { position: relative; overflow: hidden; }
-.ob-stage.morph { transition: height .46s var(--spring-soft); }
-.ob-scroll { max-height: calc(82vh - 118px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
-.ob-p { display: none; padding: 20px 22px 22px; }
-.ob-p.on { display: block; }
-.ob-p.on.fwd  { animation: ob-fwd  .44s var(--spring-snappy) both; }
-.ob-p.on.back { animation: ob-back .44s var(--spring-snappy) both; }
-@keyframes ob-fwd  { from { opacity: 0; transform: translateX(20px); } }
-@keyframes ob-back { from { opacity: 0; transform: translateX(-20px); } }
-
-.obs h1 { font-size: 21px; line-height: 1.26; font-weight: 600; letter-spacing: -.018em; }
-.obs h2 { font-size: 18px; line-height: 1.3; font-weight: 600; letter-spacing: -.014em; }
-.ob-lede {
-  font-family: var(--serif); font-size: 15px; line-height: 1.58;
-  color: var(--ink-2); margin-top: 9px;
-}
-.ob-lede code, .ob-note code { font-family: var(--mono); font-size: 12px; color: var(--ink); }
-
-/* ---------- step 1: the rail ---------- */
-.ob-rail { width: 100%; height: auto; display: block; margin-bottom: 16px; }
-.ob-rail .lbl { font-family: var(--mono); font-size: 9px; fill: var(--ink-3); letter-spacing: .04em; }
-.ob-rail .pass-tok { animation: ob-run .82s var(--spring-snappy) .1s both; }
-.ob-rail .stop-tok { animation: ob-held .42s var(--spring-snappy) both; }
-.ob-rail .stop-a { animation-delay: .30s; }
-.ob-rail .stop-b { animation-delay: .40s; }
-@keyframes ob-run  { from { opacity: 0; transform: translateX(-372px); } 14% { opacity: 1; } }
-@keyframes ob-held { from { opacity: 0; transform: translateX(-11px); } }
-
-.ob-gates { margin-top: 16px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
-.ob-gate { display: flex; align-items: flex-start; gap: 11px; padding: 11px 13px; }
-.ob-gate + .ob-gate { border-top: .5px solid var(--border); }
-.ob-gate .gi { flex: 0 0 15px; color: var(--ink-3); display: inline-flex; margin-top: 1px; }
-.ob-gate .gi svg { width: 15px; height: 15px; }
-.ob-gate .gt { min-width: 0; }
-.ob-gate .gt b { display: block; font-size: 13px; font-weight: 600; }
-.ob-gate .gt span { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 2px; }
-.ob-gate .caught {
-  margin-left: auto; flex: 0 0 auto; align-self: center;
-  font-size: 11.5px; color: var(--ink-2);
-  background: var(--surface-2); border-radius: var(--r-badge);
-  padding: 3px 7px; max-width: 46%;
+  width: 100%; height: 100%; display: flex; flex-direction: column;
+  background: #fff; border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
 }
 
-/* ---------- step 2: agents ---------- */
-.ob-agents { margin-top: 15px; border: .5px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
-.ob-ag { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; }
+.ob-stage { min-height: 0; flex: 1; position: relative; overflow: hidden; }
+.ob-scroll { width: 100%; height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+.ob-p { display: none; width: 100%; min-height: 100%; padding: 56px 48px; }
+.ob-p.on { display: flex; }
+.ob-p.on.fwd { animation: ob-fwd .42s var(--spring-snappy) both; }
+.ob-p.on.back { animation: ob-back .42s var(--spring-snappy) both; }
+@keyframes ob-fwd { from { opacity: 0; transform: translateY(12px); } }
+@keyframes ob-back { from { opacity: 0; transform: translateY(-12px); } }
+
+/* The first launch is a landing screen, not a modal over the product. */
+.ob-welcome {
+  flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 0; /* taste-ok: this single-purpose welcome is intentionally centered */
+}
+.ob-welcome-mark { width: 86px; height: 86px; display: block; margin-bottom: 22px; }
+.ob-welcome-mark svg { width: 100%; height: 100%; display: block; }
+.ob-welcome h1 {
+  font-size: 38px; line-height: 1; font-weight: 650; letter-spacing: -.035em;
+}
+.ob-start { min-width: 124px; height: 38px; margin-top: 30px; }
+
+/* Every remaining screen asks one question in the middle of the same canvas. */
+.ob-question {
+  flex-direction: column; align-items: center; justify-content: center;
+}
+.ob-question-inner { width: min(640px, 100%); }
+.ob-kicker {
+  margin-bottom: 10px; color: var(--leaf); font-family: var(--mono);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .11em; text-transform: uppercase;
+}
+.obs h2 { font-size: 25px; line-height: 1.24; font-weight: 600; letter-spacing: -.026em; }
+.ob-lede { max-width: 580px; margin-top: 10px; color: var(--ink-2); font-size: 14px; line-height: 1.58; }
+.ob-lede code, .ob-note code { font-family: var(--mono); font-size: 11.5px; color: var(--ink); }
+
+.ob-agents { margin-top: 22px; border: .5px solid var(--border); border-radius: 13px; overflow: hidden; }
+.ob-ag { display: flex; align-items: flex-start; gap: 11px; padding: 12px 14px; }
 .ob-ag + .ob-ag { border-top: .5px solid var(--border); }
-.ob-ag .dot {
-  width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px; margin-top: 6px;
-  background: var(--ink-4);
-  transition: background var(--d-hover) var(--out);
-}
-.ob-ag[data-state="yes"]  .dot { background: var(--pass); }
-.ob-ag[data-state="no"]   .dot { background: var(--warn); }
-.ob-ag[data-state="gone"] .dot { background: var(--ink-4); }
+.ob-ag .dot { width: 7px; height: 7px; border-radius: 99px; flex: 0 0 7px; margin-top: 6px; background: var(--ink-4); }
+.ob-ag[data-state="yes"] .dot { background: var(--pass); }
+.ob-ag[data-state="no"] .dot { background: var(--warn); }
 .ob-ag[data-state="checking"] .dot { animation: ob-pulse 1.5s var(--out) infinite; }
-@keyframes ob-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .38; } }
+@keyframes ob-pulse { 50% { opacity: .35; } }
 .ob-ag .nm { min-width: 0; }
 .ob-ag .nm b { display: block; font-size: 13px; font-weight: 600; }
-.ob-ag .nm span { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-top: 1px; }
-.ob-ag .nm em {
-  display: block; font-style: normal; font-size: 11.5px; line-height: 1.45;
-  color: var(--ink-2); margin-top: 4px; font-variant-numeric: tabular-nums;
-}
-.ob-ag .st {
-  margin-left: auto; flex: 0 0 auto; white-space: nowrap;
-  font-size: 11.5px; font-weight: 500;
-  border-radius: var(--r-badge); padding: 3px 8px;
-  color: var(--ink-2); background: var(--surface-2);
-}
+.ob-ag .nm span { display: block; margin-top: 1px; color: var(--ink-3); font: 11px/1.45 var(--mono); }
+.ob-ag .nm em { display: block; margin-top: 4px; color: var(--ink-2); font-size: 11.5px; line-height: 1.45; font-style: normal; }
+.ob-ag .st { margin-left: auto; padding: 3px 8px; border-radius: 5px; background: var(--surface-2); color: var(--ink-2); font-size: 11.5px; white-space: nowrap; }
 .ob-ag[data-state="yes"] .st { color: var(--pass); background: var(--pass-chip); }
-.ob-ag[data-state="no"]  .st { color: var(--warn); background: var(--warn-chip); }
-/* The reward: rows settle in one at a time when a real probe result lands. */
-.ob-ag.settled { animation: ob-settle .46s var(--spring-snappy) both; animation-delay: calc(var(--i, 0) * 78ms); }
-@keyframes ob-settle { from { opacity: .35; transform: translateY(-4px); } }
-@supports (transition-behavior: allow-discrete) {
-  .ob-ag.settled .st { transition: opacity .3s var(--out), transform .42s var(--spring-snappy); }
-  @starting-style { .ob-ag.settled .st { opacity: 0; transform: scale(.86); } }
-}
+.ob-ag[data-state="no"] .st { color: var(--warn); background: var(--warn-chip); }
+.ob-ag.settled { animation: ob-settle .4s var(--spring-snappy) both; animation-delay: calc(var(--i, 0) * 72ms); }
+@keyframes ob-settle { from { opacity: .35; transform: translateY(-3px); } }
+.ob-cmd { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 8px 8px 8px 12px; border: .5px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.ob-cmd code { overflow-x: auto; color: var(--ink); font: 11.5px var(--mono); white-space: nowrap; }
+.ob-cmd button { margin-left: auto; height: 26px; padding: 3px 10px; font-size: 12px; }
+.ob-note { margin-top: 9px; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
 
-.ob-cmd {
-  display: flex; align-items: center; gap: 10px; margin-top: 12px;
-  background: var(--surface-2); border: .5px solid var(--border);
-  border-radius: var(--r-card); padding: 9px 9px 9px 13px;
-}
-.ob-cmd code { font-family: var(--mono); font-size: 12px; color: var(--ink); overflow-x: auto; white-space: nowrap; }
-.ob-cmd button { margin-left: auto; flex: 0 0 auto; height: 26px; padding: 3px 10px; font-size: 12.5px; }
-.ob-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin-top: 10px; }
-
-/* ---------- step 3: local-first Garden pairing ---------- */
-.ob-routes {
-  display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px; margin-top: 15px;
-}
-.ob-route {
-  display: flex; flex-direction: column; min-width: 0; min-height: 128px;
-  padding: 13px; border: .5px solid var(--border); border-radius: var(--r-card);
-  background: var(--surface);
-}
-.ob-route.garden { background: color-mix(in srgb, var(--daisy-wash) 52%, var(--surface)); }
+.ob-routes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+.ob-route { display: flex; flex-direction: column; min-height: 130px; padding: 14px; border: .5px solid var(--border); border-radius: 13px; background: #fff; }
+.ob-route.garden { background: #fcf9ee; border-color: rgba(138,107,24,.18); }
 .ob-route b { font-size: 13px; font-weight: 600; }
-.ob-route p { font-size: 12px; line-height: 1.5; color: var(--ink-2); margin: 4px 0 12px; }
-.ob-route button { margin-top: auto; align-self: flex-start; }
-.ob-pair {
-  margin-top: 10px; padding: 12px 13px; border: .5px solid var(--border);
-  border-radius: var(--r-card); background: var(--surface-2);
-}
-.ob-pair label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 7px; }
+.ob-route p { margin: 4px 0 14px; color: var(--ink-2); font-size: 12px; line-height: 1.5; }
+.ob-route button { align-self: flex-start; margin-top: auto; }
+.ob-pair { margin-top: 10px; padding: 12px 13px; border: .5px solid var(--border); border-radius: 11px; background: var(--surface-2); }
+.ob-pair label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 600; }
 .ob-pairline { display: flex; align-items: center; gap: 8px; }
-.ob-code {
-  width: 150px; height: 30px; padding: 5px 9px; border: .5px solid var(--border-strong);
-  border-radius: 7px; background: var(--bg); color: var(--ink); font-family: var(--mono);
-  font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
-}
-.ob-code:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 28%, transparent); }
-.ob-linkstate { min-height: 18px; margin-top: 8px; font-size: 11.5px; line-height: 1.5; color: var(--ink-2); }
+.ob-code { width: 150px; height: 30px; padding: 5px 9px; border: .5px solid var(--border-strong); border-radius: 7px; background: #fff; color: var(--ink); font: 13px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.ob-code:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(1,105,204,.2); }
+.ob-linkstate { min-height: 18px; margin-top: 8px; color: var(--ink-2); font-size: 11.5px; line-height: 1.5; }
 .ob-linkstate[data-state="linked"] { color: var(--pass); }
 .ob-linkstate[data-state="error"] { color: var(--fail); }
 
-/* ---------- step 4: the one preference, and the thing that is not ---------- */
-.ob-choice {
-  display: flex; align-items: center; gap: 16px; padding: 13px 0;
-  border-top: .5px solid var(--border);
-}
-.ob-choice:first-of-type { border-top: none; }
+.ob-choice { display: flex; align-items: center; gap: 18px; padding: 14px 0; border-top: .5px solid var(--border); }
+.ob-choice:first-of-type { border-top: 0; }
 .ob-choice .cl { min-width: 0; }
 .ob-choice .cl b { display: block; font-size: 13px; font-weight: 600; }
-.ob-choice .cl span { display: block; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); margin-top: 3px; }
-.ob-choice .ctrl { margin-left: auto; flex: 0 0 auto; }
-.ob-fixed {
-  display: flex; align-items: flex-start; gap: 11px; margin-top: 16px;
-  background: var(--surface-2); border: .5px solid var(--border);
-  border-radius: var(--r-card); padding: 12px 14px;
-  font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
-}
+.ob-choice .cl span { display: block; margin-top: 3px; color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+.ob-choice .ctrl { flex: 0 0 auto; margin-left: auto; }
+.ob-fixed { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; padding: 12px 14px; border: .5px solid var(--border); border-radius: 11px; background: var(--surface-2); color: var(--ink-2); font-size: 12.5px; line-height: 1.55; }
 .ob-fixed b { color: var(--ink); font-weight: 600; }
-.ob-fixed .fi { flex: 0 0 15px; color: var(--ink-2); display: inline-flex; margin-top: 1px; }
+.ob-fixed .fi { width: 15px; flex: 0 0 15px; margin-top: 1px; }
 .ob-fixed .fi svg { width: 15px; height: 15px; }
 
-/* ---------- footer ---------- */
-.ob-foot {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 14px; border-top: .5px solid var(--border);
-  background: var(--surface);
-}
-.ob-hint { font-size: 12px; color: var(--ink-3); }
-.ob-foot .ob-next { margin-left: auto; }
-.ob-foot .ob-back[hidden] { display: none; }
+.ob-foot { display: flex; align-items: center; width: min(640px, calc(100% - 96px)); min-height: 72px; margin: 0 auto; gap: 12px; background: #fff; }
+.obs[data-step="0"] .ob-foot { display: none; }
+.ob-steps { display: inline-flex; gap: 5px; margin: 0 auto; }
+.ob-steps i { width: 18px; height: 3px; border-radius: 99px; background: var(--border-strong); transition: background var(--d-hover) var(--out), width .3s var(--spring-snappy); }
+.ob-steps i.on { width: 28px; background: var(--ink); }
+.ob-steps i:first-child { display: none; }
+.ob-hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.ob-foot .ob-next { margin-left: 0; }
+.ob-foot .ob-back[hidden] { visibility: hidden; display: inline-flex; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* End state, immediately. No entrance, no travel, no settle. */
-  .obv, .obv.on .obs, .ob-p.on, .ob-rail .pass-tok, .ob-rail .stop-tok,
-  .ob-ag.settled, .ob-ag[data-state="checking"] .dot {
-    animation: none; opacity: 1; transform: none;
-  }
-  .ob-stage.morph { transition: none; }
+  .obv, .ob-p.on, .ob-ag.settled, .ob-ag[data-state="checking"] .dot { animation: none; transition: none; opacity: 1; transform: none; }
   .ob-steps i { transition: none; }
-}
-@media (max-width: 520px) {
-  .obs { margin-top: 4vh; max-height: 92vh; }
-  .ob-scroll { max-height: calc(92vh - 118px); }
-  .ob-routes { grid-template-columns: 1fr; }
-  .ob-route { min-height: 0; }
-  .ob-pairline { align-items: stretch; flex-direction: column; }
-  .ob-code { width: 100%; }
 }
 </style>
 
@@ -1836,108 +1737,72 @@ $ echo $?
 
 <div class="obv" id="obv" role="dialog" aria-modal="true" aria-labelledby="ob-h0" aria-hidden="true">
  <div class="obs" id="obs">
-  <div class="ob-top">
-   <span class="ob-mark" id="ob-mark" aria-hidden="true"></span>
-   <span class="ob-wm">Daisy</span>
-   <span class="ob-steps" id="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
-   <button class="ghost ob-skip" id="ob-skip">Start locally</button>
-  </div>
-
   <div class="ob-stage" id="ob-stage"><div class="ob-scroll" id="ob-scroll">
 
-   <section class="ob-p on" id="ob-p0" aria-label="What Daisy is">
-    <svg class="ob-rail" viewBox="0 0 528 72" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-     <g class="lbl"><text x="2" y="51.5">brief</text><text x="466" y="51.5">shipped</text></g>
-     <path d="M46 48h412" stroke="var(--border-strong)" stroke-width="1" fill="none"/>
-     <g stroke="var(--ink-4)" stroke-width="1" fill="none">
-      <path d="M150 26v40"/><path d="M252 26v40"/><path d="M354 26v40"/>
-     </g>
-     <g class="lbl" text-anchor="middle">
-      <text x="150" y="16">design</text><text x="252" y="16">contrast</text><text x="354" y="16">physics</text>
-     </g>
-     <g style="transform-box: view-box">
-      <rect class="stop-tok stop-a" x="128" y="41.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
-      <rect class="stop-tok stop-b" x="230" y="41.5" width="13" height="13" rx="3.5" fill="var(--fail-chip)" stroke="var(--fail)" stroke-width="1"/>
-      <rect class="pass-tok" x="418" y="41.5" width="13" height="13" rx="3.5" fill="var(--pass-chip)" stroke="var(--pass)" stroke-width="1"/>
-     </g>
-    </svg>
-    <h1 id="ob-h0">A brief goes in. Verified software and hardware come out.</h1>
-    <p class="ob-lede">Daisy drives the coding agents already installed on this Mac, then holds everything they produce
-     to gates that are real programs rather than prompts. Two of the three runs above were stopped. That is the product.</p>
-    <div class="ob-gates">
-     <div class="ob-gate">
-      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.6 4.2h10.8M2.6 8h7.4M2.6 11.8h9" stroke-linecap="round"/></svg></span>
-      <span class="gt"><b>Design lint</b><span>taste/lint.py &middot; 20 named tells</span></span>
-      <span class="caught">caught an indigo primary in this app</span>
+   <section class="ob-p ob-welcome on" id="ob-p0" aria-label="Welcome to Daisy">
+    <span class="ob-welcome-mark" id="ob-mark" aria-hidden="true"></span>
+    <h1 id="ob-h0">Daisy</h1>
+    <button class="primary ob-start" id="ob-start">Get started</button>
+   </section>
+
+   <section class="ob-p ob-question" id="ob-p1" aria-label="Agents on this machine">
+    <div class="ob-question-inner">
+     <p class="ob-kicker">Your models</p>
+     <h2 id="ob-h1">Which agents are available on this Mac?</h2>
+     <p class="ob-lede">Daisy is checking the real command-line agents already installed here. Only agents that answer a live prompt become available.</p>
+     <div class="ob-agents" id="ob-agents"></div>
+     <div class="ob-cmd"><code>python3 labctl.py agents</code><button id="ob-copy">Copy</button></div>
+     <p class="ob-note" id="ob-note"></p>
+    </div>
+   </section>
+
+   <section class="ob-p ob-question" id="ob-p2" aria-label="Garden connection">
+    <div class="ob-question-inner">
+     <p class="ob-kicker">Local or connected</p>
+     <h2 id="ob-h2">Would you like to connect Garden?</h2>
+     <p class="ob-lede">Daisy works fully offline. Connect only when you want to publish, reuse, like, or discuss verified work.</p>
+     <div class="ob-routes">
+      <div class="ob-route">
+       <b>Stay on this Mac</b>
+       <p>Your briefs, files, credentials, traces, and run history remain local. Connect later from Settings.</p>
+       <button class="ghost" id="ob-local">Start locally</button>
+      </div>
+      <div class="ob-route garden">
+       <b>Connect Garden</b>
+       <p>Sign in in the trusted system browser, then bring back a one-time code. Daisy never receives your Google credential.</p>
+       <button class="primary" id="ob-connect">Connect Garden</button>
+      </div>
      </div>
-     <div class="ob-gate">
-      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="5.6"/><path d="M8 2.4a5.6 5.6 0 0 1 0 11.2Z" fill="currentColor" stroke="none"/></svg></span>
-      <span class="gt"><b>Contrast</b><span>taste/contrast.py &middot; computed WCAG, both themes</span></span>
-      <span class="caught">caught 3 failures that looked fine</span>
+     <div class="ob-pair">
+      <label for="ob-code">One-time Garden code</label>
+      <div class="ob-pairline">
+       <input class="ob-code" id="ob-code" maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
+       <button id="ob-pair">Pair this Mac</button>
+      </div>
+      <p class="ob-linkstate" id="ob-linkstate" role="status" aria-live="polite">Checking whether this Mac is linked…</p>
      </div>
-     <div class="ob-gate">
-      <span class="gi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2.4 3v10h11"/><path d="M4.6 10.6 7.2 7.4l2.2 2 3.2-4.6"/></svg></span>
-      <span class="gt"><b>Structural physics</b><span>hardware/margins.py &middot; closed form, no model</span></span>
-      <span class="caught">caught a negative bending margin</span>
+     <div class="ob-choice">
+      <span class="cl"><b>Publish verified runs automatically</b><span>Off by default and unavailable until Garden is linked.</span></span>
+      <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to Garden"><i></i></button></span>
      </div>
     </div>
    </section>
 
-   <section class="ob-p" id="ob-p1" aria-label="Agents on this machine">
-    <h2 id="ob-h1">Which agents can this machine actually drive?</h2>
-    <p class="ob-lede">An agent is not a name in a config file, it is a probe. Daisy runs each installed CLI against a
-     trivial prompt and reports what came back, because a factory that assumes its agents are reachable fails halfway
-     with a stack trace instead of saying which lane cannot run.</p>
-    <div class="ob-agents" id="ob-agents"></div>
-    <div class="ob-cmd">
-     <code>python3 labctl.py agents</code>
-     <button id="ob-copy">Copy</button>
-    </div>
-    <p class="ob-note" id="ob-note"></p>
-   </section>
-
-   <section class="ob-p" id="ob-p2" aria-label="Garden connection">
-    <h2 id="ob-h2">Private by default. Connected when you choose.</h2>
-    <p class="ob-lede">Daisy needs no account and stays fully useful offline. Connect Garden only when you want to publish, reuse, like, or discuss verified work.</p>
-    <div class="ob-routes">
-     <div class="ob-route">
-      <b>Stay on this Mac</b>
-      <p>Briefs, files, credentials, traces, and run history remain local. You can connect later from Settings.</p>
-      <button class="ghost" id="ob-local">Start locally</button>
-     </div>
-     <div class="ob-route garden">
-      <b>Connect the Garden</b>
-      <p>Sign in in your trusted system browser, then copy the one-time device code back here. Daisy never receives your Google credential.</p>
-      <button class="primary" id="ob-connect">Connect Garden</button>
-     </div>
-    </div>
-    <div class="ob-pair">
-     <label for="ob-code">One-time Garden code</label>
-     <div class="ob-pairline">
-      <input class="ob-code" id="ob-code" maxlength="6" pattern="[A-Za-z0-9]{6}" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
-      <button id="ob-pair">Pair this Mac</button>
-     </div>
-     <p class="ob-linkstate" id="ob-linkstate" role="status" aria-live="polite">Checking whether this Mac is linked…</p>
-    </div>
-    <div class="ob-choice">
-     <span class="cl"><b>Publish verified runs automatically</b><span>Off by default. This remains unavailable until Garden is linked, and every publish still requires all gates to pass.</span></span>
-     <span class="ctrl"><button class="toggle" id="ob-garden" role="switch" aria-checked="false" aria-label="Publish verified solutions to Garden"><i></i></button></span>
-    </div>
-   </section>
-
-   <section class="ob-p" id="ob-p3" aria-label="Appearance and first run">
-    <h2 id="ob-h3">Ready for the first verified run.</h2>
-    <p class="ob-lede">Choose how Daisy should look. Then drop in a brief or press <code>⌘N</code>; Daisy will ask only the questions that change a gate.</p>
-    <div style="margin-top:15px">
+   <section class="ob-p ob-question" id="ob-p3" aria-label="Appearance and first run">
+    <div class="ob-question-inner">
+     <p class="ob-kicker">One last choice</p>
+     <h2 id="ob-h3">How should Daisy look?</h2>
+     <p class="ob-lede">Choose an appearance. Daisy is ready for a blank first run—nothing will be written into the composer for you.</p>
+     <div style="margin-top:22px">
      <div class="ob-choice">
       <span class="cl"><b>Appearance</b><span>Daisy is light-first. Auto follows your Mac.</span></span>
       <span class="ctrl"><span class="seg" id="ob-seg"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></span></span>
      </div>
-    </div>
-    <div class="ob-fixed">
-     <span class="fi" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="6.4" rx="1.8"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7" stroke-linecap="round"/></svg></span>
-     <span><b>Gates stay on.</b> They are missing from this list because they are not a setting. A threshold you can
-      quietly relax in a console is not a gate, so they live in version control and change by commit.</span>
+     </div>
+     <div class="ob-fixed">
+      <span class="fi" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="6.4" rx="1.8"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7" stroke-linecap="round"/></svg></span>
+      <span><b>Verification stays on.</b> Gates are part of the project, not a preference that can be quietly relaxed.</span>
+     </div>
     </div>
    </section>
 
@@ -1945,7 +1810,8 @@ $ echo $?
 
   <div class="ob-foot">
    <button class="ghost ob-back" id="ob-back" hidden>Back</button>
-   <span class="ob-hint" id="ob-hint">Return to continue &middot; Esc to skip</span>
+   <span class="ob-steps" id="ob-steps" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+   <span class="ob-hint" id="ob-hint">Return to continue</span>
    <button class="primary ob-next" id="ob-next">Continue</button>
   </div>
  </div>
@@ -3885,12 +3751,12 @@ $ echo $?
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var ov = $('#obv'); if (!ov) return;
-  var sheet = $('#obs'), stage = $('#ob-stage'), scroll = $('#ob-scroll');
-  var nextBtn = $('#ob-next'), backBtn = $('#ob-back'), skipBtn = $('#ob-skip'), hint = $('#ob-hint');
+  var sheet = $('#obs'), scroll = $('#ob-scroll');
+  var startBtn = $('#ob-start'), nextBtn = $('#ob-next'), backBtn = $('#ob-back'), hint = $('#ob-hint');
   var KEY = 'daisy-onboarded', VERSION = '2';
   var PANELS = ['#ob-p0', '#ob-p1', '#ob-p2', '#ob-p3'].map(function (s) { return $(s); });
   var HEADS = ['ob-h0', 'ob-h1', 'ob-h2', 'ob-h3'];
-  var LABELS = ['Continue', 'Continue', 'Continue', 'Start locally'];
+  var LABELS = ['', 'Continue', 'Continue', 'Open Daisy'];
   var step = 0, open = false, navKey = false, lastFocus = null;
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var native = navigator.userAgent.indexOf('DaisyNative') !== -1;
@@ -4062,42 +3928,20 @@ $ echo $?
 
   /* ---------------- steps ---------------- */
   function render(dir) {
-    var from = stage.getBoundingClientRect().height;
     PANELS.forEach(function (p, i) { p.classList.remove('on', 'fwd', 'back'); if (i === step) p.classList.add('on'); });
     if (!reduced && !navKey && dir) PANELS[step].classList.add(dir > 0 ? 'fwd' : 'back');
     $$('#ob-steps i').forEach(function (b, i) { b.classList.toggle('on', i === step); });
     ov.setAttribute('aria-labelledby', HEADS[step]);
+    sheet.setAttribute('data-step', String(step));
     nextBtn.textContent = LABELS[step];
     backBtn.hidden = step === 0;
-    hint.textContent = step === 3 ? 'Return to start · Esc stays local' : 'Return to continue · Esc stays local';
+    hint.textContent = step === 3 ? 'Return to open Daisy' : 'Return to continue';
     if (scroll) scroll.scrollTop = 0;
-
-    /* Morph the sheet height so the panels do not jump. Skipped for reduced
-       motion and for a step reached from the keyboard. */
-    stage.classList.remove('morph');
-    stage.style.height = '';
-    if (dir && from > 0 && !reduced && !navKey) {
-      var to = scroll.getBoundingClientRect().height;
-      stage.style.height = from + 'px';
-      void stage.offsetHeight;                 /* commit the start height */
-      stage.classList.add('morph');
-      stage.style.height = to + 'px';
-      var settled = false;
-      var done = function () {
-        if (settled) return;
-        settled = true;
-        stage.removeEventListener('transitionend', done);
-        stage.classList.remove('morph');
-        stage.style.height = '';
-      };
-      stage.addEventListener('transitionend', done);
-      setTimeout(done, 720);
-    }
 
     if (step === 1) { if (!probe) askNative(); paintAgents(false); }
     if (step === 2) { askGarden(); paintGardenState(); }
     if (step === 3) syncChoices();
-    try { nextBtn.focus(); } catch (e) {}
+    try { (step === 0 ? startBtn : nextBtn).focus(); } catch (e) {}
   }
 
   function go(n, dir) {
@@ -4198,7 +4042,7 @@ $ echo $?
     this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   });
 
-  $('#ob-local').addEventListener('click', finish);
+  $('#ob-local').addEventListener('click', function () { go(3, 1); });
 
   $('#ob-copy').addEventListener('click', function () {
     var b = $('#ob-copy'), txt = 'python3 labctl.py agents';
@@ -4207,9 +4051,9 @@ $ echo $?
     else done();
   });
 
+  startBtn.addEventListener('click', function () { navKey = false; sheet.setAttribute('data-nav', 'pointer'); go(1, 1); });
   nextBtn.addEventListener('click', function () { navKey = false; sheet.setAttribute('data-nav', 'pointer'); go(step + 1, 1); });
   backBtn.addEventListener('click', function () { navKey = false; sheet.setAttribute('data-nav', 'pointer'); go(step - 1, -1); });
-  skipBtn.addEventListener('click', hide);
 
   /* ---------------- keyboard ----------------
      The whole flow is completable without a pointer, and a step reached this
