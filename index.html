@@ -1,801 +1,1410 @@
 <meta charset="utf-8">
 <title>Daisy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;450;500;600&display=swap">
 <style>
-  :root {
-    --bg: #161618;
-    --side: #111113;
-    --card: #1E1E22;
-    --card-hi: #232328;
-    --border: #2C2C31;
-    --border-soft: #26262B;
-    --ink: #ECECF0;
-    --ink-2: #9C9CA3;
-    --ink-3: #6B6B72;
-    --green: #4CC38A;
-    --red: #F0655A;
-    --amber: #D9A23D;
-    --blue: #7AA2E8;
-    --purple: #B48CD9;
-    --daisy: #E9C64A;
-    --daisy-ink: #1C1806;
-    --leaf: #A8C25A;
-    --sel: #26262C;
-    --serif: "Source Serif 4", Charter, Georgia, serif;
-    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+/* ============================================================
+   DAISY — command center for THE LAB
+   Light-first, warm-neutral. Color carries meaning only.
+   ============================================================ */
+
+:root {
+  /* --- light (default) — values traced from the Codex webview palette --- */
+  --bg:            #FFFFFF;              /* --color-background-surface */
+  --sidebar:       #F6F6F6;              /* --color-token-bg-primary */
+  --surface:       #FFFFFF;              /* --color-token-dropdown-background */
+  --surface-2:     #F3F3F3;              /* --gray-75 */
+  --surface-3:     #EDEDED;              /* --gray-100 */
+  --border:        rgba(26,28,31,.078);  /* --color-token-border */
+  --border-strong: rgba(26,28,31,.117);  /* --color-border-heavy */
+  --ink:           #1A1C1F;              /* --color-text-foreground */
+  --ink-2:         rgba(26,28,31,.66);
+  --ink-3:         rgba(26,28,31,.495);  /* --color-text-foreground-tertiary */
+  --ink-4:         rgba(26,28,31,.34);
+
+  --daisy:         #E9C64A;
+  --daisy-hi:      #F2D468;
+  --daisy-ink:     #1F1A06;
+  --daisy-deep:    #8A6B18;
+  --daisy-wash:    #FBF3DA;
+  --leaf:          #6B8F2E;
+  --leaf-wash:     #EFF4E2;
+
+  --pass:          #00A240;              /* gitDecoration.added, light */
+  --fail:          #BA2623;              /* gitDecoration.deleted, light */
+  --warn:          #923B0F;              /* gitDecoration.modified, light */
+  --info:          #0169CC;              /* focusBorder / textLink */
+  --violet:        #693ACF;              /* conflicting */
+
+  --add-ink:       #00A240;
+  --del-ink:       #BA2623;
+  --add-bg:        color-mix(in lab, var(--bg) 88%, var(--add-ink));
+  --del-bg:        color-mix(in lab, var(--bg) 88%, var(--del-ink));
+
+  /* elevation — Codex's own recipe */
+  --elev-stroke:   0 0 0 .5px var(--border-strong);
+  --shadow-1:      var(--elev-stroke), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2:      var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.04), 0 0 20px rgba(0,0,0,.051);
+  --shadow-3:      var(--elev-stroke), 0 8px 30px rgba(0,0,0,.13), 0 24px 60px rgba(0,0,0,.07);
+  --inner-hi:      inset 0 1px 0 rgba(255,255,255,.65);
+
+  --serif: "Source Serif 4", Charter, "New York", Georgia, serif;
+  --sans:  -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono:  "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* type — Codex Electron: chat 14px / lh 22px, chat-sm 13px */
+  --t-chat: 14px; --t-chat-sm: 13px; --t-code: 12px;
+
+  /* motion — ease-out for enter/exit; never ease-in on UI */
+  --out:     cubic-bezier(.23,1,.32,1);
+  --inout:   cubic-bezier(.77,0,.175,1);
+  --drawer:  cubic-bezier(.32,.72,0,1);
+  --snap:    cubic-bezier(.32,.72,0,1);
+  --expo:    cubic-bezier(.16,1,.3,1);
+  --soft:    cubic-bezier(.23,1,.32,1);
+  --d-press: 120ms; --d-hover: 140ms; --d-tip: 160ms; --d-menu: 180ms; --d-sheet: 320ms;
+
+  /* radius ladder — Codex: card rounded-lg 10px, composer 3xl 20px */
+  --r-win: 10px; --r-panel: 12px; --r-card: 10px; --r-btn: 10px; --r-badge: 4px;
+  --r-composer: 20px; --r-attach: 12px;
+
+  /* hover / active wash */
+  --wash: rgba(0,0,0,.04); --wash-2: rgba(0,0,0,.07);
+  --spring-snappy: linear(0, 0.0064 1.4%, 0.0241 2.8%, 0.0949 6%, 0.5136 18.9%, 0.6903 25.4%, 0.7594 28.6%, 0.8171 31.8%, 0.8667 35.2%, 0.9069 38.7%, 0.9412 42.7%, 0.9676 47.1%, 0.9861 51.9%, 0.9984 57.5%, 1.0042 63.2%, 1.0063 70.4%, 1);
+  --spring-press: linear(0, 0.0058 1.5%, 0.0229 3.1%, 0.0914 6.7%, 0.1792 10.1%, 0.4879 21%, 0.6569 28.2%, 0.7216 31.6%, 0.7769 35%, 0.8246 38.5%, 0.8659 42.2%, 0.9052 46.7%, 0.9363 51.5%, 0.9604 56.8%, 0.9784 62.8%, 0.9903 69.5%, 0.9975 77.5%, 1.0012 89.5%, 1);
+  --spring:  linear(0,.0018 .93%,.0071 1.94%,.0294 4.07%,.1101 8.28%,.1379 9.5%,.1678 10.75%,.235 13.34%,.3106 16.05%,.5039 22.34%,.5883 25.34%,.6653 28.5%,.7327 31.83%,.7924 35.42%,.8181 37.32%,.8413 39.35%,.862 41.51%,.8803 43.82%,.897 46.35%,.9114 49.06%,.9235 51.98%,.9338 55.2%,.9424 58.76%,.9495 62.73%,.9553 67.25%,.96 72.53%,.9638 78.94%,.9668 87.2%,.9694 100%);
+  --spring-soft: linear(0,.0033 1.13%,.0129 2.27%,.0503 4.63%,.1876 11.29%,.2551 14.36%,.3211 17.24%,.3846 19.94%,.4454 22.5%,.5031 24.94%,.5578 27.29%,.6094 29.55%,.6577 31.76%,.703 33.93%,.745 36.07%,.7838 38.2%,.8194 40.35%,.8519 42.53%,.8814 44.76%,.9078 47.06%,.9312 49.46%,.9518 52%,.9694 54.7%,.9842 57.63%,.9962 60.84%,1.0054 64.4%,1.012 68.4%,1.0161 72.99%,1.0181 78.4%,1.0186 86.16%,1.0177 100%);
+}
+
+:root[data-theme="dark"], :root:not([data-theme="light"]) {}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:            #181818;              /* --gray-900 / surface */
+    --sidebar:       #141414;              /* bg-primary, dark */
+    --surface:       #2D2D2D;              /* dropdown-background, dark */
+    --surface-2:     #212121;              /* --gray-800 */
+    --surface-3:     #303030;              /* --gray-700 */
+    --border:        rgba(255,255,255,.084);
+    --border-strong: rgba(255,255,255,.156);
+    --ink:           #FFFFFF;
+    --ink-2:         rgba(255,255,255,.72);
+    --ink-3:         rgba(255,255,255,.498);
+    --ink-4:         rgba(255,255,255,.34);
+    --daisy:         #EBCB5C; --daisy-hi: #F4DA80; --daisy-ink: #1A1505;
+    --daisy-deep:    #E2BF4E; --daisy-wash: #2A2413;
+    --leaf:          #A9C86A; --leaf-wash: #1E2413;
+    --pass:          #40C977;              /* gitDecoration.added, dark */
+    --fail:          #FA423E;              /* gitDecoration.deleted, dark */
+    --warn:          #FF8549;              /* gitDecoration.modified, dark */
+    --info:          #339CFF;
+    --violet:        #7B43F8;
+    --add-ink:       #40C977; --del-ink: #FA423E;
+    --add-bg:        color-mix(in lab, var(--bg) 80%, var(--add-ink));
+    --del-bg:        color-mix(in lab, var(--bg) 80%, var(--del-ink));
+    --wash: rgba(255,255,255,.06); --wash-2: rgba(255,255,255,.10);
+    --elev-stroke:   0 0 0 .5px var(--border-strong);
+    --shadow-1:      var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:      var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.3), 0 0 20px rgba(0,0,0,.35);
+    --shadow-3:      var(--elev-stroke), 0 8px 30px rgba(0,0,0,.5), 0 24px 60px rgba(0,0,0,.34);
+    --inner-hi:      inset 0 1px 0 rgba(255,255,255,.045);
+
   }
-  * { box-sizing: border-box; margin: 0; }
-  html, body { height: 100%; }
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--sans);
-    font-size: 14px;
-    display: flex;
-    overflow: hidden;
-    -webkit-font-smoothing: antialiased;
+}
+:root[data-theme="dark"] {
+  --bg:      #181818;        /* --gray-900 / surface */
+  --sidebar:     #141414;        /* bg-primary, dark */
+  --surface:     #2D2D2D;        /* dropdown-background, dark */
+  --surface-2:   #212121;        /* --gray-800 */
+  --surface-3:   #303030;        /* --gray-700 */
+  --border:    rgba(255,255,255,.084);
+  --border-strong: rgba(255,255,255,.156);
+  --ink:       #FFFFFF;
+  --ink-2:     rgba(255,255,255,.72);
+  --ink-3:     rgba(255,255,255,.498);
+  --ink-4:     rgba(255,255,255,.34);
+  --daisy:     #EBCB5C; --daisy-hi: #F4DA80; --daisy-ink: #1A1505;
+  --daisy-deep:  #E2BF4E; --daisy-wash: #2A2413;
+  --leaf:      #A9C86A; --leaf-wash: #1E2413;
+  --pass:      #40C977;        /* gitDecoration.added, dark */
+  --fail:      #FA423E;        /* gitDecoration.deleted, dark */
+  --warn:      #FF8549;        /* gitDecoration.modified, dark */
+  --info:      #339CFF;
+  --violet:    #7B43F8;
+  --add-ink:     #40C977; --del-ink: #FA423E;
+  --add-bg:    color-mix(in lab, var(--bg) 80%, var(--add-ink));
+  --del-bg:    color-mix(in lab, var(--bg) 80%, var(--del-ink));
+  --wash: rgba(255,255,255,.06); --wash-2: rgba(255,255,255,.10);
+  --elev-stroke:   0 0 0 .5px var(--border-strong);
+  --shadow-1:    var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:    var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.3), 0 0 20px rgba(0,0,0,.35);
+  --shadow-3:    var(--elev-stroke), 0 8px 30px rgba(0,0,0,.5), 0 24px 60px rgba(0,0,0,.34);
+  --inner-hi:    inset 0 1px 0 rgba(255,255,255,.045);
+
+}
+
+@supports (corner-shape: superellipse(1.5)) {
+  :root { --codex-corner-shape: superellipse(1.5); }
+  .card, .composer, .pal, .modal, .brief, .tbl, .acard, .skill, .peek, button, .chip, .toast {
+    corner-shape: superellipse(1.5);
   }
+}
+* { box-sizing: border-box; margin: 0; cursor: default; }
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; font-optical-sizing: auto; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-chat-sm);
+  line-height: 1.5;
+  display: flex;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "calt","kern","liga";
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter .3s var(--out);
+}
+body.blurred { filter: saturate(.45); }
+input, textarea, .prose, .brief, .derive, .doc, .selectable { user-select: text; }
+input, textarea { cursor: text; }
+::selection { background: color-mix(in srgb, var(--daisy) 34%, transparent); }
+h1,h2,h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
 
-  /* ---------- sidebar ---------- */
-  aside {
-    width: 244px; flex: 0 0 244px;
-    background: var(--side);
-    border-right: 1px solid var(--border-soft);
-    display: flex; flex-direction: column;
-    padding: 14px 10px 12px;
-    overflow-y: auto;
-  }
-  .lights { display: flex; gap: 8px; padding: 2px 6px 16px; }
-  .lights span { width: 12px; height: 12px; border-radius: 50%; }
-  .lights .r { background: #FF5F57; } .lights .y { background: #FEBC2E; } .lights .g { background: #28C840; }
-  .brand {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 16px; font-weight: 700; padding: 2px 8px 16px;
-  }
-  .brand .flask { width: 20px; height: 20px; display: inline-flex; flex: 0 0 20px; }
-  .brand .flask svg { width: 100%; height: 100%; display: block; }
-  .brand .chev { color: var(--ink-3); font-size: 11px; }
-  nav a, .runlink {
-    display: flex; align-items: center; gap: 10px;
-    padding: 6px 8px; border-radius: 7px;
-    color: var(--ink); text-decoration: none; font-size: 13.5px;
-    cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  nav a .ic { width: 16px; text-align: center; color: var(--ink-2); font-size: 13px; flex: 0 0 16px; }
-  nav a:hover, .runlink:hover { background: var(--sel); }
-  nav a.on { background: var(--sel); }
-  .sect { font-size: 12px; color: var(--ink-3); padding: 18px 8px 6px; font-weight: 500; }
-  .runlink { color: var(--ink-2); font-size: 13px; padding-left: 30px; }
-  .runlink.active { background: var(--sel); color: var(--ink); box-shadow: inset 2px 0 0 var(--daisy); }
-  .side-bottom { margin-top: auto; padding: 12px 8px 2px; display: flex; align-items: center; gap: 9px; font-size: 13px; }
-  .avatar { width: 22px; height: 22px; border-radius: 50%; background: #2E2E34; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: var(--ink-2); font-family: var(--mono); }
-  .live-dot { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--leaf); }
-  .kbd-hint { font-family: var(--mono); font-size: 10px; color: var(--ink-3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+/* ---------- scrollbars ---------- */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+*:hover::-webkit-scrollbar-thumb { background: var(--border-strong); background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); background-clip: content-box; }
 
-  /* ---------- main ---------- */
-  main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .topbar {
-    display: flex; align-items: center; gap: 10px;
-    padding: 14px 22px; border-bottom: 1px solid var(--border-soft);
-    font-size: 14px; font-weight: 600;
-  }
-  .topbar .fold { color: var(--ink-3); font-family: var(--mono); font-size: 12px; }
-  .topbar .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sponsors { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-  .sp {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em;
-    color: var(--ink-2); border: 1px solid var(--border); border-radius: 999px;
-    padding: 3px 10px; white-space: nowrap;
-  }
-  .sp i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-  .sp.port i { background: var(--blue); } .sp.signoz i { background: var(--purple); } .sp.bd i { background: var(--amber); }
-  .cost { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
-  .bell { position: relative; cursor: pointer; color: var(--ink-2); font-size: 15px; padding: 2px 4px; background: none; border: none; }
-  .bell .badge { display: none; position: absolute; top: -2px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
-  .bell.hot .badge { display: block; }
+/* ============================ SIDEBAR ============================ */
+aside {
+  width: 246px; flex: 0 0 246px;
+  background: color-mix(in srgb, var(--sidebar) 74%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-right: .5px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 12px 8px 8px;
+  overflow: hidden;
+  transition: margin-left .42s var(--snap), opacity .3s var(--soft);
+}
+body.rail aside { margin-left: -246px; opacity: 0; }
 
-  .view { flex: 1; display: none; flex-direction: column; min-height: 0; }
-  .view.on { display: flex; }
-  .page { flex: 1; overflow-y: auto; padding: 30px 28px; }
-  .page .col2 { max-width: 860px; margin: 0 auto; }
-  .page h2 { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
-  .page .sub2 { color: var(--ink-3); font-size: 13.5px; margin-bottom: 22px; }
+.lights { display: flex; gap: 8px; padding: 4px 8px 14px; }
+.lights span { width: 12px; height: 12px; border-radius: 50%; }
+.lights .r { background: #FF5F57; } .lights .y { background: #FEBC2E; } .lights .g { background: #28C840; }
 
-  /* ---------- feed ---------- */
-  #feed { flex: 1; overflow-y: auto; padding: 28px 0 20px; scroll-behavior: smooth; }
-  @media (prefers-reduced-motion: reduce) { #feed { scroll-behavior: auto; } }
-  .col { max-width: 760px; margin: 0 auto; padding: 0 28px; }
-  .item { margin-bottom: 22px; }
-  @media (prefers-reduced-motion: no-preference) {
-    #feed.live .item { animation: rise 240ms ease both; }
-    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  }
-  .prose { font-family: var(--serif); font-size: 16.5px; line-height: 1.65; color: var(--ink); max-width: 66ch; }
-  .prose em { color: var(--ink-2); }
-  .prose code { font-family: var(--mono); font-size: 0.82em; background: var(--card); border: 1px solid var(--border-soft); border-radius: 4px; padding: 1px 5px; }
-  .agent-tag { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
-  .agent-tag i { width: 6px; height: 6px; border-radius: 2px; display: inline-block; }
-  .agent-tag.claude i { background: #E89A6A; } .agent-tag.codex i { background: #7FBFB2; } .agent-tag.system i { background: var(--ink-3); }
-  .brief { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; font-size: 14.5px; line-height: 1.55; max-width: 60ch; margin-left: auto; }
-  .brief .lbl { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+.brand { display: flex; align-items: center; gap: 8px; padding: 0 6px 14px; }
+.brand .mark { width: 22px; height: 22px; flex: 0 0 22px; display: block; }
+.brand .mark svg { width: 100%; height: 100%; display: block; }
+.brand .name { font-size: 15.5px; font-weight: 650; letter-spacing: -.012em; }
+.brand .chev { color: var(--ink-3); font-size: 10px; margin-left: -3px; }
+.brand .tools { margin-left: auto; display: flex; gap: 2px; }
+.iconbtn {
+  width: 26px; height: 26px; border-radius: var(--r-btn); border: none; background: none;
+  color: var(--ink-3); display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: none;
+  transition: background var(--d-hover) var(--out), color var(--d-hover) var(--out), transform var(--d-press) var(--out);
+}
+.iconbtn:hover { background: var(--wash); color: var(--ink); }
+.iconbtn:active { transform: scale(.94); }
+.iconbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
+.iconbtn svg { width: 15px; height: 15px; }
 
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .card-head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; }
-  .card-head .cicon { width: 30px; height: 30px; border-radius: 8px; background: var(--card-hi); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; color: var(--ink-2); flex: 0 0 30px; }
-  .card-head b { font-size: 14px; font-weight: 600; }
-  .card-head .sub { font-family: var(--mono); font-size: 12px; margin-top: 1px; }
-  .plus { color: var(--green); } .minus { color: var(--red); }
-  .card-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-  button { font-family: var(--sans); font-size: 13px; font-weight: 600; background: var(--card-hi); color: var(--ink); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
-  button:hover { background: #2A2A30; }
-  button:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
-  button.primary { background: var(--daisy); color: var(--daisy-ink); border-color: var(--daisy); }
-  button.primary:hover { filter: brightness(1.08); }
-  button.ghost { font-weight: 500; color: var(--ink-2); }
-  button[disabled] { opacity: 0.45; cursor: default; }
+nav { display: flex; flex-direction: column; gap: 1px; }
+.navitem {
+  display: flex; align-items: center; gap: 9px;
+  padding: 6px 8px; border-radius: var(--r-badge);
+  color: var(--ink); font-size: var(--t-chat-sm); font-weight: 450;
+  cursor: pointer; user-select: none; position: relative;
+  transition: background .13s var(--soft), color .13s var(--soft);
+}
+.navitem:hover { background: var(--wash); }
+.navitem.on { background: var(--wash-2); font-weight: 500; }
+.navitem svg { width: 15px; height: 15px; flex: 0 0 15px; color: var(--ink-2); }
+.navitem.on svg { color: var(--ink); }
+.navitem .tail { margin-left: auto; color: var(--ink-4); font-size: 11px; font-family: var(--mono); }
+.navitem .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
 
-  .filerow, .gaterow { display: flex; align-items: baseline; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--border-soft); font-family: var(--mono); font-size: 12.5px; }
-  .filerow .path { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .filerow .path b { color: var(--ink); font-weight: 500; }
-  .filerow .stat { margin-left: auto; white-space: nowrap; }
-  .showmore { padding: 9px 16px; border-top: 1px solid var(--border-soft); font-size: 13px; color: var(--ink-2); cursor: pointer; background: none; border-radius: 0; width: 100%; text-align: left; border-left: 0; border-right: 0; border-bottom: 0; font-weight: 500; }
-  .hiddenrows { display: none; } .hiddenrows.open { display: block; }
+.scroller { flex: 1; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; }
+.sect { font-size: 11.5px; color: var(--ink-3); padding: 16px 8px 5px; font-weight: 500; letter-spacing: .005em; }
+.thread {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5.5px 8px 5.5px 10px; border-radius: 8px;
+  color: var(--ink-2); font-size: 13px; cursor: pointer; position: relative;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: background .13s var(--soft), color .13s var(--soft);
+}
+.thread:hover { background: var(--wash); color: var(--ink); }
+.thread.active { background: var(--wash-2); color: var(--ink); font-weight: 500; }
+.thread .pip { width: 5px; height: 5px; border-radius: 50%; flex: 0 0 5px; background: var(--ink-4); }
+.thread.active .pip { background: var(--daisy); box-shadow: 0 0 0 3px var(--daisy-wash); }
+.thread .pip.fail { background: var(--fail); }
+.thread .pip.run { background: var(--leaf); animation: pulse 2.2s var(--soft) infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+.thread .txt { overflow: hidden; text-overflow: ellipsis; }
 
-  .verdict { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 999px; }
-  .verdict.fail { color: var(--red); border: 1px solid var(--red); }
-  .verdict.pass { color: var(--green); border: 1px solid var(--green); }
-  .verdict.warn { color: var(--amber); border: 1px solid var(--amber); }
-  .gaterow { gap: 12px; }
-  .gaterow .gname { color: var(--ink-2); flex: 0 0 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gaterow .gdetail { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gaterow .gmark { margin-left: auto; font-weight: 600; }
-  .gaterow .gmark.ok { color: var(--green); } .gaterow .gmark.bad { color: var(--red); }
+.acct { display: flex; align-items: center; gap: 9px; padding: 10px 8px 4px; margin-top: 6px; border-top: 1px solid var(--border); }
+.avatar {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 22px;
+  background: linear-gradient(150deg, var(--daisy), var(--leaf));
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9.5px; font-weight: 700; color: #241D06; letter-spacing: -.02em;
+}
+.acct .who { font-size: 13px; color: var(--ink-2); }
+.acct .kbd { margin-left: auto; }
+kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 1px 5px;
+  font: 500 10.5px/1 var(--sans); color: var(--ink-3);
+  background: linear-gradient(var(--bg), var(--surface-2));
+  border: .5px solid var(--border-strong); border-radius: var(--r-badge);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 1px 0 rgba(38,34,20,.09);
+}
 
-  .mtable { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
-  .mtable th { text-align: left; color: var(--ink-3); font-weight: 500; padding: 8px 16px; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .mtable td { padding: 8px 16px; border-bottom: 1px solid var(--border-soft); color: var(--ink-2); font-variant-numeric: tabular-nums; }
-  .mtable tr:last-child td { border-bottom: none; }
-  .mtable td.ok { color: var(--green); font-weight: 600; } .mtable td.bad { color: var(--red); font-weight: 600; }
-  .mtable td.name { color: var(--ink); }
-  .scrollx { overflow-x: auto; }
-  .derive { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-2); padding: 12px 16px; border-top: 1px solid var(--border-soft); overflow-x: auto; white-space: pre; }
-  .derive b { color: var(--ink); font-weight: 600; }
-  .card.alert { border-color: #4A3A1E; }
-  .card.alert .card-head .cicon { color: var(--amber); border-color: #4A3A1E; }
-  .resolved { padding: 10px 16px; border-top: 1px solid var(--border-soft); font-size: 13px; color: var(--ink-2); }
-  .resolved b { color: var(--green); font-weight: 600; }
-  .resolved b.badres { color: var(--red); }
+/* thread hover preview */
+.peek {
+  position: fixed; z-index: 70; width: 292px; pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: .5px solid var(--border);
+  border-radius: var(--r-panel); box-shadow: var(--shadow-3); padding: 12px 14px;
+  opacity: 0; transform: translateY(4px) scale(.985); transform-origin: left center;
+  transition: opacity .18s var(--soft), transform .28s var(--spring);
+}
+.peek.on { opacity: 1; transform: none; }
+.peek b { font-size: 13px; font-weight: 600; display: block; margin-bottom: 5px; letter-spacing: -.01em; }
+.peek p { font-family: var(--serif); font-size: 13px; line-height: 1.55; color: var(--ink-2);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.peek .foot { display: flex; gap: 8px; margin-top: 9px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
 
-  .pillbar { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 10px 18px; font-size: 13.5px; }
-  .pillbar b { font-weight: 600; white-space: nowrap; }
-  .pillbar .mut { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pillbar .time { margin-left: auto; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border-soft); }
-  .chip { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); border: 1px solid var(--border); border-radius: 7px; padding: 5px 10px; display: inline-flex; align-items: center; gap: 7px; }
-  .chip i { color: var(--ink-3); font-style: normal; }
+/* ============================ MAIN ============================ */
+main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
 
-  /* flame graph */
-  .flame { padding: 12px 16px 16px; border-top: 1px solid var(--border-soft); }
-  .frow { display: grid; grid-template-columns: 168px 1fr 52px; gap: 10px; align-items: center; margin-bottom: 6px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
-  .frow .lane { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .frow .track { height: 12px; position: relative; background: var(--card-hi); border-radius: 3px; }
-  .frow .bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--leaf); opacity: 0.9; }
-  .frow .bar.err { background: var(--red); }
-  .frow .bar.warnb { background: var(--amber); }
-  .frow .ms { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.topbar {
+  display: flex; align-items: center; gap: 9px;
+  padding: 12px 18px 12px 16px;
+  border-bottom: .5px solid var(--border);
+  min-height: 50px;
+  background: color-mix(in srgb, var(--bg) 76%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  -webkit-app-region: drag;
+}
+.topbar button, .topbar .ell { -webkit-app-region: no-drag; }
+.topbar .folder { color: var(--ink-3); display: inline-flex; }
+.topbar .folder svg { width: 15px; height: 15px; }
+.topbar .title {
+  font-size: 14px; font-weight: 600; letter-spacing: -.012em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%;
+}
+.topbar .ell { color: var(--ink-3); letter-spacing: 1px; cursor: pointer; padding: 0 2px; }
+.topbar .right { margin-left: auto; display: flex; align-items: center; gap: 3px; }
 
-  /* ---------- composer ---------- */
-  .composer-wrap { padding: 10px 22px 18px; }
-  .composer { max-width: 760px; margin: 0 auto; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 12px 14px 10px; }
-  .composer input[type="text"] { width: 100%; background: none; border: none; outline: none; color: var(--ink); font-family: var(--sans); font-size: 15px; padding: 4px 4px 12px; }
-  .composer input::placeholder { color: var(--ink-3); }
-  .composer .row { display: flex; align-items: center; gap: 10px; }
-  .roundbtn { width: 30px; height: 30px; border-radius: 50%; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; color: var(--ink-2); }
-  .armchip { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--leaf); font-weight: 500; padding: 4px 10px; border-radius: 999px; }
-  .pickers { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-  select { background: var(--card-hi); border: 1px solid var(--border); color: var(--ink-2); font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 4px 8px; border-radius: 8px; cursor: pointer; }
-  select:hover { background: var(--sel); }
-  select:focus-visible { outline: 2px solid var(--leaf); }
-  select option { background: var(--card); color: var(--ink); }
-  .send { width: 32px; height: 32px; border-radius: 50%; padding: 0; background: var(--daisy); color: var(--daisy-ink); border-color: var(--daisy); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; }
-  .send:hover { filter: brightness(1.08); }
-  .toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%); width: min(600px, 90vw); z-index: 60; padding: 10px 16px; background: var(--card-hi); border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--ink-2); display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-  .toast b { color: var(--ink); }
+.view { flex: 1; display: none; flex-direction: column; min-height: 0; }
+.view.on { display: flex; animation: viewin .34s var(--expo) both; }
+@keyframes viewin { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 
-  /* ---------- list views ---------- */
-  .ltable { width: 100%; border-collapse: collapse; font-size: 13.5px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .ltable-wrap { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--card); }
-  .ltable th { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); text-align: left; font-weight: 500; padding: 10px 16px; border-bottom: 1px solid var(--border); }
-  .ltable td { padding: 11px 16px; border-bottom: 1px solid var(--border-soft); color: var(--ink-2); vertical-align: middle; }
-  .ltable tr:last-child td { border-bottom: none; }
-  .ltable td.strong { color: var(--ink); font-weight: 600; }
-  .ltable tr.rowlink { cursor: pointer; }
-  .ltable tr.rowlink:hover td { background: var(--card-hi); }
-  .ltable .mono { font-family: var(--mono); font-size: 12px; }
+/* ---------- feed + minimap ---------- */
+.stage { flex: 1; display: flex; min-height: 0; position: relative; }
+.minimap {
+  width: 34px; flex: 0 0 34px; position: relative; overflow: hidden;
+  padding: 24px 0 24px 14px;
+}
+.mm {
+  position: absolute; left: 14px;
+  width: 12px; height: 2px; border-radius: 1px; background: var(--border-strong);
+  border: none; padding: 0; box-shadow: none;
+  transition: width var(--d-menu) var(--out), background var(--d-hover) var(--out), top .4s var(--out);
+}
+.mm:hover { width: 21px; background: var(--ink-3); }
+.mm:focus-visible { outline: none; width: 21px; background: var(--leaf); }
+.mm.seen { background: var(--ink-4); }
+.mm.here { width: 21px; background: var(--daisy-deep); }
+.mm.gfail { background: var(--fail); }
+.mm.gpass { background: var(--pass); }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
-  .acard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
-  .acard .thumb { height: 150px; background: var(--card-hi); border-bottom: 1px solid var(--border-soft); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .acard .meta { padding: 12px 14px; }
-  .acard .meta b { font-size: 13.5px; display: block; margin-bottom: 3px; }
-  .acard .meta span { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
-  .minidash { width: 82%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
-  .minidash .mrow { height: 8px; border-radius: 3px; background: var(--card-hi); margin-bottom: 6px; }
-  .minidash .mrow.hd { width: 45%; background: #33333A; }
-  .minidash .mrow.ok1 { box-shadow: inset 3px 0 0 var(--leaf); }
-  .mono-doc { font-family: var(--mono); font-size: 10px; color: var(--ink-3); line-height: 1.7; padding: 12px; width: 100%; }
-  .mono-doc b { color: var(--ink-2); }
+#feed { flex: 1; overflow-y: auto; padding: 22px 0 26px; scroll-behavior: smooth;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%); }
+@media (prefers-reduced-motion: reduce) { #feed { scroll-behavior: auto; } }
+.col { max-width: 720px; margin: 0 auto; padding: 0 30px 0 8px; }
 
-  .skillcard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
-  .skillcard b { font-size: 14px; }
-  .skillcard p { color: var(--ink-2); font-size: 13.5px; margin: 6px 0 10px; max-width: 70ch; }
+.item { margin-bottom: 24px; }
+#feed.live .item { animation: itemin .52s var(--snap) both; }
+@keyframes itemin {
+  from { opacity: 0; transform: translateY(10px) scale(.995); filter: blur(3px); }
+  to   { opacity: 1; transform: none; filter: blur(0); }
+}
 
-  /* ---------- settings ---------- */
-  .setrow { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); max-width: 560px; }
-  .setrow .lab { flex: 1; }
-  .setrow .lab b { font-size: 14px; display: block; }
-  .setrow .lab span { font-size: 12.5px; color: var(--ink-3); }
-  .swatches { display: flex; gap: 8px; }
-  .sw { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
-  .sw.on { border-color: var(--ink); }
-  .themebox { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-top: 16px; white-space: pre; overflow-x: auto; max-width: 560px; display: none; }
+/* ---------- prose ---------- */
+.prose {
+  font-family: var(--serif); font-size: 16.5px; line-height: 1.62;
+  color: var(--ink); max-width: 63ch; letter-spacing: -.003em;
+  font-variation-settings: "opsz" 16;
+}
+.prose em { font-style: italic; color: var(--ink-2); }
+.prose code {
+  font-family: var(--mono); font-size: .8em; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--ink-2);
+}
+.prose .w { animation: wordin .5s var(--expo) both; display: inline; }
+@keyframes wordin { from { opacity: 0; filter: blur(4px); } to { opacity: 1; filter: blur(0); } }
 
-  /* ---------- overlays ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(8,8,10,0.6); display: none; align-items: flex-start; justify-content: center; z-index: 40; }
-  .overlay.on { display: flex; }
-  .palette { margin-top: 12vh; width: min(560px, 92vw); background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
-  .palette input { width: 100%; background: none; border: none; outline: none; color: var(--ink); font-size: 15px; padding: 15px 18px; border-bottom: 1px solid var(--border-soft); font-family: var(--sans); }
-  .pitem { display: flex; align-items: center; gap: 10px; padding: 10px 18px; font-size: 13.5px; cursor: pointer; }
-  .pitem:hover, .pitem.hot { background: var(--card-hi); }
-  .pitem .hint { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
-  .modal { margin-top: 8vh; width: min(720px, 94vw); max-height: 80vh; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
-  .modal .mhead { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border-soft); font-weight: 600; }
-  .modal .mhead button { margin-left: auto; }
-  .diff { font-family: var(--mono); font-size: 12px; line-height: 1.6; padding: 14px 0; overflow-x: auto; }
-  .diff div { padding: 0 18px; white-space: pre; }
-  .diff .add { background: rgba(76,195,138,0.09); color: #9BD8B8; }
-  .diff .del { background: rgba(240,101,90,0.09); color: #EFA49E; }
-  .diff .ctx { color: var(--ink-3); }
-  .diff .hunk { color: var(--blue); padding-top: 8px; }
+.who-tag {
+  display: inline-flex; align-items: center; gap: 7px; margin-bottom: 9px;
+  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3);
+}
+.who-tag i { width: 5px; height: 5px; border-radius: 1.5px; display: inline-block; }
+.who-tag.claude i { background: #C2703C; } .who-tag.codex i { background: #3E8577; }
+.who-tag.sys i { background: var(--ink-4); }
 
-  @media (max-width: 760px) { aside { display: none; } }
+.brief {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-card); padding: 13px 16px; font-size: 13.5px; line-height: 1.52;
+  max-width: 55ch; margin-left: auto; box-shadow: var(--inner-hi);
+}
+.brief .lbl { font-family: var(--mono); font-size: 10px; color: var(--ink-3);
+  letter-spacing: .07em; text-transform: uppercase; display: block; margin-bottom: 6px; }
+
+/* ---------- cards ---------- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-1);
+  transition: box-shadow .3s var(--soft), border-color .3s var(--soft);
+}
+.card:hover { box-shadow: var(--shadow-2); }
+.chead { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.chead .ci {
+  width: 40px; height: 40px; border-radius: var(--r-card); flex: 0 0 40px;
+  background: var(--surface-2);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-3); font-family: var(--mono); font-size: 13px; font-weight: 600;
+}
+.chead .ci svg { width: 24px; height: 24px; }
+.chead b { font-size: var(--t-chat); font-weight: 600; letter-spacing: -.008em; display: block; }
+.chead .sub { font-size: var(--t-chat-sm); color: var(--ink-3); margin-top: 1px; font-family: var(--mono); }
+.chead .act { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+.plus { color: var(--add-ink); font-weight: 500; } .minus { color: var(--del-ink); font-weight: 500; }
+
+button {
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: -.005em;
+  background: var(--bg); color: var(--ink);
+  border: .5px solid var(--border-strong); border-radius: var(--r-btn);
+  padding: 5px 11px;
+  transition: background var(--d-hover) var(--out), border-color var(--d-hover) var(--out),
+              transform var(--d-press) var(--out), box-shadow var(--d-hover) var(--out), color var(--d-hover) var(--out);
+  box-shadow: var(--shadow-1);
+}
+button:hover { background: var(--surface-2); }
+button:active { transform: scale(.97); }
+button:focus-visible { outline: none; box-shadow: var(--shadow-1), 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
+button.primary {
+  background: var(--daisy); color: var(--daisy-ink); border-color: transparent;
+  box-shadow: 0 1px 2px rgba(120,90,10,.18), var(--inner-hi);
+}
+button.primary:hover { background: var(--daisy-hi); border-color: transparent; }
+button.ghost { background: none; border-color: transparent; box-shadow: none; color: var(--ink-2); font-weight: 500; }
+button.ghost:hover { background: var(--surface-2); color: var(--ink); }
+button[disabled] { opacity: .45; cursor: default; transform: none !important; }
+
+.row, .grow {
+  display: flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 12px; border-top: .5px solid var(--border);
+  font-family: var(--mono); font-size: var(--t-code);
+  transition: background var(--d-hover) var(--out);
+  content-visibility: auto; contain-intrinsic-size: auto 36px;
+}
+.row:hover, .grow:hover { background: var(--wash); }
+.row .st, table.m td, .pill .tm, .frow .ms, table.l .mo {
+  font-variant-numeric: tabular-nums; font-feature-settings: "cv01" on, "cv02" on;
+  letter-spacing: -.01em;
+}
+.row .path { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .path b { color: var(--ink); font-weight: 500; }
+.row .st { margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.more {
+  height: 36px; padding: 0 12px; display: flex; align-items: center; border: none; border-top: 1px solid var(--border);
+  border-radius: 0; width: 100%; text-align: left; font-size: 12.5px;
+  color: var(--ink-2); background: none; box-shadow: none; font-weight: 500;
+}
+.more:hover { background: var(--surface-2); color: var(--ink); }
+.hid { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .42s var(--snap); }
+.hid > div { overflow: hidden; }
+.hid.open { grid-template-rows: 1fr; }
+
+.tag {
+  font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
+  padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+}
+.tag.fail { color: var(--fail); background: var(--del-bg); }
+.tag.pass { color: var(--pass); background: var(--leaf-wash); }
+.tag.warn { color: var(--warn); background: var(--daisy-wash); }
+.tag.info { color: var(--info); background: var(--surface-2); }
+
+.grow { gap: 12px; }
+.grow .gn { color: var(--ink-2); flex: 0 0 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grow .gd { color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grow .gm { margin-left: auto; font-weight: 600; }
+.grow .gm.ok { color: var(--pass); } .grow .gm.no { color: var(--fail); }
+
+table.m { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11.5px; }
+table.m th {
+  text-align: left; color: var(--ink-3); font-weight: 500; padding: 7px 14px;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+}
+table.m td { padding: 7.5px 14px; border-bottom: 1px solid var(--border); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+table.m tr:last-child td { border-bottom: none; }
+table.m td.ok { color: var(--pass); font-weight: 600; } table.m td.no { color: var(--fail); font-weight: 600; }
+table.m td.nm { color: var(--ink); }
+.sx { overflow-x: auto; }
+
+.derive {
+  font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--ink-2);
+  padding: 11px 14px; border-top: 1px solid var(--border);
+  overflow-x: auto; white-space: pre; background: var(--surface-2);
+}
+.derive b { color: var(--ink); font-weight: 600; }
+
+.card.alert { border-color: color-mix(in srgb, var(--warn) 34%, var(--border)); }
+.card.alert .chead .ci { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, var(--border)); background: var(--daisy-wash); }
+.res { padding: 9px 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); }
+.res b { color: var(--pass); font-weight: 600; } .res b.no { color: var(--fail); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 7px; padding: 11px 14px; border-top: 1px solid var(--border); }
+.chip {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-2);
+  border: 1px solid var(--border); background: var(--bg);
+  border-radius: 8px; padding: 4.5px 9px; display: inline-flex; align-items: center; gap: 6px;
+  transition: border-color .16s var(--soft), transform .22s var(--spring), color .16s;
+  cursor: default;
+}
+.chip:hover { border-color: var(--ink-4); color: var(--ink); transform: translateY(-1px); }
+.chip i { color: var(--ink-4); font-style: normal; }
+
+/* flame graph */
+.flame { padding: 11px 14px 14px; border-top: 1px solid var(--border); }
+.frow { display: grid; grid-template-columns: 160px 1fr 50px; gap: 10px; align-items: center;
+  margin-bottom: 5px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); }
+.frow .ln { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.frow .tk { height: 11px; position: relative; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.frow .br { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--leaf);
+  transform-origin: left; animation: bargrow .6s var(--expo) both; }
+@keyframes bargrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.frow .br.er { background: var(--fail); } .frow .br.wr { background: var(--daisy); }
+.frow .ms { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* summary pill */
+.pill {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 999px; padding: 9px 9px 9px 16px; font-size: 13px; box-shadow: var(--shadow-1);
+}
+.pill b { font-weight: 600; white-space: nowrap; }
+.pill .mu { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; }
+.pill .tm { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--ink-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* provenance (replaces the old topbar sponsor tags) */
+.prov { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.prov .p {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-3);
+  border: 1px solid var(--border); border-radius: 999px; padding: 3px 9px; background: var(--bg);
+}
+.prov .p i { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+.prov .p.port i { background: var(--info); }
+.prov .p.sig i { background: var(--violet); }
+.prov .p.bd  i { background: var(--daisy); }
+
+/* ---------- composer ---------- */
+.dock { padding: 4px 22px 18px; }
+.composer {
+  max-width: 720px; margin: 0 auto;
+  background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: var(--r-composer); padding: 11px 12px 9px;
+  box-shadow: var(--shadow-2);
+  transition: border-color var(--d-menu) var(--out), box-shadow var(--d-sheet) var(--out);
+}
+.composer:focus-within { border-color: var(--ink-4); box-shadow: var(--shadow-2), 0 0 0 3.5px var(--daisy-wash); }
+.composer input[type=text] {
+  width: 100%; background: none; border: none; outline: none; color: var(--ink);
+  font-family: var(--sans); font-size: 14.5px; padding: 3px 4px 11px; letter-spacing: -.008em;
+}
+.composer input::placeholder { color: var(--ink-3); }
+.crow { display: flex; align-items: center; gap: 8px; }
+.rbtn { width: 28px; height: 28px; border-radius: 50%; padding: 0; display: inline-flex;
+  align-items: center; justify-content: center; color: var(--ink-2); box-shadow: none;
+  background: none; border-color: transparent; }
+.rbtn:hover { background: var(--surface-2); }
+.rbtn svg { width: 15px; height: 15px; }
+.access { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--warn); font-weight: 500; }
+.access svg { width: 13px; height: 13px; }
+.picks { margin-left: auto; display: flex; align-items: center; gap: 5px; }
+select {
+  background: none; border: 1px solid transparent; color: var(--ink-2);
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500;
+  padding: 4px 6px; border-radius: 8px; cursor: pointer; letter-spacing: -.005em;
+  transition: background .14s var(--soft), border-color .14s;
+}
+select:hover { background: var(--surface-2); border-color: var(--border); }
+select:focus-visible { outline: 2px solid var(--leaf); }
+.send {
+  width: 30px; height: 30px; border-radius: 50%; padding: 0;
+  background: var(--ink); color: var(--bg); border-color: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.send:hover { background: var(--ink); filter: brightness(1.25); }
+.send svg { width: 15px; height: 15px; }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 100px; left: 50%; z-index: 80;
+  width: min(560px, 88vw); padding: 10px 15px;
+  background: var(--bg); border: 1px solid var(--border-strong);
+  border-radius: var(--r-card); font-size: 12.5px; color: var(--ink-2);
+  box-shadow: var(--shadow-3);
+  opacity: 0; transform: translate(-50%, 14px) scale(.97); pointer-events: none;
+  transition: opacity .22s var(--soft), transform .46s var(--spring);
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.toast b { color: var(--ink); font-weight: 600; }
+
+/* ---------- pages ---------- */
+.page { flex: 1; overflow-y: auto; padding: 30px 30px 60px; }
+.pcol { max-width: 840px; margin: 0 auto; }
+.page h2 { font-size: 21px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 3px; }
+.page .lede { color: var(--ink-3); font-size: 13.5px; margin-bottom: 22px; }
+.page h3 { font-size: 14px; font-weight: 600; letter-spacing: -.01em; margin: 26px 0 9px; }
+
+.tbl { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--surface); box-shadow: var(--shadow-1); }
+table.l { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.l th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-3); text-align: left; font-weight: 500; padding: 9px 14px; border-bottom: 1px solid var(--border);
+}
+table.l td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--ink-2); vertical-align: middle; }
+table.l tr:last-child td { border-bottom: none; }
+table.l td.s { color: var(--ink); font-weight: 550; }
+table.l .mo { font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+table.l tr.click { cursor: pointer; transition: background .13s var(--soft); }
+table.l tr.click:hover td { background: var(--wash); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(238px, 1fr)); gap: 14px; }
+.acard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
+  overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-1);
+  transition: transform .34s var(--spring), box-shadow .3s var(--soft); }
+.acard:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+.acard .th { height: 146px; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.acard .mt { padding: 11px 13px; }
+.acard .mt b { font-size: 13px; display: block; margin-bottom: 2px; font-weight: 600; }
+.acard .mt span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.mini { width: 80%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+.mini .r { height: 7px; border-radius: 3px; background: var(--surface-3); margin-bottom: 6px; }
+.mini .r.h { width: 46%; background: var(--border-strong); }
+.mini .r.g { box-shadow: inset 3px 0 0 var(--leaf); }
+.doc { font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); line-height: 1.75; padding: 12px; width: 100%; }
+.doc b { color: var(--ink-2); }
+
+.skill { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
+  padding: 15px 17px; margin-bottom: 11px; box-shadow: var(--shadow-1); }
+.skill b { font-size: 13.5px; font-weight: 600; }
+.skill p { color: var(--ink-2); font-size: 13px; margin: 6px 0 10px; max-width: 68ch; }
+
+.setrow { display: flex; align-items: center; gap: 16px; padding: 13px 0; border-bottom: 1px solid var(--border); max-width: 560px; }
+.setrow .lb { flex: 1; }
+.setrow .lb b { font-size: 13.5px; display: block; font-weight: 600; }
+.setrow .lb span { font-size: 12.5px; color: var(--ink-3); }
+.sws { display: flex; gap: 8px; }
+.sw { width: 25px; height: 25px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0;
+  box-shadow: 0 0 0 1px var(--border); transition: transform .26s var(--spring), box-shadow .2s; }
+.sw:hover { transform: scale(1.12); }
+.sw.on { box-shadow: 0 0 0 2px var(--ink); }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+.seg button { border: none; background: none; box-shadow: none; border-radius: 7px; padding: 4px 11px; font-size: 12.5px; color: var(--ink-2); }
+.seg button.on { background: var(--bg); color: var(--ink); box-shadow: var(--shadow-1); }
+.jsonbox { font-family: var(--mono); font-size: 11px; color: var(--ink-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--r-card); padding: 13px; margin-top: 15px;
+  white-space: pre; overflow-x: auto; max-width: 560px; display: none; }
+
+/* ---------- overlays ---------- */
+.ov { position: fixed; inset: 0; z-index: 90; display: none; align-items: flex-start; justify-content: center;
+  background: color-mix(in srgb, var(--ink) 22%, transparent); backdrop-filter: blur(3px) saturate(1.1); }
+.ov.on { display: flex; }
+.ov.anim { animation: fade .18s var(--out) both; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.pal { margin-top: 13vh; width: min(560px, 92vw);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  border: .5px solid var(--border-strong);
+  border-radius: var(--r-panel); overflow: hidden; box-shadow: var(--shadow-3); }
+/* keyboard-initiated surfaces do NOT animate — Raycast ships this deliberately */
+@keyframes popin { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+.pal input { width: 100%; background: none; border: none; outline: none; color: var(--ink);
+  font-size: 15px; padding: 14px 17px; border-bottom: 1px solid var(--border); font-family: var(--sans); }
+.pal input::placeholder { color: var(--ink-3); }
+.plist { max-height: 340px; overflow-y: auto; padding: 5px; }
+.pit { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13.2px;
+  cursor: pointer; border-radius: 9px; color: var(--ink); }
+.pit:hover, .pit.hot { background: var(--wash-2); }
+.pit .h { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--ink-3); }
+.pit .ic { color: var(--ink-3); display: inline-flex; } .pit .ic svg { width: 14px; height: 14px; }
+
+.modal { margin-top: 8vh; width: min(760px, 94vw); max-height: 78vh; overflow-y: auto;
+  background: var(--bg); border: .5px solid var(--border-strong); border-radius: var(--r-panel);
+  box-shadow: var(--shadow-3); animation: popin .28s var(--out) both; }
+.modal .mh { display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+  border-bottom: 1px solid var(--border); font-weight: 600; font-size: 13.5px;
+  position: sticky; top: 0; background: var(--bg); z-index: 2; }
+.modal .mh button { margin-left: auto; }
+.diff { font-family: var(--mono); font-size: 11.5px; line-height: 1.65; padding: 12px 0; overflow-x: auto; }
+.diff div { padding: 1px 16px; white-space: pre; }
+.diff .a { background: var(--add-bg); color: var(--add-ink); }
+.diff .d { background: var(--del-bg); color: var(--del-ink); }
+.diff .c { color: var(--ink-3); }
+.diff .hk { color: var(--info); padding-top: 8px; font-weight: 600; }
+
+@media (max-width: 820px) { aside { display: none; } .minimap { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 </style>
 
 <aside>
   <div class="lights"><span class="r"></span><span class="y"></span><span class="g"></span></div>
-  <div class="brand"><span class="flask"><svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"> <rect x="60" y="60" width="904" height="904" rx="202" fill="#17171A" stroke="#2A2A30" stroke-width="6"/> <path d="M 622.2 493.0 Q 730.0 436.4 818.0 516.0 Q 731.9 590.8 628.5 560.6" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 628.2 569.7 Q 749.1 607.2 779.3 716.6 Q 663.4 721.5 588.5 624.4" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 606.0 602.6 Q 708.8 665.1 704.9 783.3 Q 578.1 758.7 554.4 646.6" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 552.4 642.3 Q 604.9 754.6 536.7 857.5 Q 451.7 769.8 490.7 649.4" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 480.5 645.8 Q 459.7 772.9 349.5 825.7 Q 330.8 702.6 427.5 613.5" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 430.0 622.1 Q 366.4 730.9 243.2 699.2 Q 274.3 586.7 400.3 570.2" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 395.9 564.4 Q 284.2 618.6 191.2 552.0 Q 275.9 471.4 395.9 501.3" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 395.1 491.2 Q 274.6 453.6 237.1 352.6 Q 355.3 333.5 429.5 435.9" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 429.8 440.4 Q 338.9 371.7 373.7 250.0 Q 459.7 294.1 480.8 411.8" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 497.2 406.9 Q 471.6 298.7 559.2 201.3 Q 602.0 300.4 555.4 418.1" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 552.4 418.2 Q 586.8 278.2 707.8 236.2 Q 709.3 370.5 603.2 455.4" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 604.1 454.1 Q 703.0 363.9 837.9 399.9 Q 763.7 502.2 633.4 507.7" fill="#F4F0E4" stroke="#D6CFB8" stroke-width="11" stroke-linejoin="round" stroke-linecap="round"/> <path d="M 641.7 519.9 Q 725.5 515.3 777.6 520.6" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 617.7 605.7 Q 691.6 663.0 745.9 692.9" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 586.5 636.6 Q 642.4 701.2 664.1 751.1" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 524.6 659.4 Q 525.7 749.6 530.8 807.3" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 452.3 645.6 Q 395.9 723.3 374.3 784.0" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 406.0 605.3 Q 332.8 656.5 283.8 686.4" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 382.0 533.7 Q 290.7 538.8 231.4 542.3" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 403.5 458.3 Q 325.2 414.7 286.5 369.7" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 453.6 413.8 Q 404.3 345.1 378.9 299.9" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 529.6 401.2 Q 533.1 308.6 538.7 248.5" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 589.9 425.8 Q 642.4 337.3 689.0 283.6" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 632.3 480.6 Q 728.5 446.3 791.4 415.3" fill="none" stroke="#E2DCC6" stroke-width="6" stroke-linecap="round"/> <path d="M 644.5 530.0 Q 628.6 560.8 619.3 599.0 Q 587.6 624.1 562.8 641.2 Q 531.0 648.0 493.0 661.8 Q 464.9 648.0 430.2 624.5 Q 408.6 594.5 384.0 567.6 Q 383.0 525.9 381.0 491.5 Q 400.4 467.8 429.4 434.7 Q 463.2 420.1 494.0 405.1 Q 535.6 405.0 568.5 406.3 Q 599.5 435.7 623.1 458.6 Q 630.9 491.8 644.5 530.0 Z" fill="#E9C64A" stroke="#C7A339" stroke-width="11" stroke-linejoin="round"/> <path d="M 422.3 567.9 q 26.7 -35.9 53.2 -63.7" fill="none" stroke="#C7A339" stroke-width="8" stroke-linecap="round"/> <path d="M 453.3 578.8 q 25.7 -33.3 58.0 -60.8" fill="none" stroke="#C7A339" stroke-width="8" stroke-linecap="round"/> <path d="M 479.3 590.0 q 26.3 -33.8 49.2 -60.6" fill="none" stroke="#C7A339" stroke-width="8" stroke-linecap="round"/> <path d="M 499.5 596.0 q 28.4 -36.6 53.7 -57.7" fill="none" stroke="#C7A339" stroke-width="8" stroke-linecap="round"/> </svg></span> Daisy <span class="chev">▾</span></div>
-  <nav id="mainnav">
-    <a data-view="run" class="on"><span class="ic">✎</span> New run</a>
-    <a data-view="runs"><span class="ic">≣</span> Runs</a>
-    <a data-view="review"><span class="ic">⇄</span> Review queue</a>
-    <a data-view="artifacts"><span class="ic">▣</span> Artifacts</a>
-    <a data-view="autos"><span class="ic">◷</span> Automations</a>
-    <a data-view="skills"><span class="ic">⌘</span> Skills</a>
-    <a data-view="settings"><span class="ic">✦</span> Appearance</a>
+  <div class="brand">
+    <span class="mark" id="brandmark"></span>
+    <span class="name">Daisy</span><span class="chev">▾</span>
+    <span class="tools">
+      <button class="iconbtn" id="btn-search" title="Search (⌘K)" aria-label="Search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg></button>
+      <button class="iconbtn" id="btn-bell" title="Alerts" aria-label="Alerts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.5a4 4 0 1 1 8 0c0 3 1 4 1 4H3s1-1 1-4Z" stroke-linejoin="round"/><path d="M6.5 13a1.6 1.6 0 0 0 3 0" stroke-linecap="round"/></svg></button>
+    </span>
+  </div>
+
+  <nav id="nav">
+    <div class="navitem on" data-view="run"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.2 2.8a1.7 1.7 0 0 1 2.4 2.4L6 12.8l-3.2.8.8-3.2 7.6-7.6Z" stroke-linejoin="round"/></svg> New run <span class="tail">⌘N</span></div>
+    <div class="navitem" data-view="runs"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg> Runs</div>
+    <div class="navitem" data-view="review"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.5h9l-2-2M13.5 10.5h-9l2 2"/></svg> Review queue <span class="dot"></span></div>
+    <div class="navitem" data-view="precedent"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5l6-3.2Z" stroke-linejoin="round"/><path d="M8 6.4 11 8v2.6L8 12.2 5 10.6V8l3-1.6Z"/></svg> Precedent</div>
+    <div class="navitem" data-view="artifacts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5"/><path d="M2.5 9.5 6 6.5l3 2.5 2-1.5 2.5 2"/></svg> Artifacts</div>
+    <div class="navitem" data-view="autos"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.8"/><path d="M8 4.8V8l2.2 1.4" stroke-linecap="round"/></svg> Automations</div>
+    <div class="navitem" data-view="skills"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2.5a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H6a2 2 0 1 1 0-4h4a2 2 0 1 0 0-4H6Z"/></svg> Skills</div>
+    <div class="navitem" data-view="settings"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.2 9.3 5l3 .3-2.2 2 .6 3-2.7-1.5L5.3 10.3l.6-3-2.2-2 3-.3L8 2.2Z" stroke-linejoin="round"/></svg> Appearance</div>
   </nav>
-  <div class="sect">Pinned</div>
-  <div class="runlink active" data-run="1042">Sensor fleet dashboard + SR-11 bracket</div>
-  <div class="sect">Threads · the-lab</div>
-  <div class="runlink" data-run="1041">Taste gate rehearsal — tier 1 findings</div>
-  <div class="runlink" data-run="1039">Bracket margin sweep — escalated</div>
-  <div class="side-bottom"><span class="avatar">rc</span> rishith <span class="kbd-hint">⌘K</span> <span class="live-dot" title="factory live"></span></div>
+
+  <div class="scroller">
+    <div class="sect">Pinned</div>
+    <div class="thread active" data-run="1042" data-peek="Two lanes detected in this brief. The dashboard routes to the web lane and the bracket to the hardware lane; a mobile companion is noted and routed as a plan.md entry only." data-foot="2 lanes · 2 repairs · 6m 42s">
+      <span class="pip"></span><span class="txt">Sensor fleet dashboard + SR-11 bracket</span></div>
+    <div class="sect">Threads · the-lab</div>
+    <div class="thread" data-run="1041" data-peek="One variant was generated with the design skills deliberately withheld. Tier-1 lint caught it in 41 ms with three named findings; the retry injected them verbatim and the redo passed clean." data-foot="1 lane · 1 repair · 4m 08s">
+      <span class="pip"></span><span class="txt">Taste gate rehearsal — tier 1 findings</span></div>
+    <div class="thread" data-run="1039" data-peek="Retries exhausted on the bending margin. The load case in the brief cannot be met at this wall thickness within budget; parked for a human with the full derivation attached." data-foot="escalated · 3 fails · 9m 51s">
+      <span class="pip fail"></span><span class="txt">Bracket margin sweep, FoS 1.5</span></div>
+    <div class="sect">Recents</div>
+    <div class="thread" data-run="1042" data-peek="Replay of the merged run from the flight recorder — same events, same timing, no agents re-invoked." data-foot="replay · read-only">
+      <span class="pip"></span><span class="txt">Replay — run 1042</span></div>
+  </div>
+
+  <div class="acct">
+    <span class="avatar">rc</span><span class="who">rishith</span>
+    <span class="kbd"><kbd>⌘K</kbd></span>
+  </div>
 </aside>
 
 <main>
   <div class="topbar">
-    <span class="fold" id="tb-fold">run/1042</span>
+    <span class="folder"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.8 4.2c0-.8.6-1.4 1.4-1.4h2.4l1.3 1.6h5.9c.8 0 1.4.6 1.4 1.4v5.6c0 .8-.6 1.4-1.4 1.4H3.2c-.8 0-1.4-.6-1.4-1.4V4.2Z" stroke-linejoin="round"/></svg></span>
     <span class="title" id="tb-title">Sensor fleet dashboard + SR-11 mounting bracket</span>
-    <div class="sponsors">
-      <span class="cost" id="cost">≈ $0.00</span>
-      <span class="sp port"><i></i>PORT · RUN 1042</span>
-      <span class="sp signoz"><i></i>SIGNOZ · TRACE A41F</span>
-      <span class="sp bd"><i></i>SCRAPED 11:07:32</span>
-      <button class="bell" id="bell" title="Alerts"><span aria-hidden="true">◔</span><span class="badge"></span></button>
+    <span class="ell">···</span>
+    <div class="right">
+      <button class="iconbtn" id="btn-theme" title="Toggle appearance" aria-label="Toggle appearance"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke-linecap="round"/></svg></button>
+      <button class="iconbtn" id="btn-rail" title="Toggle sidebar" aria-label="Toggle sidebar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M6.2 3v10"/></svg></button>
     </div>
   </div>
 
-  <!-- RUN VIEW -->
+  <!-- ============ RUN ============ -->
   <div class="view on" id="view-run">
-    <div id="feed" class="live"><div class="col" id="col"></div></div>
-    <div class="composer-wrap">
+    <div class="stage">
+      <div class="minimap" id="minimap"></div>
+      <div id="feed" class="live"><div class="col" id="col"></div></div>
+    </div>
+    <div class="dock">
       <div class="composer">
-        <input type="text" id="amend" placeholder="Brief anything — new run, or amend the current one" aria-label="Brief or amendment">
-        <div class="row">
-          <button class="roundbtn" title="Attach">+</button>
-          <span class="armchip">⚠ Gates armed</span>
-          <div class="pickers">
+        <input type="text" id="amend" placeholder="Brief anything — a new run, or an amendment to this one" aria-label="Brief or amendment">
+        <div class="crow">
+          <button class="rbtn" title="Attach" aria-label="Attach"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
+          <span class="access"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.6 14 13H2L8 2.6Z" stroke-linejoin="round"/><path d="M8 6.6v3M8 11.3v.1" stroke-linecap="round"/></svg> Gates armed</span>
+          <div class="picks">
             <select aria-label="Frontend agent"><option>Frontend · Fable 5 High</option><option>Frontend · GPT-5.3 Codex</option></select>
             <select aria-label="API agent"><option>API · GPT-5.3 Codex</option><option>API · Fable 5 High</option></select>
-            <button class="send" id="sendbtn" title="Send" aria-label="Send">↑</button>
+            <button class="rbtn" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="4" height="7" rx="2"/><path d="M3.6 7.4a4.4 4.4 0 0 0 8.8 0M8 11.8V14" stroke-linecap="round"/></svg></button>
+            <button class="send" id="send" title="Send" aria-label="Send"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5v-9M4.2 7.2 8 3.4l3.8 3.8"/></svg></button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- RUNS VIEW -->
-  <div class="view" id="view-runs"><div class="page"><div class="col2">
-    <h2>Runs</h2><div class="sub2">Every factory run, replayable from its flight recorder.</div>
-    <div class="ltable-wrap"><table class="ltable">
-      <tr><th>Run</th><th>Brief</th><th>Lanes</th><th>Gates</th><th>Status</th><th>Duration</th></tr>
-      <tr class="rowlink" data-run="1042"><td class="mono">1042</td><td class="strong">Sensor fleet dashboard + SR-11 bracket</td><td>web · hardware</td><td class="mono">2 planted fails · 2 repairs</td><td><span class="verdict pass">PASSED</span></td><td class="mono">6m 42s</td></tr>
-      <tr class="rowlink" data-run="1041"><td class="mono">1041</td><td class="strong">Taste gate rehearsal — tier 1 findings</td><td>web</td><td class="mono">1 fail · 1 repair</td><td><span class="verdict pass">PASSED</span></td><td class="mono">4m 08s</td></tr>
-      <tr class="rowlink" data-run="1039"><td class="mono">1039</td><td class="strong">Bracket margin sweep, FoS 1.5</td><td>hardware</td><td class="mono">3 fails · retries exhausted</td><td><span class="verdict fail">ESCALATED</span></td><td class="mono">9m 51s</td></tr>
+  <!-- ============ RUNS ============ -->
+  <div class="view" id="view-runs"><div class="page"><div class="pcol">
+    <h2>Runs</h2><div class="lede">Every factory run, replayable from its flight recorder.</div>
+    <div class="tbl"><table class="l">
+      <tr><th>Run</th><th>Brief</th><th>Lanes</th><th>Gates</th><th>Status</th><th>Wall</th></tr>
+      <tr class="click" data-run="1042"><td class="mo">1042</td><td class="s">Sensor fleet dashboard + SR-11 bracket</td><td>web · hardware</td><td class="mo">2 fails · 2 repairs</td><td><span class="tag pass">PASSED</span></td><td class="mo">6m 42s</td></tr>
+      <tr class="click" data-run="1041"><td class="mo">1041</td><td class="s">Taste gate rehearsal — tier 1 findings</td><td>web</td><td class="mo">1 fail · 1 repair</td><td><span class="tag pass">PASSED</span></td><td class="mo">4m 08s</td></tr>
+      <tr class="click" data-run="1039"><td class="mo">1039</td><td class="s">Bracket margin sweep, FoS 1.5</td><td>hardware</td><td class="mo">3 fails · exhausted</td><td><span class="tag fail">ESCALATED</span></td><td class="mo">9m 51s</td></tr>
     </table></div>
   </div></div></div>
 
-  <!-- REVIEW QUEUE -->
-  <div class="view" id="view-review"><div class="page"><div class="col2">
-    <h2>Review queue</h2><div class="sub2">Nothing merges itself. Diffs land here; humans and scorecards decide.</div>
-    <div class="ltable-wrap"><table class="ltable">
-      <tr><th>Item</th><th>Source</th><th>Scorecard</th><th>Smoke boot</th><th></th></tr>
-      <tr><td class="strong">Merge run/1042 → main</td><td class="mono">CREW · 21 files</td><td><span class="verdict pass">GREEN</span></td><td><span class="verdict pass">200 /</span></td><td><button data-diff="0">View diff</button> <button class="ghost" disabled>Merged</button></td></tr>
-      <tr><td class="strong">Automation #443 — nightly scrape refresh</td><td class="mono">bolt-table · schema drift +1 col</td><td><span class="verdict warn">PENDING</span></td><td class="mono">n/a</td><td><button data-diff="1">View diff</button> <button class="primary" id="approve-auto">Approve</button></td></tr>
-      <tr><td class="strong">Scraper heal — design-DNA selector</td><td class="mono">brightdata · awaiting_approval</td><td><span class="verdict warn">PREVIEW VERIFIED</span></td><td class="mono">n/a</td><td><button data-diff="1">View diff</button> <button class="primary" id="approve-heal">Approve heal</button></td></tr>
+  <!-- ============ REVIEW ============ -->
+  <div class="view" id="view-review"><div class="page"><div class="pcol">
+    <h2>Review queue</h2><div class="lede">Nothing merges itself. Diffs land here; humans and scorecards decide.</div>
+    <div class="tbl"><table class="l">
+      <tr><th>Item</th><th>Source</th><th>Scorecard</th><th>Smoke</th><th></th></tr>
+      <tr><td class="s">Merge run/1042 → main</td><td class="mo">CREW · 21 files</td><td><span class="tag pass">GREEN</span></td><td><span class="tag pass">200 /</span></td><td><button data-diff="0">View diff</button> <button class="ghost" disabled>Merged</button></td></tr>
+      <tr><td class="s">Automation #443 — nightly scrape refresh</td><td class="mo">bolt-table · drift +1 col</td><td><span class="tag warn">PENDING</span></td><td class="mo">—</td><td><button data-diff="1">View diff</button> <button class="primary" data-approve="Automation result merged — next run uses the new schema.">Approve</button></td></tr>
+      <tr><td class="s">Scraper heal — design-DNA selector</td><td class="mo">brightdata · awaiting_approval</td><td><span class="tag warn">PREVIEW OK</span></td><td class="mo">—</td><td><button data-diff="1">View diff</button> <button class="primary" data-approve="scraper approve sent — healed extractor committed to CLAUDE.md.">Approve heal</button></td></tr>
     </table></div>
   </div></div></div>
 
-  <!-- ARTIFACTS -->
-  <div class="view" id="view-artifacts"><div class="page"><div class="col2">
-    <h2>Artifacts</h2><div class="sub2">What run/1042 shipped. Every number traces to a calculation.</div>
+  <!-- ============ PRECEDENT ============ -->
+  <div class="view" id="view-precedent"><div class="page"><div class="pcol" id="precedent-body"></div></div></div>
+
+  <!-- ============ ARTIFACTS ============ -->
+  <div class="view" id="view-artifacts"><div class="page"><div class="pcol">
+    <h2>Artifacts</h2><div class="lede">What run 1042 shipped. Every number traces to a calculation.</div>
     <div class="grid">
-      <div class="acard"><div class="thumb"><div class="minidash"><div class="mrow hd"></div><div class="mrow ok1"></div><div class="mrow ok1"></div><div class="mrow"></div><div class="mrow ok1"></div></div></div>
-        <div class="meta"><b>Fleet dashboard</b><span>web lane · taste gates green · APCA ≥ Lc 75</span></div></div>
-      <div class="acard"><div class="thumb">
-        <svg viewBox="0 0 200 130" width="170" height="112" role="img" aria-label="Bracket stress heatmap">
+      <div class="acard"><div class="th"><div class="mini"><div class="r h"></div><div class="r g"></div><div class="r g"></div><div class="r"></div><div class="r g"></div></div></div>
+        <div class="mt"><b>Fleet dashboard</b><span>web lane · taste green · APCA ≥ Lc 75</span></div></div>
+      <div class="acard"><div class="th">
+        <svg viewBox="0 0 200 130" width="168" height="110" role="img" aria-label="Bracket stress heatmap">
           <defs>
-            <linearGradient id="stress" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0" stop-color="#F0655A"/><stop offset="0.45" stop-color="#E9C64A"/><stop offset="1" stop-color="#4CC38A"/>
-            </linearGradient>
-            <linearGradient id="leg" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0" stop-color="#4CC38A"/><stop offset="0.55" stop-color="#E9C64A"/><stop offset="1" stop-color="#F0655A"/>
-            </linearGradient>
+            <linearGradient id="sg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#C0392B"/><stop offset=".45" stop-color="#E9C64A"/><stop offset="1" stop-color="#6B8F2E"/></linearGradient>
+            <linearGradient id="lg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6B8F2E"/><stop offset=".55" stop-color="#E9C64A"/><stop offset="1" stop-color="#C0392B"/></linearGradient>
           </defs>
-          <polygon points="30,100 110,100 140,82 60,82" fill="#2E2E34" stroke="#3A3A40"/>
-          <polygon points="60,82 140,82 140,30 60,30" fill="url(#stress)" stroke="#3A3A40"/>
-          <polygon points="30,100 60,82 60,30 30,48" fill="#26262B" stroke="#3A3A40"/>
-          <circle cx="45" cy="94" r="4" fill="#141416" stroke="#55555C"/>
-          <circle cx="95" cy="94" r="4" fill="#141416" stroke="#55555C"/>
-          <rect x="168" y="30" width="8" height="70" fill="url(#leg)" rx="2"/>
-          <text x="180" y="36" fill="#9C9CA3" font-size="8" font-family="monospace">172</text>
-          <text x="180" y="102" fill="#9C9CA3" font-size="8" font-family="monospace">0</text>
-          <text x="163" y="118" fill="#6B6B72" font-size="7" font-family="monospace">MPa</text>
+          <polygon points="30,100 110,100 140,82 60,82" fill="#E7E6E1" stroke="#D8D7CF"/>
+          <polygon points="60,82 140,82 140,30 60,30" fill="url(#sg)" stroke="#D8D7CF"/>
+          <polygon points="30,100 60,82 60,30 30,48" fill="#EDEDE8" stroke="#D8D7CF"/>
+          <circle cx="45" cy="94" r="4" fill="#FFF" stroke="#94928A"/><circle cx="95" cy="94" r="4" fill="#FFF" stroke="#94928A"/>
+          <rect x="168" y="30" width="8" height="70" fill="url(#lg)" rx="2"/>
+          <text x="180" y="36" fill="#94928A" font-size="8" font-family="monospace">172</text>
+          <text x="180" y="102" fill="#94928A" font-size="8" font-family="monospace">0</text>
+          <text x="163" y="118" fill="#B5B3AA" font-size="7" font-family="monospace">MPa</text>
         </svg></div>
-        <div class="meta"><b>bracket_v2.glb</b><span>closed-form σ field — not FEA · FoS 1.62</span></div></div>
-      <div class="acard"><div class="thumb"><div class="mono-doc"><b># margin-report · run 1042</b><br>trace_id  a41f09c2<br>approver  rishith<br>web bending   106/172 MPa  <b>FoS 1.62</b><br>bolt shear     96/380 MPa  <b>FoS 3.94</b><br>bolt  M4 8.8 $0.14 · vendor.com 11:07<br>mass  46.8 g ≤ 60 g</div></div>
-        <div class="meta"><b>margin-report.md</b><span>committed · cites trace + run ids + approver</span></div></div>
-      <div class="acard"><div class="thumb"><div class="mono-doc"><b>flight-recorder.jsonl</b><br>{"kind":"gate","name":"taste.t1","v":"fail"}<br>{"kind":"repair","by":"resume"}<br>{"kind":"gate","name":"physics","v":"fail"}<br>{"kind":"repair","by":"algebra"}<br>{"kind":"merge","scorecard":"green"}</div></div>
-        <div class="meta"><b>Flight recorder</b><span>append-only · replay any run at 1×</span></div></div>
+        <div class="mt"><b>bracket_v2.glb</b><span>closed-form σ field — not FEA · FoS 1.62</span></div></div>
+      <div class="acard"><div class="th"><div class="doc"><b># margin-report · run 1042</b><br>trace_id  a41f09c2<br>approver  rishith<br>web bending   106/172 MPa  <b>FoS 1.62</b><br>bolt shear     96/380 MPa  <b>FoS 3.94</b><br>bolt  M4 8.8 $0.14 · vendor 11:07<br>mass  46.8 g ≤ 60 g</div></div>
+        <div class="mt"><b>margin-report.md</b><span>cites trace + run ids + approver</span></div></div>
+      <div class="acard"><div class="th"><div class="doc"><b>flight-recorder.jsonl</b><br>{"kind":"gate","name":"taste.t1","v":"fail"}<br>{"kind":"repair","by":"resume"}<br>{"kind":"gate","name":"physics","v":"fail"}<br>{"kind":"repair","by":"algebra"}<br>{"kind":"merge","scorecard":"green"}</div></div>
+        <div class="mt"><b>Flight recorder</b><span>append-only · replay any run at 1×</span></div></div>
     </div>
   </div></div></div>
 
-  <!-- AUTOMATIONS -->
-  <div class="view" id="view-autos"><div class="page"><div class="col2">
-    <h2>Automations</h2><div class="sub2">Scheduled background runs. Results never ship — they land in the review queue.</div>
-    <div class="ltable-wrap"><table class="ltable">
+  <!-- ============ AUTOMATIONS ============ -->
+  <div class="view" id="view-autos"><div class="page"><div class="pcol">
+    <h2>Automations</h2><div class="lede">Scheduled background runs. Results never ship — they land in the review queue.</div>
+    <div class="tbl"><table class="l">
       <tr><th>Automation</th><th>Schedule</th><th>Last result</th><th>Lands in</th></tr>
-      <tr><td class="strong">Nightly scrape refresh</td><td class="mono">02:00 daily</td><td><span class="verdict warn">SCHEMA DRIFT</span></td><td>Review queue</td></tr>
-      <tr><td class="strong">Taste rubric re-distill</td><td class="mono">Sun 03:00</td><td><span class="verdict pass">NO CHANGE</span></td><td>Review queue</td></tr>
-      <tr><td class="strong">Margin re-sweep on catalog change</td><td class="mono">on scrape diff</td><td><span class="verdict pass">FoS 1.62 HELD</span></td><td>Review queue</td></tr>
-      <tr><td class="strong">Dead-scraper watchdog</td><td class="mono">every 15 min</td><td><span class="verdict pass">2 HEALTHY</span></td><td>SigNoz alert → escalation</td></tr>
+      <tr><td class="s">Nightly scrape refresh</td><td class="mo">02:00 daily</td><td><span class="tag warn">SCHEMA DRIFT</span></td><td>Review queue</td></tr>
+      <tr><td class="s">Taste rubric re-distill</td><td class="mo">Sun 03:00</td><td><span class="tag pass">NO CHANGE</span></td><td>Review queue</td></tr>
+      <tr><td class="s">Margin re-sweep on catalog change</td><td class="mo">on scrape diff</td><td><span class="tag pass">FoS 1.62 HELD</span></td><td>Review queue</td></tr>
+      <tr><td class="s">Dead-scraper watchdog</td><td class="mo">every 15 min</td><td><span class="tag pass">2 HEALTHY</span></td><td>SigNoz → escalation</td></tr>
     </table></div>
   </div></div></div>
 
-  <!-- SKILLS -->
-  <div class="view" id="view-skills"><div class="page"><div class="col2">
-    <h2>Skills</h2><div class="sub2">Bundled instructions + scripts, mounted into every agent worktree.</div>
-    <div class="skillcard"><b>hallmark</b><span class="verdict pass" style="margin-left:10px">MOUNTED</span>
+  <!-- ============ SKILLS ============ -->
+  <div class="view" id="view-skills"><div class="page"><div class="pcol">
+    <h2>Skills</h2><div class="lede">Bundled instructions and scripts, mounted into every agent worktree.</div>
+    <div class="skill"><b>hallmark</b> <span class="tag pass">MOUNTED</span>
       <p>Generation-time anti-slop discipline: theme and macrostructure rotation, banned defaults, design-DNA consumption from the scraped reference.</p>
       <span class="chip"><i>▸</i> .claude/skills/hallmark</span></div>
-    <div class="skillcard"><b>frontend-design-standards</b><span class="verdict pass" style="margin-left:10px">MOUNTED</span>
+    <div class="skill"><b>frontend-design-standards</b> <span class="tag pass">MOUNTED</span>
       <p>Grep-verifiable design rules — token-only color, type pairing, spacing scale, minimum text sizes. Tier-1 lint enforces these mechanically.</p>
       <span class="chip"><i>▸</i> .claude/skills/frontend-design-standards</span></div>
-    <div class="skillcard"><b>taste-rubric</b><span class="verdict pass" style="margin-left:10px">JUDGE</span>
+    <div class="skill"><b>taste-rubric</b> <span class="tag info">JUDGE</span>
       <p>~40 binary gates distilled from the slop test. The tier-3 vision judge scores screenshots against these by name — never a scalar.</p>
       <span class="chip"><i>▸</i> skills/taste-rubric.md</span></div>
   </div></div></div>
 
-  <!-- SETTINGS -->
-  <div class="view" id="view-settings"><div class="page"><div class="col2">
-    <h2>Appearance</h2><div class="sub2">daisy-theme-v1 — portable, like the Codex app's theme format.</div>
-    <div class="setrow"><div class="lab"><b>Chat font</b><span>agent narration</span></div>
-      <select id="set-serif"><option value='"Source Serif 4", Charter, Georgia, serif'>Source Serif</option><option value='Georgia, "Times New Roman", serif'>Georgia</option><option value='-apple-system, system-ui, sans-serif'>System Sans</option></select></div>
-    <div class="setrow"><div class="lab"><b>Code font</b><span>paths, diffs, margins</span></div>
-      <select id="set-mono"><option value='"IBM Plex Mono", ui-monospace, monospace'>IBM Plex Mono</option><option value='ui-monospace, Menlo, monospace'>System Mono</option></select></div>
-    <div class="setrow"><div class="lab"><b>Accent</b><span>brand + primary actions</span></div>
-      <div class="swatches">
-        <button class="sw on" data-accent="daisy" style="background:#E9C64A" title="Daisy" aria-label="Daisy accent"></button>
-        <button class="sw" data-accent="moss" style="background:#A8C25A" title="Moss" aria-label="Moss accent"></button>
-        <button class="sw" data-accent="porcelain" style="background:#ECECF0" title="Porcelain" aria-label="Porcelain accent"></button>
+  <!-- ============ APPEARANCE ============ -->
+  <div class="view" id="view-settings"><div class="page"><div class="pcol">
+    <h2>Appearance</h2><div class="lede">daisy-theme-v1 — portable, shareable, versioned with the repo.</div>
+    <div class="setrow"><div class="lb"><b>Theme</b><span>light is the default; dark follows your Mac</span></div>
+      <div class="seg" id="segtheme"><button data-theme="light" class="on">Light</button><button data-theme="auto">Auto</button><button data-theme="dark">Dark</button></div></div>
+    <div class="setrow"><div class="lb"><b>Chat font</b><span>agent narration</span></div>
+      <select id="set-serif"><option value='"Source Serif 4", Charter, Georgia, serif'>Source Serif</option><option value='Charter, Georgia, serif'>Charter</option><option value='Georgia, serif'>Georgia</option><option value='-apple-system, system-ui, sans-serif'>System Sans</option></select></div>
+    <div class="setrow"><div class="lb"><b>Code font</b><span>paths, diffs, margins</span></div>
+      <select id="set-mono"><option value='"IBM Plex Mono", ui-monospace, monospace'>IBM Plex Mono</option><option value='ui-monospace, Menlo, monospace'>SF Mono</option></select></div>
+    <div class="setrow"><div class="lb"><b>Accent</b><span>brand and primary actions</span></div>
+      <div class="sws">
+        <button class="sw on" data-accent="daisy" style="background:#E9C64A" title="Daisy" aria-label="Daisy"></button>
+        <button class="sw" data-accent="moss" style="background:#8FA84A" title="Moss" aria-label="Moss"></button>
+        <button class="sw" data-accent="ink" style="background:#3A3A36" title="Ink" aria-label="Ink"></button>
       </div></div>
-    <div class="setrow"><div class="lab"><b>Export theme</b><span>daisy-theme-v1 JSON</span></div>
+    <div class="setrow"><div class="lb"><b>Motion</b><span>fluid springs, or reduced</span></div>
+      <div class="seg" id="segmotion"><button data-motion="full" class="on">Fluid</button><button data-motion="calm">Calm</button></div></div>
+    <div class="setrow"><div class="lb"><b>Export theme</b><span>daisy-theme-v1 JSON</span></div>
       <button id="copytheme">Copy JSON</button></div>
-    <div class="themebox" id="themebox"></div>
+    <div class="jsonbox" id="jsonbox"></div>
   </div></div></div>
 </main>
 
 <div class="toast" id="toast"></div>
+<div class="peek" id="peek"></div>
 
-<!-- COMMAND PALETTE -->
-<div class="overlay" id="pal-overlay">
-  <div class="palette">
-    <input type="text" id="pal-input" placeholder="Type a command…" aria-label="Command">
-    <div id="pal-list"></div>
-  </div>
-</div>
+<div class="ov" id="pal-ov"><div class="pal">
+  <input type="text" id="pal-in" placeholder="Search runs, gates, precedent, commands…" aria-label="Command">
+  <div class="plist" id="pal-list"></div>
+</div></div>
 
-<!-- DIFF MODAL -->
-<div class="overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="mhead"><span id="modal-title">Diff</span><button class="ghost" id="modal-close">Close</button></div>
-    <div class="diff" id="modal-body"></div>
-  </div>
-</div>
+<div class="ov" id="mod-ov"><div class="modal">
+  <div class="mh"><span id="mod-title">Diff</span><button class="ghost" id="mod-close">Close</button></div>
+  <div class="diff" id="mod-body"></div>
+</div></div>
 
 <script>
 (function () {
-  if (navigator.userAgent.indexOf('DaisyNative') !== -1) {
-    var lt = document.querySelector('.lights');
-    if (lt) lt.style.visibility = 'hidden';
-  }
-  var col = document.getElementById('col');
-  var feed = document.getElementById('feed');
+  "use strict";
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var cost = 0, costEl = document.getElementById('cost');
+  var native = navigator.userAgent.indexOf('DaisyNative') !== -1;
+  if (native) { var lt = $('.lights'); if (lt) lt.style.visibility = 'hidden'; }
 
-  function fileRows(files, id) {
-    var head = files.slice(0, 3), rest = files.slice(3), h = '';
+  /* ---------------- brand mark (hand-drawn daisy, inline) ---------------- */
+  $('#brandmark').innerHTML = DAISY_MARK();
+
+  /* ---------------- helpers ---------------- */
+  function files(list, id) {
+    var head = list.slice(0, 3), rest = list.slice(3), h = '';
     head.forEach(function (f) { h += row(f); });
     if (rest.length) {
-      h += '<div class="hiddenrows" id="' + id + '">';
+      h += '<div class="hid" id="' + id + '"><div>';
       rest.forEach(function (f) { h += row(f); });
-      h += '</div><button class="showmore" data-toggle="' + id + '">Show ' + rest.length + ' more files ▾</button>';
+      h += '</div></div><button class="more" data-toggle="' + id + '">Show ' + rest.length + ' more files</button>';
     }
     return h;
     function row(f) {
-      return '<div class="filerow"><span class="path">' + f.dir + '<b>' + f.name + '</b></span>' +
-        '<span class="stat">' + (f.add ? '<span class="plus">+' + f.add + '</span> ' : '') +
-        (f.del ? '<span class="minus">−' + f.del + '</span>' : '') + '</span></div>';
+      return '<div class="row"><span class="path">' + f.d + '<b>' + f.n + '</b></span><span class="st">' +
+        (f.a ? '<span class="plus">+' + f.a + '</span> ' : '') + (f.r ? '<span class="minus">−' + f.r + '</span>' : '') + '</span></div>';
     }
   }
-
-  var STEPS = [
-    { d: 300, html: '<div class="brief"><span class="lbl">Brief · via Port action "Build from brief"</span>A parts dashboard for my sensor fleet, styled like the reference site, plus a mounting bracket for the SR-11 sensor. Cantilever mount, 2.4 kg tip load, budget $30 for fasteners.</div>' },
-    { d: 900, html: '<div class="agent-tag system"><i></i>Planner · labctl</div><div class="prose">Two lanes detected in this brief. The dashboard routes to the <em>web</em> lane and the bracket to the <em>hardware</em> lane; a mobile companion is noted and routed as a <code>plan.md</code> entry only. Before committing a plan I need three answers — everything else has a sane default I will state rather than assume.</div>' },
-    { d: 700, wait: 'clarify', html:
-      '<div class="card"><div class="card-head"><span class="cicon">?</span><div><b>Clarifying questions</b><div class="sub" style="color:var(--ink-3)">typed schema · answers become gate thresholds</div></div><div class="card-actions"><button class="primary" id="clarify">Answer &amp; continue</button></div></div>' +
-      '<div class="gaterow"><span class="gname">bracket.load_case</span><span class="gdetail">2.4 kg static tip load — treat as worst-case with FoS ≥ 1.5?</span><span class="gmark">default: yes</span></div>' +
-      '<div class="gaterow"><span class="gname">dashboard.data_source</span><span class="gdetail">live scrape of the fleet vendor page, refreshed per run?</span><span class="gmark">default: yes</span></div>' +
-      '<div class="gaterow"><span class="gname">style.reference</span><span class="gdetail">extract design DNA (type, palette, structure) from reference URL?</span><span class="gmark">default: yes</span></div>' +
-      '<div class="resolved" style="display:none"><b>Answered.</b> Defaults accepted · load case confirmed 2.4 kg · thresholds written into gates.json</div></div>' },
-    { d: 800, html:
-      '<div class="card"><div class="card-head"><span class="cicon">⎇</span><div><b>Plan committed</b><div class="sub"><span class="plus">+312</span> <span class="minus">−0</span> · written before any agent runs</div></div></div>' +
-      fileRows([{ dir: 'runs/1042/plan/', name: 'plan.json', add: 118, del: 0 },{ dir: 'runs/1042/plan/', name: 'gates.json', add: 96, del: 0 },{ dir: 'runs/1042/plan/', name: 'api-contract.json', add: 98, del: 0 }], 'f0') + '</div>' },
-    { d: 600, wait: 'approve', html:
-      '<div class="card"><div class="card-head"><span class="cicon" style="color:var(--blue)">P</span><div><b>Port · Approve plan</b><div class="sub" style="color:var(--ink-3)">labctl is polling action-runs — zero worktrees spawn until this lands</div></div><div class="card-actions"><button class="ghost" disabled>Reject</button><button class="primary" id="approve">Approve plan</button></div></div>' +
-      '<div class="resolved" style="display:none"><b>Approved</b> by rishith · run PATCHed to Port · worktrees spawning</div></div>' },
-    { d: 900, html: '<div class="agent-tag system"><i></i>labctl</div><div class="prose">Worktrees created: <code>runs/1042/web-frontend</code> (Fable 5) and <code>runs/1042/web-api</code> (GPT-5.3 Codex), both pinned to <code>api-contract.json</code>. All git operations stay with the orchestrator; the agents only edit files. Spans streaming to SigNoz.</div>' },
-    { d: 1100, html: '<div class="agent-tag codex"><i></i>Codex · web-api</div><div class="prose">The contract names five endpoints. I generated the route handlers with zod validation mirroring the response shapes, a seeded fixture layer for the fleet data, and one test per endpoint asserting the contract\'s exact field set — no extra keys, since the conformance gate diffs both ways.</div>' },
-    { d: 700, html:
-      '<div class="card"><div class="card-head"><span class="cicon">±</span><div><b>Edited 12 files</b><div class="sub"><span class="plus">+1,204</span> <span class="minus">−86</span></div></div><div class="card-actions"><button class="ghost" data-undo>Undo</button><button data-diff="0">Review</button></div></div>' +
-      fileRows([{ dir: 'runs/1042/web-api/app/api/parts/', name: 'route.ts', add: 214, del: 12 },{ dir: 'runs/1042/web-api/app/api/fleet/', name: 'route.ts', add: 186, del: 0 },{ dir: 'runs/1042/web-api/lib/', name: 'contract-guard.ts', add: 141, del: 8 },{ dir: 'runs/1042/web-api/tests/', name: 'contract.spec.ts', add: 232, del: 30 },{ dir: 'runs/1042/web-api/lib/', name: 'fixtures.ts', add: 178, del: 0 },{ dir: 'runs/1042/web-api/', name: 'vitest.config.ts', add: 24, del: 6 }], 'f1') + '</div>' },
-    { d: 1100, html: '<div class="agent-tag claude"><i></i>Fable 5 · web-frontend</div><div class="prose">Design DNA from the scraped reference is pinned in this worktree\'s <code>CLAUDE.md</code> — type pairing, spacing scale, palette derivation. Built the fleet table, freshness header, and margin panel against the contract\'s shapes. One variant was generated with the design skills deliberately withheld; that one goes to the gate first.</div>' },
-    { d: 700, html:
-      '<div class="card"><div class="card-head"><span class="cicon">±</span><div><b>Edited 9 files</b><div class="sub"><span class="plus">+867</span> <span class="minus">−41</span></div></div><div class="card-actions"><button class="ghost" data-undo>Undo</button><button data-diff="1">Review</button></div></div>' +
-      fileRows([{ dir: 'runs/1042/web-frontend/app/', name: 'page.tsx', add: 248, del: 22 },{ dir: 'runs/1042/web-frontend/components/', name: 'FleetTable.tsx', add: 196, del: 0 },{ dir: 'runs/1042/web-frontend/styles/', name: 'tokens.css', add: 84, del: 19 },{ dir: 'runs/1042/web-frontend/components/', name: 'FreshnessBadge.tsx', add: 61, del: 0 },{ dir: 'runs/1042/web-frontend/components/', name: 'MarginPanel.tsx', add: 152, del: 0 }], 'f2') + '</div>' },
-    { d: 1000, html:
-      '<div class="card"><div class="card-head"><span class="cicon">T</span><div><b>Taste gate · tier 1 design-lint</b><div class="sub" style="color:var(--ink-3)">grep/AST · 20 named tells · 0 tokens · 41 ms</div></div><div class="card-actions"><span class="verdict fail">FAIL · 3</span></div></div>' +
-      '<div class="gaterow"><span class="gname">gate 3 · indigo primary</span><span class="gdetail">tokens.css:12 — #6366F1 outside token system</span><span class="gmark bad">✕</span></div>' +
-      '<div class="gaterow"><span class="gname">gate 11 · default font stack</span><span class="gdetail">layout.tsx:8 — Inter with no pairing</span><span class="gmark bad">✕</span></div>' +
-      '<div class="gaterow"><span class="gname">gate 17 · emoji as icons</span><span class="gdetail">FleetTable.tsx:24 — status column</span><span class="gmark bad">✕</span></div></div>' },
-    { d: 1000, html: '<div class="agent-tag system"><i></i>labctl · repair</div><div class="prose">Findings injected verbatim into the frontend session via <code>--resume</code> — never a blind re-roll. Retry 1 of 2. <em>The alert window is burning while this narrates; that timing is deliberate.</em></div>' },
-    { d: 1100, html:
-      '<div class="card"><div class="card-head"><span class="cicon">T</span><div><b>Taste gate · retry</b><div class="sub" style="color:var(--ink-3)">tier 1 clean · tier 2: no 320px overflow, APCA pass · tier 3 from rehearsal</div></div><div class="card-actions"><span class="verdict pass">PASS</span></div></div>' +
-      '<div class="gaterow"><span class="gname">tier 1 · design-lint</span><span class="gdetail">0 findings across 20 tells</span><span class="gmark ok">✓</span></div>' +
-      '<div class="gaterow"><span class="gname">tier 2 · computed</span><span class="gdetail">320 / 768 / 1440 · both themes · APCA ≥ Lc 75</span><span class="gmark ok">✓</span></div></div>' },
-    { d: 1100, html: '<div class="agent-tag claude"><i></i>Fable 5 · hardware</div><div class="prose">Bracket parameterized in <code>bracket.py</code> — build123d, exported STEP, STL, and GLB. The margin solver reads the scraped vendor bolt table and selects the cheapest fastener passing FoS ≥ 1.5. There are no fallback constants in this code path: no scrape, no certification.</div>' },
-    { d: 900, html:
-      '<div class="card"><div class="card-head"><span class="cicon">σ</span><div><b>Physics gate · closed-form margins</b><div class="sub" style="color:var(--ink-3)">deterministic · sub-second · no LLM</div></div><div class="card-actions"><span class="verdict fail">FAIL · 1</span></div></div>' +
-      '<div class="scrollx"><table class="mtable"><tr><th>check</th><th>formula</th><th>value</th><th>allowable</th><th>FoS</th></tr>' +
-      '<tr><td class="name">web bending</td><td>σ = Mc / I</td><td>212 MPa</td><td>172 MPa</td><td class="bad">0.82 ✕</td></tr>' +
-      '<tr><td class="name">bolt shear</td><td>τ = F / nA</td><td>96 MPa</td><td>380 MPa</td><td class="ok">3.94</td></tr>' +
-      '<tr><td class="name">bolt select</td><td>min $ · FoS ≥ 1.5</td><td colspan="2">M4 · 8.8 · $0.14 — scraped vendor.com 11:07:32</td><td class="ok">✓</td></tr>' +
-      '<tr><td class="name">mass</td><td>ρ · V</td><td>41.3 g</td><td>≤ 60 g</td><td class="ok">1.45</td></tr></table></div></div>' },
-    { d: 1100, html:
-      '<div class="card"><div class="card-head"><span class="cicon">√</span><div><b>Algebraic repair · not an LLM guess</b><div class="sub" style="color:var(--ink-3)">invert the margin equation, solve, patch, regenerate</div></div></div>' +
-      '<div class="derive">σ = 6M / (b·t²)  ⇒  t = √( 6M / (b · σ_allow / FoS) )\n' +
-      't = √( 6 · 2.12 N·m / (0.018 m · 172 MPa / 1.5) )  =  <b>4.1 mm</b>\n' +
-      'patch  bracket.py :: web_thickness  3.2 → 4.1   ·  regenerate  ·  re-run gates</div></div>' },
-    { d: 1000, html:
-      '<div class="card"><div class="card-head"><span class="cicon">σ</span><div><b>Physics gate · re-run</b><div class="sub" style="color:var(--ink-3)">bracket_v2 · STEP + GLB regenerated · stress field colormapped (closed-form, not FEA)</div></div><div class="card-actions"><span class="verdict pass">PASS</span></div></div>' +
-      '<div class="scrollx"><table class="mtable"><tr><th>check</th><th>formula</th><th>value</th><th>allowable</th><th>FoS</th></tr>' +
-      '<tr><td class="name">web bending</td><td>σ = Mc / I</td><td>106 MPa</td><td>172 MPa</td><td class="ok">1.62 ✓</td></tr>' +
-      '<tr><td class="name">bolt shear</td><td>τ = F / nA</td><td>96 MPa</td><td>380 MPa</td><td class="ok">3.94</td></tr>' +
-      '<tr><td class="name">mass</td><td>ρ · V</td><td>46.8 g</td><td>≤ 60 g</td><td class="ok">1.28</td></tr></table></div></div>' },
-    { d: 1200, wait: 'conductor', bell: true, html:
-      '<div class="card alert"><div class="card-head"><span class="cicon">!</span><div><b>SigNoz alert · human summoned</b><div class="sub" style="color:var(--ink-3)">gate_failures ≥ 2 in run 1042 — labctl keeps no counter; only this alert escalates</div></div><div class="card-actions"><span class="verdict warn">ALERT FIRED</span><button class="primary" id="conductor">Open in Conductor</button></div></div>' +
-      '<div class="resolved" style="display:none"><b>Reviewed.</b> conductor:// opened on runs/1042 · operator inspected both repairs · run resumed</div></div>' },
-    { d: 1000, html:
-      '<div class="card"><div class="card-head"><span class="cicon" style="color:var(--blue)">P</span><div><b>Port scorecard · merge gate</b><div class="sub" style="color:var(--ink-3)">labctl reads the Artifact scorecard and refuses on red</div></div><div class="card-actions"><span class="verdict pass">GREEN · MERGED</span></div></div>' +
-      '<div class="gaterow"><span class="gname">contract conformance</span><span class="gdetail">frontend fetches ⊆ contract · API routes ≡ contract</span><span class="gmark ok">✓</span></div>' +
-      '<div class="gaterow"><span class="gname">merged smoke boot</span><span class="gdetail">npm run build · Playwright hit on / · 200</span><span class="gmark ok">✓</span></div>' +
-      '<div class="chips"><span class="chip"><i>▣</i> dashboard preview</span><span class="chip"><i>◆</i> bracket_v2.step</span><span class="chip"><i>◇</i> bracket_v2.glb</span><span class="chip"><i>≡</i> margin-report.md</span><span class="chip"><i>⟲</i> flight-recorder.jsonl</span></div></div>' },
-    { d: 900, html:
-      '<div class="card"><div class="card-head"><span class="cicon" style="color:var(--purple)">S</span><div><b>Trace · one flame graph of the whole run</b><div class="sub" style="color:var(--ink-3)">factory_run a41f09c2 · 14 spans · red = failed gate, amber = human wait</div></div></div>' +
-      '<div class="flame">' +
-      fl('factory_run', 0, 100, '', '402s') +
-      fl('plan.clarify', 1, 7, 'warnb', '28s') +
-      fl('port.approve_wait', 9, 6, 'warnb', '24s') +
-      fl('crew.codex.api', 16, 22, '', '89s') +
-      fl('crew.claude.frontend', 16, 26, '', '104s') +
-      fl('gate.taste.t1', 44, 2, 'err', '41ms') +
-      fl('repair.resume.retry1', 47, 9, '', '36s') +
-      fl('gate.taste.rerun', 57, 2, '', '6s') +
-      fl('gate.physics', 60, 2, 'err', '0.4s') +
-      fl('repair.algebra', 63, 4, '', '14s') +
-      fl('gate.physics.rerun', 68, 2, '', '0.4s') +
-      fl('alert.escalation_wait', 71, 12, 'warnb', '48s') +
-      fl('merge.scorecard+boot', 84, 10, '', '40s') +
-      '</div></div>' },
-    { d: 900, html:
-      '<div class="pillbar"><span class="verdict pass">PASSED</span><b>Run 1042</b><span class="mut">2 lanes · 2 planted failures · 2 repairs · 14 spans · every decision on tape</span><span class="time">6m 42s</span><button class="ghost" id="replay">Replay</button></div>' },
-  ];
-
   function fl(name, left, w, cls, ms) {
-    return '<div class="frow"><span class="lane">' + name + '</span><span class="track"><span class="bar ' + cls + '" style="left:' + left + '%;width:' + w + '%"></span></span><span class="ms">' + ms + '</span></div>';
+    return '<div class="frow"><span class="ln">' + name + '</span><span class="tk"><span class="br ' + cls +
+      '" style="left:' + left + '%;width:' + w + '%"></span></span><span class="ms">' + ms + '</span></div>';
   }
 
+  /* ---------------- the run script ---------------- */
+  var STEPS = [
+    { d: 260, kind: 'brief', html: '<div class="brief"><span class="lbl">Brief · Port action “Build from brief”</span>A parts dashboard for my sensor fleet, styled like the reference site, plus a mounting bracket for the SR-11 sensor. Cantilever mount, 2.4 kg tip load, $30 for fasteners.</div>' },
+    { d: 780, kind: 'prose', tag: '<div class="who-tag sys"><i></i>Planner · labctl</div>',
+      text: 'Two lanes detected in this brief. The dashboard routes to the <em>web</em> lane and the bracket to the <em>hardware</em> lane; a mobile companion is noted and routed as a <code>plan.md</code> entry only. Before committing a plan I need three answers — everything else has a sane default I will state rather than assume.' },
+    { d: 620, kind: 'gate', wait: 'clarify', html:
+      '<div class="card"><div class="chead"><span class="ci">?</span><div><b>Clarifying questions</b><div class="sub">typed schema · answers become gate thresholds</div></div><div class="act"><button class="primary" id="clarify">Answer &amp; continue</button></div></div>' +
+      '<div class="grow"><span class="gn">bracket.load_case</span><span class="gd">2.4 kg static tip load — worst case at FoS ≥ 1.5?</span><span class="gm">default: yes</span></div>' +
+      '<div class="grow"><span class="gn">dashboard.data_source</span><span class="gd">live scrape of the fleet vendor page, per run?</span><span class="gm">default: yes</span></div>' +
+      '<div class="grow"><span class="gn">style.reference</span><span class="gd">extract design DNA from the reference URL?</span><span class="gm">default: yes</span></div>' +
+      '<div class="res" hidden><b>Answered.</b> Defaults accepted · load case confirmed 2.4 kg · thresholds written into gates.json</div></div>' },
+    { d: 700, kind: 'card', html:
+      '<div class="card"><div class="chead"><span class="ci">⎇</span><div><b>Plan committed</b><div class="sub"><span class="plus">+312</span> <span class="minus">−0</span> · written before any agent runs</div></div></div>' +
+      files([{d:'runs/1042/plan/',n:'plan.json',a:118},{d:'runs/1042/plan/',n:'gates.json',a:96},{d:'runs/1042/plan/',n:'api-contract.json',a:98}], 'f0') + '</div>' },
+    { d: 560, kind: 'gate', wait: 'approve', html:
+      '<div class="card"><div class="chead"><span class="ci" style="color:var(--info)">P</span><div><b>Port · Approve plan</b><div class="sub">polling action-runs — zero worktrees spawn until this lands</div></div><div class="act"><button class="ghost" disabled>Reject</button><button class="primary" id="approve">Approve plan</button></div></div>' +
+      '<div class="res" hidden><b>Approved</b> by rishith · run PATCHed to Port · worktrees spawning</div></div>' },
+    { d: 780, kind: 'prose', tag: '<div class="who-tag sys"><i></i>labctl</div>',
+      text: 'Worktrees created: <code>runs/1042/web-frontend</code> on Fable 5 and <code>runs/1042/web-api</code> on GPT-5.3 Codex, both pinned to <code>api-contract.json</code>. Every git operation stays with the orchestrator; the agents only edit files. Spans are streaming.' },
+    { d: 900, kind: 'prose', tag: '<div class="who-tag codex"><i></i>Codex · web-api</div>',
+      text: 'The contract names five endpoints. I generated route handlers with validation mirroring the response shapes, a seeded fixture layer for the fleet data, and one test per endpoint asserting the exact field set — no extra keys, since the conformance gate diffs both ways.' },
+    { d: 620, kind: 'card', html:
+      '<div class="card"><div class="chead"><span class="ci">±</span><div><b>Edited 12 files</b><div class="sub"><span class="plus">+1,204</span> <span class="minus">−86</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="0">Review</button></div></div>' +
+      files([{d:'runs/1042/web-api/app/api/parts/',n:'route.ts',a:214,r:12},{d:'runs/1042/web-api/app/api/fleet/',n:'route.ts',a:186},{d:'runs/1042/web-api/lib/',n:'contract-guard.ts',a:141,r:8},{d:'runs/1042/web-api/tests/',n:'contract.spec.ts',a:232,r:30},{d:'runs/1042/web-api/lib/',n:'fixtures.ts',a:178},{d:'runs/1042/web-api/',n:'vitest.config.ts',a:24,r:6}], 'f1') + '</div>' },
+    { d: 900, kind: 'prose', tag: '<div class="who-tag claude"><i></i>Fable 5 · web-frontend</div>',
+      text: 'Design DNA from the scraped reference is pinned in this worktree’s <code>CLAUDE.md</code> — type pairing, spacing scale, palette derivation. I built the fleet table, freshness header, and margin panel against the contract shapes. One variant was generated with the design skills deliberately withheld; that one goes to the gate first.' },
+    { d: 620, kind: 'card', html:
+      '<div class="card"><div class="chead"><span class="ci">±</span><div><b>Edited 9 files</b><div class="sub"><span class="plus">+867</span> <span class="minus">−41</span></div></div><div class="act"><button class="ghost" data-undo>Undo</button><button data-diff="1">Review</button></div></div>' +
+      files([{d:'runs/1042/web-frontend/app/',n:'page.tsx',a:248,r:22},{d:'runs/1042/web-frontend/components/',n:'FleetTable.tsx',a:196},{d:'runs/1042/web-frontend/styles/',n:'tokens.css',a:84,r:19},{d:'runs/1042/web-frontend/components/',n:'FreshnessBadge.tsx',a:61},{d:'runs/1042/web-frontend/components/',n:'MarginPanel.tsx',a:152}], 'f2') + '</div>' },
+    { d: 860, kind: 'fail', html:
+      '<div class="card"><div class="chead"><span class="ci">T</span><div><b>Taste gate · tier 1 design-lint</b><div class="sub">grep/AST · 20 named tells · 0 tokens · 41 ms</div></div><div class="act"><span class="tag fail">FAIL · 3</span></div></div>' +
+      '<div class="grow"><span class="gn">gate 3 · indigo primary</span><span class="gd">tokens.css:12 — #6366F1 outside token system</span><span class="gm no">✕</span></div>' +
+      '<div class="grow"><span class="gn">gate 11 · default font stack</span><span class="gd">layout.tsx:8 — Inter with no pairing</span><span class="gm no">✕</span></div>' +
+      '<div class="grow"><span class="gn">gate 17 · emoji as icons</span><span class="gd">FleetTable.tsx:24 — status column</span><span class="gm no">✕</span></div></div>' },
+    { d: 820, kind: 'precedent', html: '' },
+    { d: 760, kind: 'prose', tag: '<div class="who-tag sys"><i></i>labctl · repair</div>',
+      text: 'Findings injected verbatim into the frontend session with <code>--resume</code> — never a blind re-roll. Retry 1 of 2. <em>The alert evaluation window is burning while this narrates; that timing is deliberate.</em>' },
+    { d: 820, kind: 'pass', html:
+      '<div class="card"><div class="chead"><span class="ci">T</span><div><b>Taste gate · retry</b><div class="sub">tier 1 clean · tier 2 computed · tier 3 from rehearsal</div></div><div class="act"><span class="tag pass">PASS</span></div></div>' +
+      '<div class="grow"><span class="gn">tier 1 · design-lint</span><span class="gd">0 findings across 20 tells</span><span class="gm ok">✓</span></div>' +
+      '<div class="grow"><span class="gn">tier 2 · computed</span><span class="gd">320 / 768 / 1440 · both themes · APCA ≥ Lc 75</span><span class="gm ok">✓</span></div></div>' },
+    { d: 880, kind: 'prose', tag: '<div class="who-tag claude"><i></i>Fable 5 · hardware</div>',
+      text: 'Bracket parameterized in <code>bracket.py</code> — build123d, exported STEP, STL, and GLB. The margin solver reads the scraped vendor bolt table and selects the cheapest fastener passing FoS ≥ 1.5. There are no fallback constants in this path: no scrape, no certification.' },
+    { d: 760, kind: 'fail', html:
+      '<div class="card"><div class="chead"><span class="ci">σ</span><div><b>Physics gate · closed-form margins</b><div class="sub">deterministic · sub-second · no LLM</div></div><div class="act"><span class="tag fail">FAIL · 1</span></div></div>' +
+      '<div class="sx"><table class="m"><tr><th>check</th><th>formula</th><th>value</th><th>allowable</th><th>FoS</th></tr>' +
+      '<tr><td class="nm">web bending</td><td>σ = Mc / I</td><td>212 MPa</td><td>172 MPa</td><td class="no">0.82 ✕</td></tr>' +
+      '<tr><td class="nm">bolt shear</td><td>τ = F / nA</td><td>96 MPa</td><td>380 MPa</td><td class="ok">3.94</td></tr>' +
+      '<tr><td class="nm">bolt select</td><td>min $ · FoS ≥ 1.5</td><td colspan="2">M4 · 8.8 · $0.14 — scraped 11:07:32</td><td class="ok">✓</td></tr>' +
+      '<tr><td class="nm">mass</td><td>ρ · V</td><td>41.3 g</td><td>≤ 60 g</td><td class="ok">1.45</td></tr></table></div></div>' },
+    { d: 900, kind: 'card', html:
+      '<div class="card"><div class="chead"><span class="ci">√</span><div><b>Algebraic repair · not an LLM guess</b><div class="sub">invert the margin equation, solve, patch, regenerate</div></div></div>' +
+      '<div class="derive">σ = 6M / (b·t²)   ⇒   t = √( 6M / (b · σ_allow / FoS) )\n' +
+      't = √( 6 · 2.12 N·m / (0.018 m · 172 MPa / 1.5) )  =  <b>4.1 mm</b>\n' +
+      'patch  bracket.py :: web_thickness  3.2 → 4.1   ·  regenerate  ·  re-run gates</div></div>' },
+    { d: 820, kind: 'pass', html:
+      '<div class="card"><div class="chead"><span class="ci">σ</span><div><b>Physics gate · re-run</b><div class="sub">bracket_v2 · STEP + GLB regenerated · stress field colormapped</div></div><div class="act"><span class="tag pass">PASS</span></div></div>' +
+      '<div class="sx"><table class="m"><tr><th>check</th><th>formula</th><th>value</th><th>allowable</th><th>FoS</th></tr>' +
+      '<tr><td class="nm">web bending</td><td>σ = Mc / I</td><td>106 MPa</td><td>172 MPa</td><td class="ok">1.62 ✓</td></tr>' +
+      '<tr><td class="nm">bolt shear</td><td>τ = F / nA</td><td>96 MPa</td><td>380 MPa</td><td class="ok">3.94</td></tr>' +
+      '<tr><td class="nm">mass</td><td>ρ · V</td><td>46.8 g</td><td>≤ 60 g</td><td class="ok">1.28</td></tr></table></div></div>' },
+    { d: 980, kind: 'gate', wait: 'conductor', bell: true, html:
+      '<div class="card alert"><div class="chead"><span class="ci">!</span><div><b>SigNoz alert · human summoned</b><div class="sub">gate_failures ≥ 2 in run 1042 — labctl keeps no counter</div></div><div class="act"><span class="tag warn">ALERT FIRED</span><button class="primary" id="conductor">Open in Conductor</button></div></div>' +
+      '<div class="res" hidden><b>Reviewed.</b> conductor:// opened on runs/1042 · operator inspected both repairs · run resumed</div></div>' },
+    { d: 820, kind: 'pass', html:
+      '<div class="card"><div class="chead"><span class="ci" style="color:var(--info)">P</span><div><b>Port scorecard · merge gate</b><div class="sub">labctl reads the Artifact scorecard and refuses on red</div></div><div class="act"><span class="tag pass">GREEN · MERGED</span></div></div>' +
+      '<div class="grow"><span class="gn">contract conformance</span><span class="gd">frontend fetches ⊆ contract · routes ≡ contract</span><span class="gm ok">✓</span></div>' +
+      '<div class="grow"><span class="gn">merged smoke boot</span><span class="gd">npm run build · Playwright hit on / · 200</span><span class="gm ok">✓</span></div>' +
+      '<div class="chips"><span class="chip"><i>▣</i> dashboard preview</span><span class="chip"><i>◆</i> bracket_v2.step</span><span class="chip"><i>◇</i> bracket_v2.glb</span><span class="chip"><i>≡</i> margin-report.md</span><span class="chip"><i>⟲</i> flight-recorder.jsonl</span></div></div>' },
+    { d: 760, kind: 'card', html:
+      '<div class="card"><div class="chead"><span class="ci" style="color:var(--violet)">S</span><div><b>One trace, whole run</b><div class="sub">factory_run a41f09c2 · 14 spans · red = failed gate, amber = human wait</div></div></div>' +
+      '<div class="flame">' +
+      fl('factory_run', 0, 100, '', '402s') + fl('plan.clarify', 1, 7, 'wr', '28s') + fl('port.approve_wait', 9, 6, 'wr', '24s') +
+      fl('crew.codex.api', 16, 22, '', '89s') + fl('crew.claude.frontend', 16, 26, '', '104s') + fl('gate.taste.t1', 44, 2, 'er', '41ms') +
+      fl('precedent.recall', 46, 2, '', '38ms') + fl('repair.resume.retry1', 48, 9, '', '36s') + fl('gate.taste.rerun', 58, 2, '', '6s') +
+      fl('gate.physics', 61, 2, 'er', '0.4s') + fl('repair.algebra', 64, 4, '', '14s') + fl('gate.physics.rerun', 69, 2, '', '0.4s') +
+      fl('alert.escalation_wait', 72, 12, 'wr', '48s') + fl('merge.scorecard+boot', 85, 10, '', '40s') +
+      '</div></div>' },
+    { d: 700, kind: 'done', html:
+      '<div class="pill"><span class="tag pass">PASSED</span><b>Run 1042</b><span class="mu">2 lanes · 2 planted failures · 2 repairs · 1 precedent hit · 14 spans</span><span class="tm">6m 42s</span><button class="ghost" id="replay">Replay</button></div>' +
+      '<div class="prov"><span class="p port"><i></i>PORT · run 1042 · approved by rishith</span><span class="p sig"><i></i>SIGNOZ · trace a41f09c2</span><span class="p bd"><i></i>BRIGHT DATA · scraped 11:07:32</span></div>' },
+  ];
+
   var DIFFS = [
-    { title: 'contract-guard.ts — conformance check', body: [
-      ['hunk', '@@ lib/contract-guard.ts @@'],
-      ['ctx', '  const contract = JSON.parse(readFileSync(CONTRACT_PATH, "utf8"));'],
-      ['add', '+ // both directions: extra routes fail, missing routes fail'],
-      ['add', '+ const routes = discoverRoutes("app/api");'],
-      ['add', '+ const extra   = routes.filter(r => !contract.endpoints.some(e => e.path === r));'],
-      ['add', '+ const missing = contract.endpoints.filter(e => !routes.includes(e.path));'],
-      ['add', '+ if (extra.length || missing.length) fail({ extra, missing });'],
-      ['del', '- // TODO: validate against contract'],
-      ['ctx', '  export const conformance = { pass: extra.length === 0 && missing.length === 0 };'],
-    ]},
-    { title: 'tokens.css — tier-1 findings fixed', body: [
-      ['hunk', '@@ styles/tokens.css @@'],
-      ['del', '- --primary: #6366F1;              /* gate 3: indigo default */'],
-      ['add', '+ --primary: var(--dna-accent);    /* from scraped design DNA */'],
-      ['del', '- font-family: Inter, sans-serif;  /* gate 11: unpaired stack */'],
-      ['add', '+ font-family: var(--dna-display), var(--dna-body-fallback);'],
-      ['hunk', '@@ components/FleetTable.tsx @@'],
-      ['del', '- {status === "ok" ? "✅" : "❌"}   /* gate 17: emoji as icons */'],
-      ['add', '+ <StatusDot state={status} />      /* semantic dot, tokened */'],
-    ]},
+    { t: 'contract-guard.ts — conformance check', b: [
+      ['hk', '@@ lib/contract-guard.ts @@'],
+      ['c', '  const contract = JSON.parse(readFileSync(CONTRACT_PATH, "utf8"));'],
+      ['a', '+ // both directions: extra routes fail, missing routes fail'],
+      ['a', '+ const routes  = discoverRoutes("app/api");'],
+      ['a', '+ const extra   = routes.filter(r => !contract.endpoints.some(e => e.path === r));'],
+      ['a', '+ const missing = contract.endpoints.filter(e => !routes.includes(e.path));'],
+      ['a', '+ if (extra.length || missing.length) fail({ extra, missing });'],
+      ['d', '- // TODO: validate against contract'],
+      ['c', '  export const conformance = { pass: extra.length === 0 && missing.length === 0 };'] ] },
+    { t: 'tokens.css — tier-1 findings fixed', b: [
+      ['hk', '@@ styles/tokens.css @@'],
+      ['d', '- --primary: #6366F1;              /* gate 3: indigo default */'],
+      ['a', '+ --primary: var(--dna-accent);    /* from scraped design DNA */'],
+      ['d', '- font-family: Inter, sans-serif;  /* gate 11: unpaired stack */'],
+      ['a', '+ font-family: var(--dna-display), var(--dna-body-fallback);'],
+      ['hk', '@@ components/FleetTable.tsx @@'],
+      ['d', '- {status === "ok" ? "OK-emoji" : "X-emoji"}   /* gate 17 */'],
+      ['a', '+ <StatusDot state={status} />      /* semantic dot, tokened */'] ] },
   ];
 
   var RUNS = {
-    '1042': { title: 'Sensor fleet dashboard + SR-11 mounting bracket', fold: 'run/1042', live: true, steps: STEPS.length },
-    '1041': { title: 'Taste gate rehearsal — tier 1 findings', fold: 'run/1041', live: false, steps: 13, cost: 1.87 },
-    '1039': { title: 'Bracket margin sweep, FoS 1.5', fold: 'run/1039', live: false, steps: 18, failed: true, cost: 2.41 },
+    '1042': { t: 'Sensor fleet dashboard + SR-11 mounting bracket', live: true },
+    '1041': { t: 'Taste gate rehearsal — tier 1 findings', n: 14 },
+    '1039': { t: 'Bracket margin sweep, FoS 1.5', n: 18, failed: true },
   };
 
-  /* ---------- playback ---------- */
-  var i = 0, playing = false, timer = null;
-  function setCost(v) { cost = v; costEl.textContent = '≈ $' + cost.toFixed(2); }
-  function next() {
-    if (i >= STEPS.length) { playing = false; return; }
-    var s = STEPS[i++];
-    timer = setTimeout(function () {
-      appendStep(s, false);
-      setCost(cost + 0.14 + (i % 3) * 0.09);
-      feed.scrollTop = feed.scrollHeight;
-      if (s.wait) {
-        var btn = col.querySelector('#' + s.wait);
-        if (btn) { btn.addEventListener('click', function () { resolveGate(btn); next(); }, { once: true }); return; }
-      }
-      next();
-    }, reduced ? 0 : s.d);
+  /* ---------------- precedent card ---------------- */
+  function precedentCard() {
+    return '<div class="card"><div class="chead"><span class="ci" style="color:var(--daisy-deep)">§</span>' +
+      '<div><b>Precedent recall</b><div class="sub">gate-signature hybrid retrieval · 1,284 archived runs · 38 ms · 0 tokens</div></div>' +
+      '<div class="act"><span class="tag info">3 CITED</span></div></div>' +
+      '<div class="grow"><span class="gn">run 0917 · sim .94</span><span class="gd">same 3 tells — fixed by tokenizing primary + pairing display face</span><span class="gm ok">applied</span></div>' +
+      '<div class="grow"><span class="gn">run 0731 · sim .89</span><span class="gd">gate 3 + gate 17 — emoji column replaced with semantic dot</span><span class="gm ok">applied</span></div>' +
+      '<div class="grow"><span class="gn">run 0642 · sim .71</span><span class="gd">gate 11 only — pairing added, no palette change</span><span class="gm">noted</span></div>' +
+      '<div class="res" style="display:block"><b>Family F-03.</b> Seen 4 times, fixed 4 times, mean time-to-green 34 s. Precedent fix injected ahead of the retry — the agent is told what worked before, not asked to rediscover it.</div></div>';
   }
-  function appendStep(s, resolved) {
+
+  /* ---------------- playback ---------------- */
+  var col = $('#col'), feed = $('#feed'), mm = $('#minimap');
+  var idx = 0, timer = null, marks = [];
+
+  function addMark(kind) {
+    var b = document.createElement('button');
+    b.className = 'mm here' + (kind === 'fail' ? ' gfail' : kind === 'pass' ? ' gpass' : '');
+    b.setAttribute('aria-label', 'Jump to step ' + (marks.length + 1));
+    b.title = 'step ' + (marks.length + 1);
+    var at = marks.length;
+    b.addEventListener('click', function () {
+      var el = col.children[at];
+      if (el) el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+    });
+    $$('.mm', mm).forEach(function (m) { m.classList.remove('here'); m.classList.add('seen'); });
+    mm.appendChild(b);
+    marks.push(b);
+    layoutMarks();
+  }
+
+  /* place each mark at the vertical fraction its item occupies in the feed */
+  function layoutMarks() {
+    var total = col.scrollHeight || 1;
+    var span = mm.clientHeight - 48;
+    marks.forEach(function (b, i) {
+      var el = col.children[i];
+      if (!el) return;
+      var frac = (el.offsetTop + el.offsetHeight / 2) / total;
+      b.style.top = (24 + Math.max(0, Math.min(1, frac)) * span) + 'px';
+    });
+  }
+
+  /* highlight the mark whose item is centred in the viewport */
+  var mmTick = null;
+  function onFeedScroll() {
+    if (mmTick) return;
+    mmTick = requestAnimationFrame(function () {
+      mmTick = null;
+      var mid = feed.scrollTop + feed.clientHeight / 2, best = -1, bd = 1e9;
+      for (var i = 0; i < col.children.length; i++) {
+        var el = col.children[i];
+        var d = Math.abs((el.offsetTop + el.offsetHeight / 2) - mid);
+        if (d < bd) { bd = d; best = i; }
+      }
+      marks.forEach(function (b, i) { b.classList.toggle('here', i === best); });
+    });
+  }
+  feed.addEventListener('scroll', onFeedScroll);
+  window.addEventListener('resize', layoutMarks);
+
+  function streamProse(el, html) {
+    if (reduced || document.documentElement.getAttribute('data-motion') === 'calm') { el.innerHTML = html; return; }
+    var parts = html.split(/(\s+)/);
+    el.innerHTML = '';
+    var i = 0, chunk = 3;
+    (function tick() {
+      var buf = '';
+      for (var k = 0; k < chunk && i < parts.length; k++, i++) buf += parts[i];
+      var span = document.createElement('span');
+      span.className = 'w';
+      span.innerHTML = buf;
+      el.appendChild(span);
+      if (i < parts.length) setTimeout(tick, 26);
+    })();
+  }
+
+  function place(step, instant) {
     var item = document.createElement('div');
     item.className = 'item';
-    item.innerHTML = s.html;
-    col.appendChild(item);
-    if (s.bell) document.getElementById('bell').classList.add('hot');
-    if (resolved && s.wait) {
-      var btn = item.querySelector('#' + s.wait);
-      if (btn) resolveGate(btn);
+    if (step.kind === 'prose') {
+      item.innerHTML = step.tag + '<div class="prose"></div>';
+      col.appendChild(item);
+      var p = $('.prose', item);
+      if (instant) p.innerHTML = step.text; else streamProse(p, step.text);
+    } else {
+      item.innerHTML = step.kind === 'precedent' ? precedentCard() : step.html;
+      col.appendChild(item);
     }
+    addMark(step.kind);
+    if (step.bell) $('#btn-bell').style.color = 'var(--warn)';
+    if (instant && step.wait) { var b = $('#' + step.wait, item); if (b) settle(b); }
+    return item;
   }
-  function resolveGate(btn) {
+
+  function settle(btn) {
     btn.disabled = true;
     var card = btn.closest('.card');
-    var res = card && card.querySelector('.resolved');
-    if (res) res.style.display = 'block';
-    feed.scrollTop = feed.scrollHeight;
+    var r = card && $('.res', card);
+    if (r) { r.hidden = false; }
   }
+
+  function next() {
+    if (idx >= STEPS.length) return;
+    var s = STEPS[idx++];
+    timer = setTimeout(function () {
+      var item = place(s, false);
+      feed.scrollTop = feed.scrollHeight;
+      if (s.wait) {
+        var b = $('#' + s.wait, item);
+        if (b) { b.addEventListener('click', function () { settle(b); feed.scrollTop = feed.scrollHeight; next(); }, { once: true }); return; }
+      }
+      next();
+    }, reduced ? 10 : s.d);
+  }
+
   function playLive() {
-    clearTimeout(timer); col.innerHTML = ''; i = 0; playing = true; setCost(0);
+    clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = 0;
     feed.classList.add('live');
-    document.getElementById('bell').classList.remove('hot');
+    $('#btn-bell').style.color = '';
     next();
   }
-  function renderSnapshot(runId) {
-    clearTimeout(timer); playing = false; col.innerHTML = ''; i = STEPS.length;
+
+  function snapshot(id) {
+    clearTimeout(timer); col.innerHTML = ''; mm.innerHTML = ''; marks = []; idx = STEPS.length;
     feed.classList.remove('live');
-    var r = RUNS[runId];
-    var n = Math.min(r.steps, STEPS.length);
+    var r = RUNS[id], n = Math.min(r.n || STEPS.length, STEPS.length);
     for (var k = 0; k < n; k++) {
       var s = STEPS[k];
       if (r.failed && s.wait === 'conductor') {
-        var item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = s.html;
-        col.appendChild(item);
-        var b = item.querySelector('#conductor'); if (b) b.disabled = true;
-        var res = item.querySelector('.resolved');
-        if (res) { res.innerHTML = '<b class="badres">Escalated.</b> Retries exhausted · operator has not resumed · run parked with full trace'; res.style.display = 'block'; }
+        var item = place(s, true);
+        var b = $('#conductor', item); if (b) b.disabled = true;
+        var res = $('.res', item);
+        if (res) { res.hidden = false; res.innerHTML = '<b class="no">Escalated.</b> Retries exhausted · operator has not resumed · run parked with the full derivation attached'; }
         break;
       }
-      appendStep(s, true);
+      place(s, true);
     }
     if (r.failed) {
       var p = document.createElement('div');
       p.className = 'item';
-      p.innerHTML = '<div class="pillbar"><span class="verdict fail">ESCALATED</span><b>Run ' + runId + '</b><span class="mut">3 gate failures · retries exhausted · parked at human review</span><span class="time">9m 51s</span></div>';
+      p.innerHTML = '<div class="pill"><span class="tag fail">ESCALATED</span><b>Run ' + id + '</b><span class="mu">3 gate failures · retries exhausted · parked at human review</span><span class="tm">9m 51s</span></div>';
       col.appendChild(p);
     }
-    setCost(r.cost || 3.12);
     feed.scrollTop = 0;
   }
-  function openRun(runId) {
-    var r = RUNS[runId]; if (!r) return;
-    document.getElementById('tb-fold').textContent = r.fold;
-    document.getElementById('tb-title').textContent = r.title;
-    document.querySelectorAll('.runlink').forEach(function (el) { el.classList.toggle('active', el.getAttribute('data-run') === runId); });
-    showView('run');
-    if (r.live) playLive(); else renderSnapshot(runId);
+
+  function openRun(id) {
+    var r = RUNS[id]; if (!r) return;
+    $('#tb-title').textContent = r.t;
+    $$('.thread').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-run') === id); });
+    show('run');
+    if (r.live) playLive(); else snapshot(id);
   }
 
-  /* ---------- views ---------- */
-  function showView(name) {
-    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
-    document.querySelectorAll('#mainnav a').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-view') === name); });
+  /* ---------------- views ---------------- */
+  function show(name) {
+    $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
+    $$('.navitem').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-view') === name); });
+    if (name === 'precedent') renderPrecedent();
   }
-  document.getElementById('mainnav').addEventListener('click', function (e) {
-    var a = e.target.closest('a[data-view]'); if (!a) return;
+  $('#nav').addEventListener('click', function (e) {
+    var a = e.target.closest('.navitem'); if (!a) return;
     var v = a.getAttribute('data-view');
     if (v === 'run') { openRun('1042'); return; }
-    showView(v);
-  });
-  document.body.addEventListener('click', function (e) {
-    var r = e.target.closest('[data-run]');
-    if (r && !e.target.closest('button')) { openRun(r.getAttribute('data-run')); }
+    show(v);
   });
 
-  /* ---------- feed interactions ---------- */
+  /* ---------------- precedent page ---------------- */
+  function renderPrecedent() {
+    var el = $('#precedent-body');
+    if (el.dataset.built) return;
+    el.dataset.built = '1';
+    el.innerHTML =
+      '<h2>Precedent</h2><div class="lede">The factory cites its own case law. Every gate failure ever recorded is embedded, quantized, and searchable — so a repeat failure is fixed from precedent instead of rediscovered.</div>' +
+      '<div class="tbl" style="margin-bottom:18px"><table class="l">' +
+      '<tr><th>Metric</th><th>Value</th><th>Note</th></tr>' +
+      '<tr><td class="s">Archived runs</td><td class="mo">1,284</td><td>every run since the factory booted</td></tr>' +
+      '<tr><td class="s">Failure families</td><td class="mo">37</td><td>clustered by gate signature</td></tr>' +
+      '<tr><td class="s">Recall latency</td><td class="mo">38 ms</td><td>local · no API call · 0 tokens</td></tr>' +
+      '<tr><td class="s">Compression</td><td class="mo">412 KB → 3.1 KB</td><td><span class="tag pass">133×</span> per run essence</td></tr>' +
+      '<tr><td class="s">Repeat-failure fix rate</td><td class="mo">91%</td><td>fixed from precedent, no rediscovery</td></tr>' +
+      '</table></div>' +
+      '<h3>Failure families</h3>' +
+      '<div class="tbl"><table class="l">' +
+      '<tr><th>Family</th><th>Signature</th><th>Seen</th><th>Fixed</th><th>MTTG</th></tr>' +
+      '<tr><td class="s">F-03 · slop palette</td><td class="mo">taste.t1 {3,11,17}</td><td class="mo">4</td><td class="mo">4</td><td class="mo">34 s</td></tr>' +
+      '<tr><td class="s">F-11 · thin web</td><td class="mo">physics.bend &lt; 1.0</td><td class="mo">7</td><td class="mo">7</td><td class="mo">14 s</td></tr>' +
+      '<tr><td class="s">F-19 · contract drift</td><td class="mo">contract.extra ≠ ∅</td><td class="mo">3</td><td class="mo">2</td><td class="mo">2m 41s</td></tr>' +
+      '<tr><td class="s">F-24 · stale scrape</td><td class="mo">scrape.age &gt; ttl</td><td class="mo">9</td><td class="mo">9</td><td class="mo">51 s</td></tr>' +
+      '</table></div>' +
+      '<h3>How retrieval is grounded</h3>' +
+      '<div class="card"><div class="derive" style="border-top:none">score(r) = <b>0.55</b>·cos(v_text, q_text)  +  <b>0.35</b>·jaccard(sig_r, sig_q)  +  <b>0.10</b>·recency(r)\n\n' +
+      'sig  = deterministic gate signature — which gates failed, and by how much\n' +
+      'v    = 256-d static embedding, int8-quantized  (4× smaller, recall −0.6%)\n' +
+      'note = the sparse half of this score is <b>verified engineering state</b>, not vibes</div></div>';
+  }
+
+  /* ---------------- interactions ---------------- */
   document.body.addEventListener('click', function (e) {
     var t = e.target.closest('[data-toggle]');
     if (t) {
       var box = document.getElementById(t.getAttribute('data-toggle'));
-      if (box) { box.classList.toggle('open'); t.textContent = box.classList.contains('open') ? 'Show fewer files ▴' : t.textContent.replace('▴', '▾'); }
+      var open = box.classList.toggle('open');
+      t.textContent = open ? 'Show fewer files' : t.textContent.replace('fewer', 'more');
+      if (!open) t.textContent = 'Show ' + ($$('.row', box).length) + ' more files';
       return;
     }
+    var r = e.target.closest('[data-run]');
+    if (r && !e.target.closest('button')) { openRun(r.getAttribute('data-run')); return; }
     if (e.target.id === 'replay') { playLive(); return; }
-    if (e.target.closest('[data-undo]')) { showToast('<b>Undo is a git operation.</b> labctl owns git — agents never touch it. Reverted via orchestrator, diff preserved in the flight recorder.'); return; }
+    if (e.target.closest('[data-undo]')) { toast('<b>Undo is a git operation.</b> labctl owns git — agents never touch it. Reverted through the orchestrator, diff preserved in the flight recorder.'); return; }
     var d = e.target.closest('[data-diff]');
-    if (d) { openDiff(parseInt(d.getAttribute('data-diff'), 10) || 0); return; }
-    if (e.target.id === 'approve-auto' || e.target.id === 'approve-heal') {
-      e.target.disabled = true; e.target.textContent = 'Approved';
-      showToast('<b>Approved.</b> ' + (e.target.id === 'approve-heal' ? 'scraper approve sent — healed extractor diff committed to CLAUDE.md.' : 'Automation result merged — next run uses the new schema.'));
-    }
-  });
-  document.getElementById('bell').addEventListener('click', function () {
-    openRun('1042');
-    showToast('<b>1 alert.</b> gate_failures ≥ 2 fired on run 1042 — jump to the escalation card in the feed.');
+    if (d) { openDiff(+d.getAttribute('data-diff') || 0); return; }
+    var ap = e.target.closest('[data-approve]');
+    if (ap) { ap.disabled = true; ap.textContent = 'Approved'; toast('<b>Approved.</b> ' + ap.getAttribute('data-approve')); return; }
   });
 
-  /* ---------- toast + composer ---------- */
-  var toast = document.getElementById('toast');
-  var toastTimer = null;
-  function showToast(html) {
-    toast.innerHTML = html; toast.style.display = 'block';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.style.display = 'none'; }, 5200);
+  $('#btn-bell').addEventListener('click', function () { openRun('1042'); toast('<b>1 alert.</b> gate_failures ≥ 2 fired on run 1042 — the escalation card is in the feed.'); });
+  $('#btn-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
+  $('#btn-search').addEventListener('click', palOpen);
+
+  /* ---------------- toast ---------------- */
+  var toastEl = $('#toast'), tt = null;
+  function toast(html) {
+    toastEl.innerHTML = html; toastEl.classList.add('on');
+    clearTimeout(tt); tt = setTimeout(function () { toastEl.classList.remove('on'); }, 5000);
   }
+
+  /* ---------------- composer ---------------- */
   function sendAmend() {
-    var inp = document.getElementById('amend');
-    var v = inp.value.trim(); if (!v) return;
+    var inp = $('#amend'), v = inp.value.trim(); if (!v) return;
     inp.value = '';
-    showToast('<b>Queued as amendment.</b> The current agent turn completes first, then labctl resumes both sessions with: “' + v.replace(/</g, '&lt;') + '”');
+    toast('<b>Queued as an amendment.</b> The current agent turn finishes first, then labctl resumes both sessions with: “' + v.replace(/</g, '&lt;') + '”');
   }
-  document.getElementById('sendbtn').addEventListener('click', sendAmend);
-  document.getElementById('amend').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.keyCode === 13) sendAmend(); });
+  $('#send').addEventListener('click', sendAmend);
+  $('#amend').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.keyCode === 13) sendAmend(); });
 
-  /* ---------- diff modal ---------- */
-  var modalOv = document.getElementById('modal-overlay');
-  function openDiff(idx) {
-    var d = DIFFS[idx] || DIFFS[0];
-    document.getElementById('modal-title').textContent = d.title;
-    var b = document.getElementById('modal-body');
-    b.innerHTML = d.body.map(function (l) { return '<div class="' + l[0] + '">' + l[1].replace(/</g, '&lt;') + '</div>'; }).join('');
-    modalOv.classList.add('on');
+  /* ---------------- diff modal ---------------- */
+  var modOv = $('#mod-ov');
+  function openDiff(i) {
+    var d = DIFFS[i] || DIFFS[0];
+    $('#mod-title').textContent = d.t;
+    $('#mod-body').innerHTML = d.b.map(function (l) { return '<div class="' + l[0] + '">' + l[1].replace(/</g, '&lt;') + '</div>'; }).join('');
+    modOv.classList.add('anim'); modOv.classList.add('on');
   }
-  document.getElementById('modal-close').addEventListener('click', function () { modalOv.classList.remove('on'); });
-  modalOv.addEventListener('click', function (e) { if (e.target === modalOv) modalOv.classList.remove('on'); });
+  $('#mod-close').addEventListener('click', function () { modOv.classList.remove('on'); });
+  modOv.addEventListener('click', function (e) { if (e.target === modOv) modOv.classList.remove('on'); });
 
-  /* ---------- command palette ---------- */
-  var palOv = document.getElementById('pal-overlay');
-  var palIn = document.getElementById('pal-input');
-  var palList = document.getElementById('pal-list');
-  var COMMANDS = [
-    { l: 'New run — replay the live demo', h: 'R', fn: function () { openRun('1042'); } },
-    { l: 'Open runs', h: '', fn: function () { showView('runs'); } },
-    { l: 'Open review queue', h: '', fn: function () { showView('review'); } },
-    { l: 'Open artifacts', h: '', fn: function () { showView('artifacts'); } },
-    { l: 'Open automations', h: '', fn: function () { showView('autos'); } },
-    { l: 'Open skills', h: '', fn: function () { showView('skills'); } },
-    { l: 'Appearance settings', h: '', fn: function () { showView('settings'); } },
-    { l: 'Queue an amendment', h: '', fn: function () { showView('run'); document.getElementById('amend').focus(); } },
-    { l: 'Open failed run 1039', h: '', fn: function () { openRun('1039'); } },
-    { l: 'Copy daisy-theme-v1 JSON', h: '', fn: copyTheme },
+  /* ---------------- thread peek ---------------- */
+  var peek = $('#peek'), pk = null, peekWarm = false, peekCool = null;
+  $$('.thread').forEach(function (th) {
+    th.addEventListener('mouseenter', function () {
+      clearTimeout(pk);
+      pk = setTimeout(function () {
+        peek.style.transitionDuration = peekWarm ? '0ms' : '';
+        var rect = th.getBoundingClientRect();
+        peek.innerHTML = '<b>' + $('.txt', th).textContent + '</b><p>' + th.getAttribute('data-peek') + '</p>' +
+          '<div class="foot"><span>' + th.getAttribute('data-foot') + '</span></div>';
+        peek.style.left = (rect.right + 10) + 'px';
+        peek.style.top = Math.min(window.innerHeight - 150, rect.top - 6) + 'px';
+        peek.classList.add('on');
+        peekWarm = true; clearTimeout(peekCool);
+      }, peekWarm ? 0 : 800);
+    });
+    th.addEventListener('mouseleave', function () {
+      clearTimeout(pk); peek.classList.remove('on');
+      clearTimeout(peekCool); peekCool = setTimeout(function () { peekWarm = false; }, 700);
+    });
+  });
+
+  /* ---------------- command palette ---------------- */
+  var palOv = $('#pal-ov'), palIn = $('#pal-in'), palList = $('#pal-list');
+  var CMDS = [
+    { l: 'Replay run 1042 live', h: '⏎', f: function () { openRun('1042'); } },
+    { l: 'Open escalated run 1039', h: '', f: function () { openRun('1039'); } },
+    { l: 'Precedent — failure families', h: '', f: function () { show('precedent'); } },
+    { l: 'Review queue', h: '', f: function () { show('review'); } },
+    { l: 'Runs', h: '', f: function () { show('runs'); } },
+    { l: 'Artifacts', h: '', f: function () { show('artifacts'); } },
+    { l: 'Automations', h: '', f: function () { show('autos'); } },
+    { l: 'Skills', h: '', f: function () { show('skills'); } },
+    { l: 'Appearance', h: '', f: function () { show('settings'); } },
+    { l: 'Toggle light / dark', h: '⌘⇧L', f: toggleTheme },
+    { l: 'Toggle sidebar', h: '', f: function () { document.body.classList.toggle('rail'); } },
+    { l: 'Queue an amendment', h: '', f: function () { show('run'); $('#amend').focus(); } },
+    { l: 'Copy daisy-theme-v1 JSON', h: '', f: copyTheme },
   ];
   function palRender(q) {
     q = (q || '').toLowerCase();
-    var items = COMMANDS.filter(function (c) { return c.l.toLowerCase().indexOf(q) !== -1; });
-    palList.innerHTML = items.map(function (c, idx) {
-      return '<div class="pitem' + (idx === 0 ? ' hot' : '') + '" data-cmd="' + COMMANDS.indexOf(c) + '">' + c.l + '<span class="hint">' + c.h + '</span></div>';
-    }).join('') || '<div class="pitem">No matches</div>';
+    var hits = CMDS.filter(function (c) { return c.l.toLowerCase().indexOf(q) !== -1; });
+    palList.innerHTML = hits.length ? hits.map(function (c, i) {
+      return '<div class="pit' + (i === 0 ? ' hot' : '') + '" data-c="' + CMDS.indexOf(c) + '">' + c.l + '<span class="h">' + c.h + '</span></div>';
+    }).join('') : '<div class="pit" style="color:var(--ink-3)">No matches</div>';
   }
   function palOpen() { palOv.classList.add('on'); palIn.value = ''; palRender(''); palIn.focus(); }
   function palClose() { palOv.classList.remove('on'); }
   palIn.addEventListener('input', function () { palRender(palIn.value); });
   palIn.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { var hot = palList.querySelector('.pitem.hot') || palList.querySelector('.pitem[data-cmd]'); if (hot && hot.hasAttribute('data-cmd')) { runCmd(hot); } }
+    var items = $$('.pit[data-c]', palList);
+    var hot = palList.querySelector('.pit.hot');
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var i = items.indexOf(hot); if (i < 0) i = 0;
+      i = e.key === 'ArrowDown' ? Math.min(items.length - 1, i + 1) : Math.max(0, i - 1);
+      items.forEach(function (x) { x.classList.remove('hot'); });
+      if (items[i]) { items[i].classList.add('hot'); items[i].scrollIntoView({ block: 'nearest' }); }
+      return;
+    }
+    if (e.key === 'Enter') { var pick = hot || items[0]; if (pick) run(pick); }
     if (e.key === 'Escape') palClose();
   });
-  palList.addEventListener('click', function (e) { var it = e.target.closest('.pitem[data-cmd]'); if (it) runCmd(it); });
-  function runCmd(el) { palClose(); COMMANDS[parseInt(el.getAttribute('data-cmd'), 10)].fn(); }
+  palList.addEventListener('click', function (e) { var it = e.target.closest('.pit[data-c]'); if (it) run(it); });
+  function run(el) { palClose(); CMDS[+el.getAttribute('data-c')].f(); }
   palOv.addEventListener('click', function (e) { if (e.target === palOv) palClose(); });
+
   document.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); palOv.classList.contains('on') ? palClose() : palOpen(); }
-    if (e.key === 'Escape') { palClose(); modalOv.classList.remove('on'); }
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleTheme(); }
+    if (e.key === 'Escape') { palClose(); modOv.classList.remove('on'); }
   });
 
-  /* ---------- appearance ---------- */
-  var ACCENTS = { daisy: ['#E9C64A', '#A8C25A', '#1C1806'], moss: ['#A8C25A', '#C9DD8F', '#141B06'], porcelain: ['#ECECF0', '#B9B9C2', '#141416'] };
-  function applyTheme(t) {
+  /* ---------------- appearance ---------------- */
+  var ACCENT = {
+    daisy: ['#E9C64A', '#F2D468', '#1F1A06', '#8A6B18', '#FBF3DA', '#6B8F2E'],
+    moss:  ['#8FA84A', '#A6BE63', '#141B06', '#5E7320', '#F0F4E4', '#6B8F2E'],
+    ink:   ['#3A3A36', '#4C4C47', '#FFFFFF', '#3A3A36', '#F0F0EC', '#5E5D56'],
+  };
+  var theme = { mode: 'light', serif: '', mono: '', accent: 'daisy', motion: 'full' };
+  try { var s = localStorage.getItem('daisy-theme'); if (s) theme = Object.assign(theme, JSON.parse(s)); } catch (e) {}
+
+  function applyTheme() {
     var root = document.documentElement;
-    if (t.serif) root.style.setProperty('--serif', t.serif);
-    if (t.mono) root.style.setProperty('--mono', t.mono);
-    if (t.accent && ACCENTS[t.accent]) {
-      root.style.setProperty('--daisy', ACCENTS[t.accent][0]);
-      root.style.setProperty('--leaf', ACCENTS[t.accent][1]);
-      root.style.setProperty('--daisy-ink', ACCENTS[t.accent][2]);
+    if (theme.mode === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme.mode);
+    root.setAttribute('data-motion', theme.motion);
+    if (theme.serif) root.style.setProperty('--serif', theme.serif);
+    if (theme.mono) root.style.setProperty('--mono', theme.mono);
+    var a = ACCENT[theme.accent];
+    if (a) {
+      root.style.setProperty('--daisy', a[0]); root.style.setProperty('--daisy-hi', a[1]);
+      root.style.setProperty('--daisy-ink', a[2]); root.style.setProperty('--daisy-deep', a[3]);
+      root.style.setProperty('--daisy-wash', a[4]); root.style.setProperty('--leaf', a[5]);
     }
-    document.querySelectorAll('.sw').forEach(function (s) { s.classList.toggle('on', s.getAttribute('data-accent') === t.accent); });
+    $$('.sw').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-accent') === theme.accent); });
+    $$('#segtheme button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-theme') === theme.mode); });
+    $$('#segmotion button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-motion') === theme.motion); });
+    if (theme.serif) $('#set-serif').value = theme.serif;
+    if (theme.mono) $('#set-mono').value = theme.mono;
   }
-  var theme = { serif: '', mono: '', accent: 'daisy' };
-  try { var saved = localStorage.getItem('daisy-theme'); if (saved) { theme = JSON.parse(saved); applyTheme(theme);
-    if (theme.serif) document.getElementById('set-serif').value = theme.serif;
-    if (theme.mono) document.getElementById('set-mono').value = theme.mono; } } catch (err) {}
-  function saveTheme() { try { localStorage.setItem('daisy-theme', JSON.stringify(theme)); } catch (err) {} applyTheme(theme); }
-  document.getElementById('set-serif').addEventListener('change', function (e) { theme.serif = e.target.value; saveTheme(); });
-  document.getElementById('set-mono').addEventListener('change', function (e) { theme.mono = e.target.value; saveTheme(); });
-  document.querySelectorAll('.sw').forEach(function (s) { s.addEventListener('click', function () { theme.accent = s.getAttribute('data-accent'); saveTheme(); }); });
+  function save() { try { localStorage.setItem('daisy-theme', JSON.stringify(theme)); } catch (e) {} applyTheme(); }
+  function toggleTheme() { theme.mode = (theme.mode === 'dark') ? 'light' : 'dark'; save(); toast('<b>' + (theme.mode === 'dark' ? 'Dark' : 'Light') + '.</b> Appearance saved to daisy-theme-v1.'); }
+
+  $('#btn-theme').addEventListener('click', toggleTheme);
+  $('#segtheme').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { theme.mode = b.getAttribute('data-theme'); save(); } });
+  $('#segmotion').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { theme.motion = b.getAttribute('data-motion'); save(); } });
+  $('#set-serif').addEventListener('change', function (e) { theme.serif = e.target.value; save(); });
+  $('#set-mono').addEventListener('change', function (e) { theme.mono = e.target.value; save(); });
+  $$('.sw').forEach(function (x) { x.addEventListener('click', function () { theme.accent = x.getAttribute('data-accent'); save(); }); });
+
   function themeJSON() {
-    return JSON.stringify({ format: 'daisy-theme-v1', base: 'graphite-dark', accent: theme.accent, chatFont: theme.serif || 'Source Serif 4', codeFont: theme.mono || 'IBM Plex Mono', semantics: { pass: '#4CC38A', fail: '#F0655A', wait: '#D9A23D' } }, null, 2);
+    return JSON.stringify({ format: 'daisy-theme-v1', mode: theme.mode, accent: theme.accent, motion: theme.motion,
+      chatFont: theme.serif || 'Source Serif 4', codeFont: theme.mono || 'IBM Plex Mono',
+      semantics: { pass: '#4B7C21', fail: '#BE3A2B', wait: '#B4690E' } }, null, 2);
   }
   function copyTheme() {
-    var json = themeJSON();
-    var box = document.getElementById('themebox');
-    function show() { showView('settings'); box.textContent = json; box.style.display = 'block'; }
+    var j = themeJSON(), box = $('#jsonbox');
+    function fall() { show('settings'); box.textContent = j; box.style.display = 'block'; }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(json).then(function () { show(); showToast('<b>Theme copied.</b> daisy-theme-v1 JSON is on your clipboard.'); }, show);
-    } else show();
+      navigator.clipboard.writeText(j).then(function () { fall(); toast('<b>Copied.</b> daisy-theme-v1 JSON is on the clipboard.'); }, fall);
+    } else fall();
   }
-  document.getElementById('copytheme').addEventListener('click', copyTheme);
+  $('#copytheme').addEventListener('click', copyTheme);
 
-  /* ---------- go ---------- */
+  /* ---------------- window focus (native apps desaturate chrome when inactive) ------- */
+  window.addEventListener('blur',  function () { document.body.classList.add('blurred'); });
+  window.addEventListener('focus', function () { document.body.classList.remove('blurred'); });
+
+  /* ---------------- press feedback on pointerdown, not click ---------------- */
+  document.addEventListener('pointerdown', function (e) {
+    var b = e.target.closest('button, .navitem, .thread');
+    if (!b || b.disabled) return;
+    b.style.transform = 'scale(.978)';
+    var up = function () { b.style.transform = ''; window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointerup', up);
+  });
+
+  applyTheme();
   playLive();
+
+  /* ---------------- the mark ---------------- */
+  function DAISY_MARK() { return "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\" aria-hidden=\"true\"><g fill=\"var(--daisy)\"><path d=\"M62.0 43.2Q82.0 36.7 96.3 51.9Q79.3 67.9 60.7 58.2Z\"/><path d=\"M63.4 55.1Q78.7 65.9 76.5 86.3Q57.0 82.6 51.6 63.9Z\"/><path d=\"M53.5 63.3Q57.2 83.2 39.7 93.9Q28.2 75.9 40.7 59.6Z\"/><path d=\"M42.6 61.9Q32.0 75.9 12.2 71.6Q18.4 52.7 35.9 49.5Z\"/><path d=\"M35.4 51.2Q16.6 49.3 10.1 27.3Q29.6 21.5 42.5 37.9Z\"/><path d=\"M40.7 39.8Q29.9 22.9 41.2 3.9Q58.6 15.5 55.3 36.3Z\"/><path d=\"M52.5 36.5Q60.2 17.7 82.4 16.4Q82.4 36.6 63.1 46.5Z\"/></g><path d=\"M67.8 50.0Q65.0 56.2 62.7 62.7Q56.7 65.1 50.0 67.5Q44.1 65.1 38.1 61.9Q34.9 56.1 32.5 50.0Q34.8 43.8 37.4 37.4Q44.1 34.7 50.0 32.7Q56.3 35.0 61.6 38.4Q64.7 44.3 67.8 50.0Z\" fill=\"var(--daisy-deep)\"/></svg>"; }
 })();
 </script>
