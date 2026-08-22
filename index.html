@@ -577,6 +577,43 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 .adopt-foot { padding: 9px 12px; font-size: 12px; color: var(--ink-3); border-top: .5px solid var(--border); background: var(--surface-2); }
 .adopt-foot b { color: var(--ink-2); font-weight: 600; }
 
+/* ---------- model picker: Codex's cascading Model / Effort / Speed ---------- */
+.mtrig {
+  height: 28px; padding: 0 6px 0 9px; gap: 5px; border: none; background: transparent;
+  box-shadow: none; border-radius: 8px; color: var(--ink-2); font-size: 12.5px; font-weight: 450;
+}
+.mtrig:hover, .mtrig[aria-expanded="true"] { background: var(--wash); color: var(--ink); }
+.mtrig .ln { color: var(--ink-3); }
+.mtrig .mn { color: var(--ink); font-weight: 500; }
+.mtrig .ef { color: var(--ink-3); }
+.mtrig svg { width: 12px; height: 12px; color: var(--ink-4); }
+
+.mmenu, .msub {
+  position: fixed; z-index: 400; min-width: 208px; padding: 5px;
+  background: var(--surface); border: .5px solid var(--border-strong); border-radius: 12px;
+  box-shadow: var(--shadow-3); opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(4px) scale(.985); transform-origin: bottom left;
+  transition: visibility 0s linear var(--d-menu), opacity var(--d-menu) var(--out), transform var(--d-menu) var(--out);
+}
+.mmenu.on, .msub.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
+.msub { min-width: 186px; max-height: 62vh; overflow-y: auto; }
+.mi {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  height: 32px; padding: 0 9px; border: none; background: transparent; box-shadow: none;
+  border-radius: 7px; font-size: 13.5px; font-weight: 450; color: var(--ink); text-align: left;
+}
+.mi:hover, .mi.open { background: var(--wash); }
+.mi .val { margin-left: auto; color: var(--ink-3); }
+.mi .chev { width: 13px; height: 13px; color: var(--ink-4); flex: 0 0 13px; }
+.mi .tick { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink); visibility: hidden; }
+.mi.sel .tick { visibility: visible; }
+.mi.tall { height: auto; padding: 7px 9px; align-items: flex-start; flex-direction: column; gap: 1px; }
+.mi.tall .sub { font-size: 12px; color: var(--ink-3); font-weight: 400; }
+.mi.tall .top { display: flex; align-items: center; gap: 10px; width: 100%; }
+.msep { height: 1px; background: var(--border); margin: 5px 4px; }
+.mhead { padding: 7px 9px 4px; font-size: 11.5px; color: var(--ink-3); letter-spacing: .02em; text-transform: uppercase; }
+.mnote { padding: 4px 9px 7px; font-size: 11.5px; color: var(--ink-3); }
+
 /* ---------- cards ---------- */
 .card {
   background: var(--surface); border: .5px solid var(--border-strong);
@@ -1068,8 +1105,8 @@ table.l tr.click:hover td { background: var(--wash); }
           <button class="rbtn" title="Attach" aria-label="Attach"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg></button>
           <span class="access"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.6 14 13H2L8 2.6Z" stroke-linejoin="round"/><path d="M8 6.6v3M8 11.3v.1" stroke-linecap="round"/></svg> Gates armed</span>
           <div class="picks">
-            <select aria-label="Frontend agent"><option>Frontend · Fable 5 High</option><option>Frontend · GPT-5.3 Codex</option></select>
-            <select aria-label="API agent"><option>API · GPT-5.3 Codex</option><option>API · Fable 5 High</option></select>
+            <button class="mtrig" data-lane="fe" aria-haspopup="menu" aria-expanded="false"><span class="ln">Frontend</span><span class="mn">—</span><span class="ef"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
+            <button class="mtrig" data-lane="api" aria-haspopup="menu" aria-expanded="false"><span class="ln">API</span><span class="mn">—</span><span class="ef"></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 6.5 8 10l3.5-3.5"/></svg></button>
             <button class="rbtn" title="Dictate" aria-label="Dictate"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2" width="4" height="7" rx="2"/><path d="M3.6 7.4a4.4 4.4 0 0 0 8.8 0M8 11.8V14" stroke-linecap="round"/></svg></button>
             <button class="send" id="send" title="Send" aria-label="Send"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12.5v-9M4.2 7.2 8 3.4l3.8 3.8"/></svg></button>
           </div>
@@ -1339,6 +1376,7 @@ $ echo $?
   "use strict";
   var PRECEDENT_DEMO = [{"label":"exact repeat","q":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:12, Inter used with no paired display face in layout.tsx:8, and emoji standing in for icons in the status column","ms":15.2,"sig":["taste.t1=gross"],"tier":"fingerprint","hits":[{"run":"0384","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:34, Inter used with no paired display face in layout.tsx:34, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}},{"run":"0316","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:143, Inter used with no paired display face in layout.tsx:143, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}}]},{"label":"paraphrase","q":"my bracket bends way too much under the tip load, stress is over what the material takes","ms":83.2,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.624,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.327,"bm25":0.0,"recency":0.998,"evidence":0.665}},{"run":"0205","score":0.62,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.341,"bm25":0.0,"recency":0.793,"evidence":0.669}}]},{"label":"text-poor, gates match","q":"something is off with the part","ms":15.3,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.641,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.357,"bm25":0.0,"recency":0.998,"evidence":0.675}},{"run":"0205","score":0.613,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.355,"bm25":0.0,"recency":0.793,"evidence":0.674}}]},{"label":"novel failure","q":"the ci runner ran out of disk space while installing playwright browsers","ms":13.9,"sig":["infra.disk=gross"],"tier":null,"hits":[]}];  // taste-ok: fixture quoting the tell
   var PRECEDENT_STATS = {"generated":"2026-08-22 04:33","cases":1284,"families":7,"fix_rate":90.0,"recall_ms":15.9,"fingerprint_ms":0.012,"index_kb":80,"float_mb":2.6,"quant_x":32,"db_mb":5.6,"compact_before":23450,"compact_after":983,"compact_x":24,"compact_ms":29,"probe_score":100,"probe_n":8,"top_families":[{"family":"F-11 thin-web bending","seen":329,"fixed":309,"how":"algebra","sig":"physics.bend=marginal"},{"family":"F-24 stale-scrape","seen":311,"fixed":298,"how":"resume-findings","sig":"scrape.freshness=gross"},{"family":"F-03 slop-palette","seen":211,"fixed":205,"how":"resume-findings","sig":"taste.t1=gross"},{"family":"F-31 selector-break","seen":169,"fixed":158,"how":"human","sig":"scrape.schema=gross"},{"family":"F-19 contract-drift","seen":115,"fixed":112,"how":"resume-findings","sig":"contract.conformance=gross"},{"family":"F-42 budget-overrun","seen":77,"fixed":74,"how":"human","sig":"budget.total=short"}]};
+  var MODEL_INVENTORY = {"efforts": {"claude": ["low", "medium", "high", "xhigh", "max"], "codex": ["light", "medium", "high", "xhigh", "max", "ultra"], "opencode": []}, "speeds": ["standard", "fast"], "labels": {"effort": {"low": "Low", "light": "Light", "medium": "Medium", "high": "High", "xhigh": "Extra High", "max": "Max", "ultra": "Ultra"}, "effort_note": {"ultra": "Consumes usage limits faster", "max": "Slowest, most thorough"}, "speed_note": {"standard": "Default speed", "fast": "1.5\u00d7 speed, more usage"}}, "models": [{"vendor": "claude", "id": "claude-fable-5", "label": "Fable", "source": "config", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-opus-5", "label": "Opus 5", "source": "known", "current": true, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-sonnet-5", "label": "Sonnet 5", "source": "known", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "claude", "id": "claude-haiku-4-5-20251001", "label": "Haiku 4.5", "source": "known", "current": false, "efforts": ["low", "medium", "high", "xhigh", "max"], "speeds": ["standard", "fast"], "effort": "", "provider": ""}, {"vendor": "codex", "id": "gpt-5.6-sol", "label": "5.6 Sol", "source": "config", "current": true, "efforts": ["light", "medium", "high", "xhigh", "max", "ultra"], "speeds": ["standard", "fast"], "effort": "xhigh", "provider": ""}, {"vendor": "opencode", "id": "x-preview-f-free", "label": "x-preview-f-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}, {"vendor": "opencode", "id": "stealth/ox-alpha", "label": "stealth/ox-alpha", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "openrouter"}, {"vendor": "opencode", "id": "nemotron-3.5-lightning-free", "label": "nemotron-3.5-lightning-free", "source": "history", "current": false, "efforts": [], "speeds": [], "effort": "", "provider": "opencode"}]};
   var ADOPTED_SNAPSHOT = {"generated": "2026-08-22 09:49:24", "counts": {"claude": 28, "codex": 26, "opencode": 4}, "live": 1, "processes": {"cli": {"claude": 0, "codex": 3, "opencode": 2}, "desktop": {"claude": 1, "codex": 1}}, "total": 58, "sessions": [{"vendor": "claude", "state": "live", "project": "daisy", "model": "claude-opus-5", "messages": 30, "tokens": 0}, {"vendor": "claude", "state": "idle", "project": "Prometheus_Vault", "model": "claude-fable-5", "messages": 13, "tokens": 0}, {"vendor": "codex", "state": "idle", "project": "Developer", "model": "openai", "messages": 13, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "tes", "model": "1.18.15", "messages": 0, "tokens": 2791360}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}]};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -1348,6 +1386,190 @@ $ echo $?
 
   /* ---------------- brand mark (hand-drawn daisy, inline) ---------------- */
   $('#brandmark').innerHTML = DAISY_MARK();
+
+  /* ---------------- model picker ----------------
+     Codex's shape: one pill that opens Model / Effort / Speed, each cascading
+     to its own list. The contents are not hardcoded — agents/models.py reads
+     what this machine actually has, so the Claude entries come from
+     ~/.claude.json, the Codex entry and its effort come from config.toml, and
+     the OpenCode entries come from models it has really run.
+
+     The ladders are per-vendor on purpose. Claude Code and Codex do not agree
+     on the names or the length of the effort scale, and OpenCode has no such
+     concept at all — so picking an OpenCode model disables Effort and Speed
+     rather than offering settings that go nowhere. */
+  var VENDOR_LABEL = { claude: 'Claude Code', codex: 'Codex', opencode: 'OpenCode' };
+  var LANES = { fe: null, api: null };
+
+  function modelsFor() { return MODEL_INVENTORY.models || []; }
+
+  function defaultLane(pref) {
+    var ms = modelsFor();
+    var pick = null;
+    for (var i = 0; i < ms.length; i++) {
+      if (ms[i].vendor === pref) { pick = ms[i]; if (ms[i].current) break; }
+    }
+    if (!pick) pick = ms[0];
+    if (!pick) return null;
+    return { model: pick, effort: pick.effort || (pick.efforts[2] || pick.efforts[0] || ''),
+             speed: pick.speeds[0] || '' };
+  }
+
+  function effortLabel(e) { return (MODEL_INVENTORY.labels.effort || {})[e] || e; }
+
+  function paintTrigger(lane) {
+    var t = $('.mtrig[data-lane="' + lane + '"]'), s = LANES[lane];
+    if (!t) return;
+    $('.mn', t).textContent = s ? (s.model.label || s.model.id) : '—';
+    $('.ef', t).textContent = s && s.effort ? effortLabel(s.effort) : '';
+  }
+
+  var mmenu, msub, openLane = null, openRow = null;
+
+  function buildMenus() {
+    mmenu = document.createElement('div'); mmenu.className = 'mmenu';
+    mmenu.setAttribute('role', 'menu');
+    msub = document.createElement('div'); msub.className = 'msub';
+    msub.setAttribute('role', 'menu');
+    document.body.appendChild(mmenu); document.body.appendChild(msub);
+
+    mmenu.addEventListener('click', function (e) {
+      var row = e.target.closest('.mi'); if (!row) return;
+      e.stopPropagation();
+      openSub(row.getAttribute('data-row'), row);
+    });
+    msub.addEventListener('click', function (e) {
+      var it = e.target.closest('.mi[data-val]'); if (!it) return;
+      e.stopPropagation();
+      choose(it.getAttribute('data-kind'), it.getAttribute('data-val'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.mtrig') && !e.target.closest('.mmenu') && !e.target.closest('.msub')) closeMenu();
+    });
+  }
+
+  var TICK = '<svg class="tick" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5 6.5 12 13 4.5"/></svg>';
+  var CHEV = '<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4 10 7.5 6.5 11"/></svg>';
+
+  function menuHTML(s) {
+    var noLadder = !s.model.efforts.length;
+    return '<button class="mi" data-row="model">Model<span class="val">' +
+             (s.model.label || s.model.id) + '</span>' + CHEV + '</button>' +
+           '<button class="mi" data-row="effort"' + (noLadder ? ' disabled' : '') + '>Effort<span class="val">' +
+             (noLadder ? 'n/a' : effortLabel(s.effort)) + '</span>' + CHEV + '</button>' +
+           '<button class="mi" data-row="speed"' + (noLadder ? ' disabled' : '') + '>Speed<span class="val">' +
+             (noLadder ? 'n/a' : (s.speed === 'fast' ? 'Fast' : 'Standard')) + '</span>' + CHEV + '</button>' +
+           '<div class="msep"></div>' +
+           '<div class="mnote">' + VENDOR_LABEL[s.model.vendor] + ' &middot; read from ' +
+             (s.model.source === 'config' ? 'its config' :
+              s.model.source === 'history' ? 'its history' : 'the known roster') + '</div>';
+  }
+
+  function subHTML(kind, s) {
+    var out = '', L = MODEL_INVENTORY.labels || {};
+    if (kind === 'model') {
+      var groups = {};
+      modelsFor().forEach(function (m) { (groups[m.vendor] = groups[m.vendor] || []).push(m); });
+      ['claude', 'codex', 'opencode'].forEach(function (v) {
+        if (!groups[v]) return;
+        out += '<div class="mhead">' + VENDOR_LABEL[v] + '</div>';
+        groups[v].forEach(function (m) {
+          out += '<button class="mi' + (m.id === s.model.id ? ' sel' : '') +
+                 '" data-kind="model" data-val="' + m.id + '">' + TICK +
+                 '<span>' + (m.label || m.id) + '</span></button>';
+        });
+      });
+    } else if (kind === 'effort') {
+      out += '<div class="mhead">Effort</div>';
+      s.model.efforts.forEach(function (e) {
+        var note = (L.effort_note || {})[e];
+        out += '<button class="mi' + (note ? ' tall' : '') + (e === s.effort ? ' sel' : '') +
+               '" data-kind="effort" data-val="' + e + '">' +
+               (note ? '<span class="top">' + TICK + '<span>' + effortLabel(e) + '</span></span><span class="sub">' + note + '</span>'
+                     : TICK + '<span>' + effortLabel(e) + '</span>') + '</button>';
+      });
+    } else {
+      out += '<div class="mhead">Speed</div>';
+      (s.model.speeds || []).forEach(function (sp) {
+        var note = (L.speed_note || {})[sp];
+        out += '<button class="mi tall' + (sp === s.speed ? ' sel' : '') +
+               '" data-kind="speed" data-val="' + sp + '">' +
+               '<span class="top">' + TICK + '<span>' + (sp === 'fast' ? 'Fast' : 'Standard') + '</span></span>' +
+               '<span class="sub">' + (note || '') + '</span></button>';
+      });
+    }
+    return out;
+  }
+
+  function place(el, anchorRect, toLeft) {
+    el.style.visibility = 'hidden'; el.classList.add('on');
+    var w = el.offsetWidth, hgt = el.offsetHeight;
+    var left = toLeft ? anchorRect.left - w - 6 : anchorRect.left;
+    if (left < 8) left = anchorRect.right + 6;
+    var top = anchorRect.top - hgt - 6;
+    if (top < 8) top = Math.min(anchorRect.bottom + 6, window.innerHeight - hgt - 8);
+    el.style.left = Math.min(left, window.innerWidth - w - 8) + 'px';
+    el.style.top = top + 'px';
+    el.style.visibility = '';
+  }
+
+  function openSub(kind, row) {
+    if (row.disabled) return;
+    if (openRow) openRow.classList.remove('open');
+    openRow = row; row.classList.add('open');
+    msub.innerHTML = subHTML(kind, LANES[openLane]);
+    place(msub, row.getBoundingClientRect(), true);
+  }
+
+  function choose(kind, val) {
+    var s = LANES[openLane];
+    if (kind === 'model') {
+      var m = modelsFor().filter(function (x) { return x.id === val; })[0];
+      if (!m) return;
+      // Carry effort across only when the new vendor has that rung; otherwise
+      // fall to its own default rather than writing a value it cannot honour.
+      var keep = m.efforts.indexOf(s.effort) !== -1 ? s.effort : (m.effort || m.efforts[2] || m.efforts[0] || '');
+      LANES[openLane] = { model: m, effort: keep, speed: m.speeds.indexOf(s.speed) !== -1 ? s.speed : (m.speeds[0] || '') };
+    } else if (kind === 'effort') { s.effort = val; }
+    else { s.speed = val; }
+    paintTrigger(openLane);
+    syncSettingsFromLane(openLane);
+    mmenu.innerHTML = menuHTML(LANES[openLane]);
+    msub.classList.remove('on');
+    if (openRow) { openRow.classList.remove('open'); openRow = null; }
+    var st = LANES[openLane];
+    toast('<b>' + (openLane === 'fe' ? 'Frontend' : 'API') + ' lane.</b> ' +
+          (st.model.label || st.model.id) + (st.effort ? ' &middot; ' + effortLabel(st.effort) : '') +
+          (st.speed === 'fast' ? ' &middot; fast' : ''));
+  }
+
+  function closeMenu() {
+    if (!mmenu) return;
+    mmenu.classList.remove('on'); msub.classList.remove('on');
+    if (openRow) { openRow.classList.remove('open'); openRow = null; }
+    $$('.mtrig').forEach(function (t) { t.setAttribute('aria-expanded', 'false'); });
+    openLane = null;
+  }
+
+  function initPicker() {
+    if (!modelsFor().length) return;
+    LANES.fe = defaultLane('claude');
+    LANES.api = defaultLane('codex');
+    buildMenus();
+    ['fe', 'api'].forEach(paintTrigger);
+    $$('.mtrig').forEach(function (t) {
+      t.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var lane = t.getAttribute('data-lane');
+        if (openLane === lane) { closeMenu(); return; }
+        closeMenu();
+        openLane = lane;
+        t.setAttribute('aria-expanded', 'true');
+        mmenu.innerHTML = menuHTML(LANES[lane]);
+        place(mmenu, t.getBoundingClientRect(), false);
+      });
+    });
+  }
 
   /* ---------------- adopted agents ----------------
      Conductor spawns its agents, so it owns them. These it did not start: they
@@ -2078,25 +2300,46 @@ $ echo $?
   /* ---------------- settings: default agents ----------------
      These mirror the composer's own pickers rather than storing a second
      copy of the truth — changing one moves the other, in both directions. */
-  (function () {
-    var picks = $$('.picks select');
-    var fe = $('#set-agent-fe'), api = $('#set-agent-api');
-    if (!picks.length || !fe || !api) return;
-    var pairs = [[fe, picks[0], 'Frontend'], [api, picks[1], 'API']];
-    pairs.forEach(function (pair) {
-      var setting = pair[0], composer = pair[1], lane = pair[2];
-      setting.addEventListener('change', function () {
-        composer.selectedIndex = Array.prototype.findIndex.call(
-          composer.options, function (o) { return o.text === lane + ' \u00b7 ' + setting.value; });
-        toast('<b>' + lane + ' lane.</b> ' + setting.value + ' for the next run.');
+  // Settings mirrors the composer rather than storing a second copy of the
+  // truth: both read LANES, and either one moves the other.
+  var SET_SEL = { fe: '#set-agent-fe', api: '#set-agent-api' };
+
+  function fillSettingsModels() {
+    var ms = modelsFor(); if (!ms.length) return;
+    Object.keys(SET_SEL).forEach(function (lane) {
+      var sel = $(SET_SEL[lane]); if (!sel) return;
+      sel.innerHTML = '';
+      ['claude', 'codex', 'opencode'].forEach(function (v) {
+        var group = ms.filter(function (m) { return m.vendor === v; });
+        if (!group.length) return;
+        var og = document.createElement('optgroup');
+        og.label = VENDOR_LABEL[v];
+        group.forEach(function (m) {
+          var o = document.createElement('option');
+          o.value = m.id; o.textContent = m.label || m.id;
+          og.appendChild(o);
+        });
+        sel.appendChild(og);
       });
-      composer.addEventListener('change', function () {
-        var name = composer.options[composer.selectedIndex].text.split(' \u00b7 ')[1];
-        setting.selectedIndex = Array.prototype.findIndex.call(
-          setting.options, function (o) { return o.text === name; });
+      sel.addEventListener('change', function () {
+        var m = modelsFor().filter(function (x) { return x.id === sel.value; })[0];
+        if (!m) return;
+        var cur = LANES[lane];
+        var keep = m.efforts.indexOf(cur.effort) !== -1 ? cur.effort
+                 : (m.effort || m.efforts[2] || m.efforts[0] || '');
+        LANES[lane] = { model: m, effort: keep,
+                        speed: m.speeds.indexOf(cur.speed) !== -1 ? cur.speed : (m.speeds[0] || '') };
+        paintTrigger(lane);
+        toast('<b>' + (lane === 'fe' ? 'Frontend' : 'API') + ' lane.</b> ' + (m.label || m.id));
       });
     });
-  }());
+    Object.keys(SET_SEL).forEach(syncSettingsFromLane);
+  }
+
+  function syncSettingsFromLane(lane) {
+    var sel = $(SET_SEL[lane]), s = LANES[lane];
+    if (sel && s) sel.value = s.model.id;
+  }
 
   /* ---------------- run menu (the ... beside the title) ----------------
      It was a bare span with cursor:pointer and no handler — a control that
@@ -2431,6 +2674,11 @@ $ echo $?
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
   }
+  // after every definition above: initPicker reads LANES, which var-hoists
+  // its declaration but not its value.
+  initPicker();
+  fillSettingsModels();
+
   trap(modOv); trap(palOv);
 
   // restore focus to wherever you were when an overlay closes
