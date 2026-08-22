@@ -48,6 +48,9 @@ gate "precedent — engine + compaction test suite" \
 gate "agents — adoption of other tools' sessions" \
      env PYTHONWARNINGS=ignore $PY -m agents.test_discover
 
+gate "commons — verified solution reuse across agents" \
+     env PYTHONWARNINGS=ignore $PY -m commons.test_commons
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'
