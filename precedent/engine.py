@@ -414,10 +414,15 @@ class Precedent:
         into something an agent can interrogate on its own terms.
         """
         q = query.strip().rstrip(";")
-        if not re.match(r"(?is)^\s*select\b", q):
-            raise ValueError("precedent.sql accepts SELECT only")
-        if re.search(r"(?is)\b(attach|pragma|insert|update|delete|drop|create|alter)\b", q):
+        # WITH ... SELECT is read-only and is exactly what an agent reaches for
+        # when it wants to aggregate; SQLite also allows WITH ... DELETE, so the
+        # keyword blocklist below still has to run.
+        if not re.match(r"(?is)^\s*(select|with)\b", q):
+            raise ValueError("precedent.sql accepts SELECT (or WITH ... SELECT) only")
+        if re.search(r"(?is)\b(attach|pragma|insert|update|delete|drop|create|alter|replace|vacuum)\b", q):
             raise ValueError("precedent.sql is read-only")
+        if ";" in q:
+            raise ValueError("precedent.sql runs one statement at a time")
         rows = self.db.execute(q).fetchmany(limit)
         return [dict(r) for r in rows]
 

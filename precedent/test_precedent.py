@@ -132,8 +132,11 @@ def test_recall():
         # sql tool is read-only
         rows = p.sql("SELECT COUNT(*) n FROM cases")
         check("sql tool reads", rows[0]["n"] == 36)
+        check("sql tool allows read-only CTEs",
+              p.sql("WITH t AS (SELECT family FROM cases) SELECT COUNT(*) n FROM t")[0]["n"] == 36)
         for bad in ("DELETE FROM cases", "DROP TABLE cases", "INSERT INTO cases VALUES (1)",
-                    "SELECT 1; DROP TABLE cases"):
+                    "SELECT 1; DROP TABLE cases", "WITH x AS (SELECT 1) DELETE FROM cases",
+                    "VACUUM", "PRAGMA table_info(cases)"):
             try:
                 p.sql(bad); check("sql tool refuses %r" % bad[:18], False, "not refused")
             except ValueError:
