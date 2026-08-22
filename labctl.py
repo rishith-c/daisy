@@ -25,7 +25,11 @@ def main(argv=None):
     r = sub.add_parser("run", help="take a brief through the factory")
     r.add_argument("--brief", required=True)
     r.add_argument("--run-id")
-    r.add_argument("--lane", action="append", choices=("hardware", "scrape", "software"))
+    r.add_argument("--lane", action="append",
+               choices=("hardware", "scrape", "software", "crew"))
+    r.add_argument("--crew", action="append",
+               choices=("claude", "codex", "opencode"),
+               help="agents for the crew lane (default: claude, codex)")
     r.add_argument("--agent", default="auto", choices=("auto", "claude", "codex", "opencode"))
     r.add_argument("--fixture", default="vendor_v1.html")
     r.add_argument("--json", action="store_true")
@@ -41,7 +45,7 @@ def main(argv=None):
         return 0
 
     s = execute(a.brief, a.run_id, tuple(a.lane or ("hardware", "scrape", "software")),
-                a.agent, a.fixture, quiet=a.json)
+                a.agent, a.fixture, quiet=a.json, crew=a.crew)
     if a.json:
         print(json.dumps(s, indent=1, default=str))
     else:

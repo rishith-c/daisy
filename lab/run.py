@@ -270,6 +270,102 @@ def _extract_html(text: str) -> str:
     return t[i:] if i >= 0 else t
 
 
+CONTRACT = {
+    "states": ["pass", "fail", "pending"],
+    "root_class": "badge",
+    "state_attr": "data-state",
+}
+
+CREW_TASK = (
+    "Write a single self-contained HTML file for a status badge component.\n"
+    "You MUST conform to this contract exactly — another agent is building "
+    "against the same one and the two outputs must be interchangeable:\n"
+    "  - root element carries class=\"badge\"\n"
+    "  - state is expressed as data-state=\"pass|fail|pending\"\n"
+    "  - all three states must appear\n"
+    "Requirements: every colour from a CSS custom property in one :root block; "
+    "no hardcoded hex outside :root; no emoji; no inline style attributes.\n"
+    "Output ONLY the HTML, no explanation, no markdown fences."
+)
+
+
+def contract_check(html: str) -> tuple:
+    """Does this output honour the shared contract? Returns (ok, [misses]).
+
+    This is what makes two agents a crew rather than two agents. The claim
+    Daisy makes is that Claude and Codex are combined by a contract, not by a
+    conversation — so the contract has to be a thing that can be checked, and
+    a lane that violates it has to fail for that reason and no other.
+    """
+    low = (html or "").lower()
+    miss = []
+    if 'class="badge"' not in low and "class='badge'" not in low:
+        miss.append('root_class: no class="badge"')
+    for st in CONTRACT["states"]:
+        if 'data-state="%s"' % st not in low and "data-state='%s'" % st not in low:
+            miss.append('state_attr: missing data-state="%s"' % st)
+    return (not miss), miss
+
+
+def crew_lane(run_id: str, brief: str, agents: list, log) -> LaneResult:
+    """Two vendors, one contract, judged identically."""
+    r = LaneResult("crew", ran=True)
+    d = _rundir(run_id)
+    outs = {}
+    for name in agents:
+        ex, probed = executors.pick(name, cwd=d)
+        if not ex:
+            log("  %-9s unavailable — %s" % (name, probed[0].detail if probed else "?"))
+            r.gates.append(_gate_row("crew.%s.available" % name, False, 0,
+                                     probed[0].detail if probed else ""))
+            continue
+        with tracer().span("agent.invoke", {"agent": name, "lane": "crew"}) as s:
+            res = executors.run(ex, CREW_TASK, cwd=d)
+            s.set("agent.ok", res["ok"]); s.set("agent.ms", res["ms"])
+        html = _extract_html(res["stdout"]) if res["ok"] else ""
+        path = os.path.join(d, "badge.%s.html" % name)
+        open(path, "w", encoding="utf-8").write(html)
+
+        sane, why = artifact_sane(html)
+        with gate("crew.%s.contract" % name, {"agent": name}) as g:
+            ok, miss = contract_check(html) if sane else (False, [why])
+            g.margin = float(len(miss))
+            if not ok:
+                g.fail(len(miss), "; ".join(miss)[:120])
+        with gate("crew.%s.taste" % name, {"agent": name}) as gt:
+            f = lint(html, path) if sane else []
+            gt.margin = float(len(f))
+            if not sane:
+                gt.fail(0, why)
+            elif f:
+                gt.fail(len(f), "%d findings" % len(f))
+        r.gates.append(_gate_row("crew.%s.contract" % name, ok, len(miss),
+                                 "; ".join(miss)[:90]))
+        r.gates.append(_gate_row("crew.%s.taste" % name, sane and not f, len(f)))
+        outs[name] = {"path": path, "bytes": len(html), "contract_ok": ok,
+                      "contract_misses": miss, "taste_findings": len(f),
+                      "ms": res["ms"]}
+        log("  %-9s %5d bytes  contract %-4s  taste %d finding%s  %.0fs"
+            % (name, len(html), "OK" if ok else "MISS", len(f),
+               "" if len(f) == 1 else "s", res["ms"] / 1000.0))
+        r.artifacts.append(outs[name])
+
+    # The interchangeability claim, checked rather than asserted.
+    both = [n for n, o in outs.items() if o["contract_ok"]]
+    with gate("crew.interchangeable") as g:
+        g.margin = float(len(both))
+        if len(both) < 2:
+            g.fail(len(both), "only %d of %d agents met the contract"
+                              % (len(both), len(agents)))
+    r.gates.append(_gate_row("crew.interchangeable", len(both) >= 2, len(both),
+                             "%d agents conform" % len(both)))
+    log("  contract honoured by %d/%d agents: %s"
+        % (len(both), len(agents), ", ".join(both) or "none"))
+    r.passed = all(x["passed"] for x in r.gates)
+    r.attempts = 1
+    return r
+
+
 def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
     r = LaneResult("software")
     d = _rundir(run_id)
@@ -361,7 +457,7 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
 
 def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape", "software"),
             prefer: str = "auto", fixture: str = "vendor_v1.html",
-            quiet: bool = False) -> dict:
+            quiet: bool = False, crew: list = None) -> dict:
     run_id = run_id or time.strftime("%H%M%S")
     d = _rundir(run_id)
     out = []
@@ -397,6 +493,9 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         if "software" in lanes:
             log("software lane")
             results["software"] = software_lane(run_id, brief, prefer, log)
+        if "crew" in lanes:
+            log("crew lane — two vendors, one contract")
+            results["crew"] = crew_lane(run_id, brief, crew or ["claude", "codex"], log)
 
         all_gates = [g for r in results.values() for g in r.gates]
         failed = [g for g in all_gates if not g["passed"]]
