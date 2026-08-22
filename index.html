@@ -848,13 +848,29 @@ table.l tr.click:hover td { background: var(--wash); }
 
   <!-- ============ RUNS ============ -->
   <div class="view" id="view-runs"><div class="page"><div class="pcol">
-    <h2>Runs</h2><div class="lede">Every factory run, replayable from its flight recorder.</div>
-    <div class="tbl"><table class="l">
-      <tr><th>Run</th><th>Brief</th><th>Lanes</th><th>Gates</th><th>Status</th><th>Wall</th></tr>
-      <tr class="click" data-run="1042"><td class="mo">1042</td><td class="s">Sensor fleet dashboard + SR-11 bracket</td><td>web · hardware</td><td class="mo">2 fails · 2 repairs</td><td><span class="tag pass">PASSED</span></td><td class="mo">6m 42s</td></tr>
-      <tr class="click" data-run="1041"><td class="mo">1041</td><td class="s">Taste gate rehearsal — tier 1 findings</td><td>web</td><td class="mo">1 fail · 1 repair</td><td><span class="tag pass">PASSED</span></td><td class="mo">4m 08s</td></tr>
-      <tr class="click" data-run="1039"><td class="mo">1039</td><td class="s">Bracket margin sweep, FoS 1.5</td><td>hardware</td><td class="mo">3 fails · exhausted</td><td><span class="tag fail">ESCALATED</span></td><td class="mo">9m 51s</td></tr>
+    <h2>Runs</h2><div class="lede">The last ten. Every one is replayable from its flight recorder, and every one is archived into precedent when it closes.</div>
+
+    <div class="tbl" style="margin-bottom:20px"><table class="l">
+      <tr><th>Window</th><th>Runs</th><th>Passed</th><th>Escalated</th><th>Gate failures caught</th><th>Median wall</th></tr>
+      <tr><td class="s">today</td><td class="mo">7</td><td class="mo">6</td><td class="mo">1</td><td class="mo">11</td><td class="mo">6m 04s</td></tr>
+      <tr><td class="s">this week</td><td class="mo">63</td><td class="mo">57</td><td class="mo">6</td><td class="mo">94</td><td class="mo">6m 41s</td></tr>
+      <tr><td class="s">archived (all time)</td><td class="mo">1,284</td><td class="mo">1,156</td><td class="mo">128</td><td class="mo">1,284</td><td class="mo">7m 12s</td></tr>
     </table></div>
+
+    <div class="tbl"><table class="l">
+      <tr><th>Run</th><th>Brief</th><th>Lanes</th><th>Gates</th><th>Precedent</th><th>Status</th><th>Wall</th></tr>
+      <tr class="click" data-run="1042"><td class="mo">1043</td><td class="s">Sensor fleet dashboard + SR-11 bracket &mdash; $18 ceiling</td><td>web &middot; hardware</td><td class="mo">1 fail &middot; escalated cost</td><td class="mo">2 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">5m 08s</td></tr>
+      <tr class="click" data-run="1042"><td class="mo">1042</td><td class="s">Sensor fleet dashboard + SR-11 bracket</td><td>web &middot; hardware</td><td class="mo">2 fails &middot; 2 repairs</td><td class="mo">3 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">6m 42s</td></tr>
+      <tr class="click" data-run="1041"><td class="mo">1041</td><td class="s">Taste gate rehearsal &mdash; tier 1 findings</td><td>web</td><td class="mo">1 fail &middot; 1 repair</td><td class="mo">1 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">4m 08s</td></tr>
+      <tr class="click" data-run="1042"><td class="mo">1040</td><td class="s">Fleet table pagination + freshness badge</td><td>web</td><td class="mo">clean</td><td class="mo">&mdash;</td><td><span class="tag pass">PASSED</span></td><td class="mo">3m 27s</td></tr>
+      <tr class="click" data-run="1039"><td class="mo">1039</td><td class="s">Bracket margin sweep, FoS 1.5</td><td>hardware</td><td class="mo">3 fails &middot; exhausted</td><td class="mo">4 cited</td><td><span class="tag fail">ESCALATED</span></td><td class="mo">9m 51s</td></tr>
+      <tr class="click" data-run="1042"><td class="mo">1038</td><td class="s">Vendor bolt table &mdash; schema drift repair</td><td>data</td><td class="mo">1 fail &middot; healed</td><td class="mo">6 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">2m 55s</td></tr>
+      <tr class="click" data-run="1042"><td class="mo">1037</td><td class="s">SR-11 enclosure lid, 6 mm standoffs</td><td>hardware</td><td class="mo">2 fails &middot; 2 repairs</td><td class="mo">2 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">7m 19s</td></tr>
+      <tr class="click" data-run="1041"><td class="mo">1036</td><td class="s">Contract drift &mdash; /api/parts/bulk</td><td>web</td><td class="mo">1 fail &middot; 1 repair</td><td class="mo">3 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">5m 33s</td></tr>
+      <tr class="click" data-run="1039"><td class="mo">1035</td><td class="s">Thermal margin sweep, 6S pack</td><td>hardware</td><td class="mo">2 fails &middot; exhausted</td><td class="mo">1 cited</td><td><span class="tag fail">ESCALATED</span></td><td class="mo">11m 02s</td></tr>
+      <tr class="click" data-run="1042"><td class="mo">1034</td><td class="s">Design DNA re-extract after reference redesign</td><td>data &middot; web</td><td class="mo">1 fail &middot; healed</td><td class="mo">5 cited</td><td><span class="tag pass">PASSED</span></td><td class="mo">4m 46s</td></tr>
+    </table></div>
+    <p class="lede" style="margin-top:12px">Older runs live in the archive rather than here &mdash; searchable by gate signature under <b>Precedent</b>, not by scrolling.</p>
   </div></div></div>
 
   <!-- ============ REVIEW ============ -->
