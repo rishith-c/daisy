@@ -1192,14 +1192,25 @@ $ echo $?
   }
 
   /* place each mark at the vertical fraction its item occupies in the feed */
+  var relayoutQueued = false;
   function layoutMarks() {
     var total = col.scrollHeight || 1;
-    var span = mm.clientHeight - 48;
+    // clientHeight is 0 before the pane has been laid out; falling through to
+    // that produced a negative span and parked every mark off-screen.
+    var box = mm.clientHeight || feed.clientHeight || 0;
+    if (box <= 48) {
+      if (!relayoutQueued) {
+        relayoutQueued = true;
+        requestAnimationFrame(function () { relayoutQueued = false; layoutMarks(); });
+      }
+      return;
+    }
+    var span = box - 48;
     marks.forEach(function (b, i) {
       var el = col.children[i];
       if (!el) return;
       var frac = (el.offsetTop + el.offsetHeight / 2) / total;
-      b.style.top = (24 + Math.max(0, Math.min(1, frac)) * span) + 'px';
+      b.style.top = Math.max(0, 24 + Math.max(0, Math.min(1, frac)) * span) + 'px';
     });
   }
 
@@ -1719,8 +1730,10 @@ $ echo $?
 
   document.addEventListener('keydown', function (e) {
     if ((e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); show('run'); playLive(); return; }
-    // j/k through the run outline, the way a terminal person expects
-    if (!palOv.classList.contains('on') && !modOv.classList.contains('on') &&
+    // j/k through the run outline, the way a terminal person expects.
+    // Must ignore modified keys, or it swallows cmd-K before the palette sees it.
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey &&
+        !palOv.classList.contains('on') && !modOv.classList.contains('on') &&
         document.activeElement.tagName !== 'INPUT' && (e.key === 'j' || e.key === 'k')) {
       var here = marks.findIndex(function (m) { return m.classList.contains('here'); });
       var to = e.key === 'j' ? Math.min(marks.length - 1, here + 1) : Math.max(0, here - 1);
