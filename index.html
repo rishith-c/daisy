@@ -206,7 +206,7 @@ body {
 body.blurred { filter: saturate(.45); }
 input, textarea, .prose, .brief, .derive, .doc, .selectable { user-select: text; }
 input, textarea { cursor: text; }
-::selection { background: color-mix(in srgb, var(--daisy) 34%, transparent); }
+::selection { background: color-mix(in srgb, var(--info) 20%, transparent); }
 h1,h2,h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 
@@ -250,7 +250,7 @@ body.rail aside { margin-left: -248px; opacity: 0; }
 .tbtn:active { background: var(--wash-2); transform: none; }
 .tbtn[disabled] { color: color-mix(in srgb, var(--ink-4) 52%, transparent); opacity: 1; background: transparent; }
 .tbtn svg { width: 17px; height: 17px; }
-.tbtn:focus-visible { outline: none; box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--leaf) 42%, transparent); }
+.tbtn:focus-visible { outline: none; box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--info) 34%, transparent); }
 
 /* Codex tooltip: near-black pill, the shortcut in a lighter inset badge, and a
    delay long enough that sweeping across the row does not strobe. */
@@ -310,7 +310,7 @@ body.rail aside { margin-left: -248px; opacity: 0; }
 }
 .iconbtn:hover { background: var(--wash); color: var(--ink); }
 .iconbtn:active { background: var(--wash-2); }
-.iconbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
+.iconbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 34%, transparent); }
 .iconbtn svg { width: 15px; height: 15px; }
 
 nav { display: flex; flex-direction: column; gap: 2px; }
@@ -340,16 +340,16 @@ nav { display: flex; flex-direction: column; gap: 2px; }
 .thread:hover { background: var(--wash); }
 .thread.active { background: var(--wash-2); }
 .thread .pip { display: none; }   /* Codex carries no status dots in the rail */
-.thread.active .pip { background: var(--daisy); box-shadow: 0 0 0 3px var(--daisy-wash); }
+.thread.active .pip { background: var(--ink-3); }
 .thread .pip.fail { background: var(--fail); }
-.thread .pip.run { background: var(--leaf); animation: pulse 2.2s var(--soft) infinite; }
+.thread .pip.run { background: var(--pass); animation: pulse 2.2s var(--soft) infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
 .thread .txt { overflow: hidden; text-overflow: ellipsis; }
 
 .acct { display: flex; align-items: center; gap: 9px; padding: 10px 8px 4px; margin-top: 6px; border-top: 1px solid var(--border); }
 .avatar {
   width: 22px; height: 22px; border-radius: 50%; flex: 0 0 22px;
-  background: linear-gradient(150deg, var(--daisy), var(--leaf));
+  background: linear-gradient(150deg, var(--ink-3), var(--ink-4));
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 9.5px; font-weight: 700; color: #241D06; letter-spacing: -.02em;
 }
@@ -412,7 +412,7 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 /* rename happens in place — no modal for a one-field edit */
 .topbar .title.editing {
   outline: none; background: var(--wash); border-radius: 6px;
-  padding: 2px 6px; margin: -2px -6px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--leaf) 40%, transparent);
+  padding: 2px 6px; margin: -2px -6px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--info) 34%, transparent);
 }
 .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 3px; }
 .iconbtn.on { background: var(--wash-2); color: var(--ink); }
@@ -477,9 +477,9 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
               transform .4s var(--out);
 }
 .mm:hover { width: 21px; background: var(--ink-3); }
-.mm:focus-visible { outline: none; width: 21px; background: var(--leaf); }
+.mm:focus-visible { outline: none; width: 21px; background: var(--info); }
 .mm.seen { background: var(--ink-4); }
-.mm.here { width: 21px; background: var(--daisy-deep); }
+.mm.here { width: 21px; background: var(--ink); }
 .mm.gfail { background: var(--fail); }
 .mm.gpass { background: var(--pass); }
 
@@ -560,6 +560,23 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 }
 .bay-foot b { color: var(--ink); font-weight: 600; }
 
+/* ---------- adopted: agent sessions already running on this machine ---------- */
+.adopt { border: .5px solid var(--border-strong); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.adopt-h { display: flex; align-items: baseline; gap: 8px; padding: 11px 12px; border-bottom: .5px solid var(--border); }
+.adopt-h b { font-size: 13.5px; font-weight: 600; }
+.adopt-h .src { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); }
+.adopt-h .n { font-size: 12.5px; color: var(--ink-3); }
+.arow { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 12px; font-size: 12.5px; }
+.arow + .arow { border-top: .5px solid var(--border); }
+.arow .v { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); width: 62px; flex: 0 0 62px; }
+.arow .pj { color: var(--ink); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arow .md { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); white-space: nowrap; }
+.arow .dot { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 6px; background: var(--ink-5, rgba(26,28,31,.22)); }
+.arow.live .dot { background: var(--pass); animation: pulse 2.2s var(--soft) infinite; }
+.arow.recent .dot { background: var(--warn); }
+.adopt-foot { padding: 9px 12px; font-size: 12px; color: var(--ink-3); border-top: .5px solid var(--border); background: var(--surface-2); }
+.adopt-foot b { color: var(--ink-2); font-weight: 600; }
+
 /* ---------- cards ---------- */
 .card {
   background: var(--surface); border: .5px solid var(--border-strong);
@@ -599,12 +616,12 @@ button {
 }
 button:hover { background: var(--surface-2); }
 button:active { transform: scale(.97); }
-button:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
+button:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 34%, transparent); }
 button.primary {
-  background: var(--daisy); color: var(--daisy-ink); border-color: transparent;
-  box-shadow: 0 1px 2px rgba(120,90,10,.18), var(--inner-hi);
+  background: var(--ink); color: var(--bg); border-color: transparent;
+  box-shadow: none;
 }
-button.primary:hover { background: var(--daisy-hi); border-color: transparent; }
+button.primary:hover { background: color-mix(in srgb, var(--ink) 86%, var(--bg)); border-color: transparent; }
 button.ghost { background: none; border: none; box-shadow: none; color: var(--ink); font-weight: 400; padding: 5px 6px; }
 button.ghost:hover { background: var(--surface-2); color: var(--ink); }
 button[disabled] { opacity: .45; cursor: default; transform: none !important; }
@@ -670,7 +687,7 @@ table.m td.nm { color: var(--ink); }
 .derive b { color: var(--ink); font-weight: 600; }
 
 .card.alert { border-color: color-mix(in srgb, var(--warn) 34%, var(--border)); }
-.card.alert .chead .ci { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, var(--border)); background: var(--daisy-wash); }
+.card.alert .chead .ci { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, var(--border)); background: var(--warn-chip); }
 .res { padding: 9px 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); }
 .res b { color: var(--pass); font-weight: 600; } .res b.no { color: var(--fail); }
 
@@ -691,10 +708,10 @@ table.m td.nm { color: var(--ink); }
   margin-bottom: 5px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-2); }
 .frow .ln { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .frow .tk { height: 11px; position: relative; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
-.frow .br { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--leaf);
+.frow .br { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--pass);
   transform-origin: left; animation: bargrow .6s var(--expo) both; }
 @keyframes bargrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.frow .br.er { background: var(--fail); } .frow .br.wr { background: var(--daisy); }
+.frow .br.er { background: var(--fail); } .frow .br.wr { background: var(--warn); }
 .frow .ms { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
 /* summary pill */
@@ -717,7 +734,7 @@ table.m td.nm { color: var(--ink); }
 .prov .p i { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
 .prov .p.port i { background: var(--info); }
 .prov .p.sig i { background: var(--violet); }
-.prov .p.bd  i { background: var(--daisy); }
+.prov .p.bd  i { background: var(--ink-3); }
 
 /* ---------- composer ---------- */
 .dock { padding: 4px 22px 18px; }
@@ -730,7 +747,7 @@ table.m td.nm { color: var(--ink); }
   box-shadow: var(--shadow-float);
   transition: box-shadow var(--d-sheet) var(--out);
 }
-.composer:focus-within { box-shadow: var(--shadow-float), 0 0 0 3.5px var(--daisy-wash); }
+.composer:focus-within { box-shadow: var(--shadow-float), 0 0 0 3.5px color-mix(in srgb, var(--info) 14%, transparent); }
 .composer input[type=text] {
   width: 100%; background: none; border: none; outline: none; color: var(--ink);
   font-family: var(--sans); font-size: 16px; padding: 2px 4px 16px; letter-spacing: -.008em;
@@ -752,7 +769,7 @@ select {
   transition: background .14s var(--soft), border-color .14s;
 }
 select:hover { background: var(--surface-2); border-color: var(--border); }
-select:focus-visible { outline: 2px solid var(--leaf); }
+select:focus-visible { outline: 2px solid color-mix(in srgb, var(--info) 70%, transparent); }
 .send {
   width: 30px; height: 30px; padding: 0; border-radius: 50%; padding: 0;
   background: var(--ink-4); color: var(--bg); border-color: transparent;
@@ -833,7 +850,7 @@ table.l tr.click:hover td { background: var(--wash); }
 .mini { width: 80%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
 .mini .r { height: 7px; border-radius: 3px; background: var(--surface-3); margin-bottom: 6px; }
 .mini .r.h { width: 46%; background: var(--border-strong); }
-.mini .r.g { box-shadow: inset 3px 0 0 var(--leaf); }
+.mini .r.g { box-shadow: inset 3px 0 0 var(--pass); }
 .doc { font-family: var(--mono); font-size: 9.5px; color: var(--ink-3); line-height: 1.75; padding: 12px; width: 100%; }
 .doc b { color: var(--ink-2); }
 
@@ -1322,6 +1339,7 @@ $ echo $?
   "use strict";
   var PRECEDENT_DEMO = [{"label":"exact repeat","q":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:12, Inter used with no paired display face in layout.tsx:8, and emoji standing in for icons in the status column","ms":15.2,"sig":["taste.t1=gross"],"tier":"fingerprint","hits":[{"run":"0384","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:34, Inter used with no paired display face in layout.tsx:34, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}},{"run":"0316","score":1.0,"family":"F-03 slop-palette","kind":"resume-findings","fix":"tokenize the primary from scraped design DNA, pair the display face with a text face, replace emoji with a semantic StatusDot","narrative":"taste tier 1 rejected the frontend: indigo primary #6366F1 declared outside the token system in tokens.css:143, Inter used with no paired display face in layout.tsx:143, and emoji standing in for icons in the status column","parts":{"fp":"de25de8cea177a30"}}]},{"label":"paraphrase","q":"my bracket bends way too much under the tip load, stress is over what the material takes","ms":83.2,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.624,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.327,"bm25":0.0,"recency":0.998,"evidence":0.665}},{"run":"0205","score":0.62,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.341,"bm25":0.0,"recency":0.793,"evidence":0.669}}]},{"label":"text-poor, gates match","q":"something is off with the part","ms":15.3,"sig":["physics.bend=short"],"tier":"hybrid","hits":[{"run":"0087","score":0.641,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.73","parts":{"jaccard":1.0,"dense":0.357,"bm25":0.0,"recency":0.998,"evidence":0.675}},{"run":"0205","score":0.613,"family":"F-11 thin-web bending","kind":"algebra","fix":"invert sigma = 6M/(b t^2) for t at FoS 1.5, patch web_thickness in bracket.py, regenerate and re-run the gates","narrative":"web section too thin for the cantilever load; bending margin negative at FoS 0.8","parts":{"jaccard":1.0,"dense":0.355,"bm25":0.0,"recency":0.793,"evidence":0.674}}]},{"label":"novel failure","q":"the ci runner ran out of disk space while installing playwright browsers","ms":13.9,"sig":["infra.disk=gross"],"tier":null,"hits":[]}];  // taste-ok: fixture quoting the tell
   var PRECEDENT_STATS = {"generated":"2026-08-22 04:33","cases":1284,"families":7,"fix_rate":90.0,"recall_ms":15.9,"fingerprint_ms":0.012,"index_kb":80,"float_mb":2.6,"quant_x":32,"db_mb":5.6,"compact_before":23450,"compact_after":983,"compact_x":24,"compact_ms":29,"probe_score":100,"probe_n":8,"top_families":[{"family":"F-11 thin-web bending","seen":329,"fixed":309,"how":"algebra","sig":"physics.bend=marginal"},{"family":"F-24 stale-scrape","seen":311,"fixed":298,"how":"resume-findings","sig":"scrape.freshness=gross"},{"family":"F-03 slop-palette","seen":211,"fixed":205,"how":"resume-findings","sig":"taste.t1=gross"},{"family":"F-31 selector-break","seen":169,"fixed":158,"how":"human","sig":"scrape.schema=gross"},{"family":"F-19 contract-drift","seen":115,"fixed":112,"how":"resume-findings","sig":"contract.conformance=gross"},{"family":"F-42 budget-overrun","seen":77,"fixed":74,"how":"human","sig":"budget.total=short"}]};
+  var ADOPTED_SNAPSHOT = {"generated": "2026-08-22 09:49:24", "counts": {"claude": 28, "codex": 26, "opencode": 4}, "live": 1, "processes": {"cli": {"claude": 0, "codex": 3, "opencode": 2}, "desktop": {"claude": 1, "codex": 1}}, "total": 58, "sessions": [{"vendor": "claude", "state": "live", "project": "daisy", "model": "claude-opus-5", "messages": 30, "tokens": 0}, {"vendor": "claude", "state": "idle", "project": "Prometheus_Vault", "model": "claude-fable-5", "messages": 13, "tokens": 0}, {"vendor": "codex", "state": "idle", "project": "Developer", "model": "openai", "messages": 13, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "tes", "model": "1.18.15", "messages": 0, "tokens": 2791360}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}, {"vendor": "opencode", "state": "idle", "project": "rishith", "model": "1.18.15", "messages": 0, "tokens": 0}]};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1330,6 +1348,61 @@ $ echo $?
 
   /* ---------------- brand mark (hand-drawn daisy, inline) ---------------- */
   $('#brandmark').innerHTML = DAISY_MARK();
+
+  /* ---------------- adopted agents ----------------
+     Conductor spawns its agents, so it owns them. These it did not start: they
+     were already running, in three tools with three different session formats,
+     and agents/discover.py normalises them read-only. Live when Daisy runs
+     natively and can shell out; the baked snapshot otherwise — labelled, so a
+     stale read is never passed off as a live one. */
+  var ADOPTED = ADOPTED_SNAPSHOT, ADOPTED_LIVE = false;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]; });
+  }
+
+  function adoptedHTML() {
+    var d = ADOPTED, rows = (d.sessions || []).slice(0, 6);
+    var vendors = Object.keys(d.counts || {}).sort().map(function (k) {
+      return esc(k) + ' ' + d.counts[k]; }).join(' &middot; ');
+    var cli = (d.processes && d.processes.cli) || {}, desk = (d.processes && d.processes.desktop) || {};
+    var procs = (cli.claude || 0) + (cli.codex || 0) + (cli.opencode || 0);
+    var deskN = (desk.claude || 0) + (desk.codex || 0);
+    var body = rows.map(function (r) {
+      return '<div class="arow ' + esc(r.state) + '"><span class="dot"></span>' +
+             '<span class="v">' + esc(r.vendor) + '</span>' +
+             '<span class="pj">' + esc(r.project) + '</span>' +
+             '<span class="md">' + esc(r.model || '') + '</span></div>';
+    }).join('');
+    if (!rows.length) body = '<div class="arow"><span class="pj">no agent sessions found on this machine</span></div>';
+    return '<div class="adopt"><div class="adopt-h"><b>Adopted</b>' +
+      '<span class="n">' + (d.total || 0) + ' sessions &middot; ' + (d.live || 0) + ' live</span>' +
+      '<span class="src">' + (ADOPTED_LIVE ? 'live &middot; read-only' : 'snapshot ' + esc(d.generated)) + '</span></div>' +
+      body +
+      '<div class="adopt-foot">' + (vendors || 'none') + ' &middot; ' + procs +
+      ' cli, ' + deskN + ' desktop. Read from <b>~/.claude</b>, <b>~/.codex</b> and ' +
+      '<b>opencode.db</b> without taking a lock &mdash; Daisy did not start these, it found them.</div></div>';
+  }
+
+  function paintAdopted() {
+    $$('.adopt-slot').forEach(function (el) { el.innerHTML = adoptedHTML(); });
+  }
+
+  // The native shell answers with live data; the browser keeps the snapshot.
+  window.__daisyAgents = function (payload) {
+    try {
+      var d = typeof payload === 'string' ? JSON.parse(payload) : payload;
+      if (d && d.sessions) {
+        d.total = d.total || d.sessions.length;
+        ADOPTED = d; ADOPTED_LIVE = true; paintAdopted();
+      }
+    } catch (e) { /* keep the snapshot */ }
+  };
+  if (native && window.webkit && window.webkit.messageHandlers &&
+      window.webkit.messageHandlers.daisy) {
+    try { window.webkit.messageHandlers.daisy.postMessage({ cmd: 'agents' }); } catch (e) {}
+  }
 
   /* ---------------- helpers ---------------- */
   function files(list, id) {
@@ -1370,7 +1443,7 @@ $ echo $?
       '<div class="res" hidden><b>Approved</b> by rishith · run PATCHed to Port · worktrees spawning</div></div>' },
     { d: 780, kind: 'prose', tag: '<div class="who-tag sys"><i></i>labctl</div>',
       text: 'Worktrees created: <code>runs/1042/web-frontend</code> on Fable 5 and <code>runs/1042/web-api</code> on GPT-5.3 Codex, both pinned to <code>api-contract.json</code>. Every git operation stays with the orchestrator; the agents only edit files. Spans are streaming.' },
-    { d: 820, kind: 'card', html: "<div class=\"bay\"><div class=\"lane codex\"><div class=\"lh\"><i></i><b>web-api</b><span class=\"m\">codex exec &middot; gpt-5.3-codex</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-api</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-api</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">5 endpoints, pinned</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">12 files &middot; +1,204 &minus;86</span></div><div><span class=\"k\">tests</span> &nbsp;<span class=\"v\">18 passed, 0 failed</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div><div class=\"lane claude\"><div class=\"lh\"><i></i><b>web-frontend</b><span class=\"m\">claude -p &middot; fable-5 high</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-frontend</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-frontend</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">same 5 endpoints</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">9 files &middot; +867 &minus;41</span></div><div><span class=\"k\">skills</span> &nbsp;<span class=\"v\">hallmark, design-standards</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div></div><div class=\"bay-foot\">Two vendors, two worktrees, <b>one <code>api-contract.json</code></b>. Neither agent can touch git &mdash; the orchestrator owns every commit, so the diffs stay symmetric and reviewable. They are combined by a contract, not by a conversation.</div>" },
+    { d: 820, kind: 'card', html: "<div class=\"bay\"><div class=\"lane codex\"><div class=\"lh\"><i></i><b>web-api</b><span class=\"m\">codex exec &middot; gpt-5.3-codex</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-api</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-api</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">5 endpoints, pinned</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">12 files &middot; +1,204 &minus;86</span></div><div><span class=\"k\">tests</span> &nbsp;<span class=\"v\">18 passed, 0 failed</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div><div class=\"lane claude\"><div class=\"lh\"><i></i><b>web-frontend</b><span class=\"m\">claude -p &middot; fable-5 high</span></div><div class=\"lb\"><div><span class=\"k\">worktree</span> &nbsp;<span class=\"v\">runs/1042/web-frontend</span></div><div><span class=\"k\">branch</span> &nbsp;<span class=\"v\">run/1042/web-frontend</span></div><div><span class=\"k\">contract</span> &nbsp;<span class=\"v\">same 5 endpoints</span></div><div><span class=\"k\">wrote</span> &nbsp;<span class=\"v\">9 files &middot; +867 &minus;41</span></div><div><span class=\"k\">skills</span> &nbsp;<span class=\"v\">hallmark, design-standards</span></div><div><span class=\"k\">sandbox</span> &nbsp;<span class=\"v\">workspace-write</span></div></div></div></div><div class=\"bay-foot\">Two vendors, two worktrees, <b>one <code>api-contract.json</code></b>. Neither agent can touch git &mdash; the orchestrator owns every commit, so the diffs stay symmetric and reviewable. They are combined by a contract, not by a conversation.</div><div class=\"adopt-slot\" style=\"margin-top:10px\"></div>" },
     { d: 900, kind: 'prose', tag: '<div class="who-tag codex"><i></i>Codex · web-api</div>',
       text: 'The contract names five endpoints. I generated route handlers with validation mirroring the response shapes, a seeded fixture layer for the fleet data, and one test per endpoint asserting the exact field set — no extra keys, since the conformance gate diffs both ways.' },
     { d: 620, kind: 'card', html:
@@ -1499,7 +1572,7 @@ $ echo $?
 
   /* ---------------- precedent card ---------------- */
   function precedentCard() {
-    return '<div class="card"><div class="chead"><span class="ci" style="color:var(--daisy-deep)">§</span>' +
+    return '<div class="card"><div class="chead"><span class="ci" style="color:var(--ink-3)">§</span>' +
       '<div><b>Precedent recall</b><div class="sub">gate-signature hybrid retrieval · 1,284 archived runs · 38 ms · 0 tokens</div></div>' +
       '<div class="act"><span class="tag info">3 CITED</span></div></div>' +
       '<div class="grow"><span class="gn">run 0917 · sim .94</span><span class="gd">same 3 tells — fixed by tokenizing primary + pairing display face</span><span class="gm ok">applied</span></div>' +
@@ -1624,6 +1697,7 @@ $ echo $?
       col.appendChild(item);
     }
     $$('.row, .grow', item).forEach(function (r, i) { r.style.setProperty('--i', Math.min(i, 8)); });
+    if ($('.adopt-slot', item)) paintAdopted();
     addMark(step.kind);
     if (step.bell) $('#btn-bell').style.color = 'var(--warn)';
     if (instant && step.wait) { var b = $('#' + step.wait, item); if (b) settle(b); }

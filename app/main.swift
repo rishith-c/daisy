@@ -1,8 +1,55 @@
 import Cocoa
 import WebKit
 
+/// Bridges `window.webkit.messageHandlers.daisy` to the adoption scanner.
+///
+/// The web layer cannot enumerate ~/.claude, ~/.codex or opencode.db, so the
+/// shell does it and hands the JSON back. Runs off the main thread — scanning
+/// three session stores takes ~200ms and must not stall the first paint — and
+/// is read-only all the way down.
+final class Bridge: NSObject, WKScriptMessageHandler {
+    weak var webView: WKWebView?
+
+    func userContentController(_ c: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any],
+              body["cmd"] as? String == "agents" else { return }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let json = Bridge.scan()
+            guard !json.isEmpty else { return }
+            DispatchQueue.main.async {
+                let escaped = json.data(using: .utf8).flatMap {
+                    String(data: try! JSONSerialization.data(withJSONObject: [String(data: $0, encoding: .utf8)!],
+                                                             options: []), encoding: .utf8)
+                } ?? "[\"\"]"
+                self?.webView?.evaluateJavaScript(
+                    "window.__daisyAgents(\(escaped)[0])", completionHandler: nil)
+            }
+        }
+    }
+
+    /// `python3 -m agents.discover --json`, run against the copy of the package
+    /// inside the bundle so the app does not depend on the checkout still
+    /// existing at the path it was built from.
+    static func scan() -> String {
+        guard let res = Bundle.main.resourceURL else { return "" }
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        proc.arguments = ["python3", "-m", "agents.discover", "--json", "--limit", "8"]
+        proc.currentDirectoryURL = res
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = FileHandle.nullDevice
+        do { try proc.run() } catch { return "" }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        proc.waitUntilExit()
+        guard proc.terminationStatus == 0 else { return "" }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+}
+
 final class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
+    var bridge: Bridge!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let rect = NSRect(x: 0, y: 0, width: 1320, height: 860)
@@ -13,14 +60,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.title = "Daisy"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
-        window.appearance = NSAppearance(named: .darkAqua)
-        window.backgroundColor = NSColor(calibratedRed: 0.086, green: 0.086, blue: 0.094, alpha: 1)
+        window.appearance = NSAppearance(named: .aqua)
+        window.backgroundColor = .white
         window.minSize = NSSize(width: 900, height: 600)
         window.center()
         window.setFrameAutosaveName("DaisyMain")
 
         let config = WKWebViewConfiguration()
+        let bridge = Bridge()
+        config.userContentController.add(bridge, name: "daisy")
         let webView = WKWebView(frame: window.contentView!.bounds, configuration: config)
+        bridge.webView = webView
+        self.bridge = bridge
         webView.autoresizingMask = [.width, .height]
         webView.customUserAgent = (webView.value(forKey: "userAgent") as? String ?? "") + " DaisyNative"
         webView.setValue(false, forKey: "drawsBackground")
