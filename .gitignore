@@ -24,4 +24,6 @@ runs/
 # local credentials — never committed
 .env
 .env.local
+.env.local.*
+.env.*
 *.key
