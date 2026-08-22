@@ -12,7 +12,7 @@
 :root {
   /* --- light (default) — values traced from the Codex webview palette --- */
   --bg:            #FFFFFF;              /* --color-background-surface */
-  --sidebar:       #F6F6F6;              /* --color-token-bg-primary */
+  --sidebar:       #FFFFFF;              /* Codex sidebar is white, not a gray rail */
   --surface:       #FFFFFF;              /* --color-token-dropdown-background */
   --surface-2:     #F3F3F3;              /* --gray-75 */
   --surface-3:     #EDEDED;              /* --gray-100 */
@@ -51,6 +51,12 @@
   --shadow-1:      var(--elev-stroke), 0 1px 2px rgba(0,0,0,.04);
   --shadow-2:      var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.04), 0 0 20px rgba(0,0,0,.051);
   --shadow-3:      var(--elev-stroke), 0 8px 30px rgba(0,0,0,.13), 0 24px 60px rgba(0,0,0,.07);
+  --shadow-float:  var(--elev-stroke), 0 1px 3px rgba(0,0,0,.045), 0 10px 28px rgba(0,0,0,.06);
+  --glass:         color-mix(in srgb, var(--bg) 76%, transparent);
+  --glass-strong:  color-mix(in srgb, var(--bg) 90%, transparent);
+  --glass-stroke:  rgba(255,255,255,.72);
+  --glass-hover:   0 0 0 .5px rgba(26,28,31,.10), inset 0 1px 0 rgba(255,255,255,.82), 0 3px 9px rgba(26,28,31,.075);
+  --chrome-shadow: 0 1px 16px rgba(26,28,31,.045);
   --inner-hi:      inset 0 1px 0 rgba(255,255,255,.65);
 
   --serif: "Source Serif 4", Charter, "New York", Georgia, serif;
@@ -71,7 +77,7 @@
 
   /* radius ladder — Codex: card rounded-lg 10px, composer 3xl 20px */
   --r-win: 10px; --r-panel: 12px; --r-card: 10px; --r-btn: 10px; --r-badge: 4px;
-  --r-composer: 20px; --r-attach: 12px;
+  --r-composer: 18px; --r-attach: 12px;
 
   /* hover / active wash */
   --wash: rgba(0,0,0,.04); --wash-2: rgba(0,0,0,.07);
@@ -116,6 +122,10 @@
     --shadow-1:      var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
     --shadow-2:      var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.3), 0 0 20px rgba(0,0,0,.35);
     --shadow-3:      var(--elev-stroke), 0 8px 30px rgba(0,0,0,.5), 0 24px 60px rgba(0,0,0,.34);
+    --shadow-float:  var(--elev-stroke), 0 1px 3px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.45);
+    --glass-stroke:  rgba(255,255,255,.11);
+    --glass-hover:   0 0 0 .5px rgba(255,255,255,.13), inset 0 1px 0 rgba(255,255,255,.08), 0 4px 12px rgba(0,0,0,.30);
+    --chrome-shadow: 0 1px 18px rgba(0,0,0,.24);
     --inner-hi:      inset 0 1px 0 rgba(255,255,255,.045);
 
   }
@@ -152,6 +162,10 @@
   --shadow-1:    var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
   --shadow-2:    var(--elev-stroke), 0 3px 7.5px rgba(0,0,0,.3), 0 0 20px rgba(0,0,0,.35);
   --shadow-3:    var(--elev-stroke), 0 8px 30px rgba(0,0,0,.5), 0 24px 60px rgba(0,0,0,.34);
+  --shadow-float:var(--elev-stroke), 0 1px 3px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.45);
+  --glass-stroke:  rgba(255,255,255,.11);
+  --glass-hover:   0 0 0 .5px rgba(255,255,255,.13), inset 0 1px 0 rgba(255,255,255,.08), 0 4px 12px rgba(0,0,0,.30);
+  --chrome-shadow: 0 1px 18px rgba(0,0,0,.24);
   --inner-hi:    inset 0 1px 0 rgba(255,255,255,.045);
 
 }
@@ -196,66 +210,127 @@ p { text-wrap: pretty; }
 
 /* ============================ SIDEBAR ============================ */
 aside {
-  width: 246px; flex: 0 0 246px;
-  background: color-mix(in srgb, var(--sidebar) 74%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  width: 248px; flex: 0 0 248px;
+  /* Opaque, not vibrant. Codex's rail is flat white; a translucent one picks up
+     whatever wallpaper is behind the window and reads warm against the transcript. */
+  background: var(--sidebar);
   border-right: .5px solid var(--border);
   display: flex; flex-direction: column;
   padding: 12px 8px 8px;
   overflow: hidden;
   transition: margin-left .42s var(--snap), opacity .3s var(--soft);
 }
-body.rail aside { margin-left: -246px; opacity: 0; }
+body.rail aside { margin-left: -248px; opacity: 0; }
 
-.lights { display: flex; gap: 8px; padding: 4px 8px 14px; }
+/* Title bar. Codex measures 20px between the traffic lights, a 28px gap to the
+   first tool, then a 28px pitch across the tool row — copied rather than eyeballed. */
+.titlebar { display: flex; align-items: center; padding: 4px 8px 12px; position: relative; z-index: 70; }
+.lights { display: flex; gap: 8px; }
 .lights span { width: 12px; height: 12px; border-radius: 50%; }
 .lights .r { background: #FF5F57; } .lights .y { background: #FEBC2E; } .lights .g { background: #28C840; }
+/* 10px, not 8: the .lights box is 2px narrower than the real macOS buttons it
+   stands in for, and the gap that has to read as 8px is to those. */
+.tb-tools { display: flex; align-items: center; margin-left: 10px; }
+.tbtn {
+  width: 28px; height: 26px; padding: 0; border: none; background: transparent;
+  border-radius: 7px; color: var(--ink-3); box-shadow: none; position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--d-hover) var(--out), color var(--d-hover) var(--out);
+}
+.tbtn:hover { background: var(--wash); color: var(--ink-2); }
+.tbtn:active { background: var(--wash-2); transform: none; }
+.tbtn[disabled] { color: color-mix(in srgb, var(--ink-4) 52%, transparent); opacity: 1; background: transparent; }
+.tbtn svg { width: 17px; height: 17px; }
+.tbtn:focus-visible { outline: none; box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--leaf) 42%, transparent); }
 
-.brand { display: flex; align-items: center; gap: 8px; padding: 0 6px 14px; }
+/* Codex tooltip: near-black pill, the shortcut in a lighter inset badge, and a
+   delay long enough that sweeping across the row does not strobe. */
+.tip {
+  position: absolute; top: calc(100% + 6px); left: 50%; z-index: 200;
+  transform: translateX(-50%) translateY(-3px) scale(.96); transform-origin: top center;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #232326; color: #fff; border-radius: 9px; padding: 6px 9px;
+  font-size: 12.5px; font-weight: 450; line-height: 1; white-space: nowrap;
+  pointer-events: none; opacity: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.16);
+  transition: opacity var(--d-tip) var(--out), transform var(--d-tip) var(--out);
+}
+.tbtn:hover .tip, .tbtn:focus-visible .tip {
+  opacity: 1; transform: translateX(-50%) translateY(0) scale(1); transition-delay: .34s;
+}
+.tip kbd { background: rgba(255,255,255,.17); border-radius: 5px; padding: 3px 5px; font: inherit; font-size: 11.5px; }
+@media (prefers-reduced-motion: reduce) { .tip { transition: opacity .01ms; transform: translateX(-50%); } }
+
+.brand { display: flex; align-items: center; gap: 4px; padding: 0 2px 12px; position: relative; z-index: 60; }
+.brand-trigger {
+  min-width: 0; height: 30px; padding: 3px 6px; gap: 8px;
+  border: .5px solid transparent; background: transparent; box-shadow: none;
+  justify-content: flex-start;
+}
+.brand-trigger:hover, .brand-trigger[aria-expanded="true"] {
+  background: var(--glass-strong); border-color: var(--glass-stroke); box-shadow: var(--glass-hover);
+}
 .brand .mark { width: 22px; height: 22px; flex: 0 0 22px; display: block; }
 .brand .mark svg { width: 100%; height: 100%; display: block; }
-.brand .name { font-size: 15.5px; font-weight: 650; letter-spacing: -.012em; }
-.brand .chev { color: var(--ink-3); font-size: 10px; margin-left: -3px; }
+.brand .name { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+.brand .chev { width: 13px; height: 13px; flex: 0 0 13px; color: var(--ink-3); margin-left: -2px; transition: transform var(--d-menu) var(--out); }
+.brand-trigger[aria-expanded="true"] .chev { transform: rotate(180deg); }
 .brand .tools { margin-left: auto; display: flex; gap: 2px; }
+.brand-menu {
+  position: absolute; left: 3px; top: 35px; width: 188px; padding: 5px;
+  background: var(--glass-strong); border: .5px solid var(--border-strong); border-radius: 12px;
+  backdrop-filter: saturate(190%) blur(24px); -webkit-backdrop-filter: saturate(190%) blur(24px);
+  box-shadow: var(--shadow-3); opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateY(-5px) scale(.98); transform-origin: top left;
+  transition: visibility 0s linear var(--d-menu), opacity var(--d-menu) var(--out), transform var(--d-menu) var(--out);
+}
+.brand-menu.on { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition-delay: 0s; }
+.brand-menu button {
+  width: 100%; height: 30px; padding: 0 9px; border: none; background: transparent; box-shadow: none;
+  justify-content: flex-start; font-weight: 450;
+}
+.brand-menu button:hover { background: var(--wash); }
 .iconbtn {
-  width: 26px; height: 26px; border-radius: var(--r-btn); border: none; background: none;
+  /* padding: 0 is load-bearing — the base `button` rule's horizontal padding
+     would otherwise eat the 28px box and leave the glyph a couple of px wide. */
+  width: 28px; height: 28px; padding: 0; flex: 0 0 28px;
+  border-radius: var(--r-btn); border: .5px solid transparent; background: transparent;
   color: var(--ink-3); display: inline-flex; align-items: center; justify-content: center;
   box-shadow: none;
-  transition: background var(--d-hover) var(--out), color var(--d-hover) var(--out), transform var(--d-press) var(--out);
+  transition: background var(--d-hover) var(--out), border-color var(--d-hover) var(--out), color var(--d-hover) var(--out), transform var(--d-press) var(--out), box-shadow var(--d-hover) var(--out);
 }
 .iconbtn:hover { background: var(--wash); color: var(--ink); }
-.iconbtn:active { transform: scale(.94); }
+.iconbtn:active { background: var(--wash-2); }
 .iconbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
 .iconbtn svg { width: 15px; height: 15px; }
 
-nav { display: flex; flex-direction: column; gap: 1px; }
+nav { display: flex; flex-direction: column; gap: 2px; }
 .navitem {
   display: flex; align-items: center; gap: 9px;
-  padding: 6px 8px; border-radius: var(--r-badge);
-  color: var(--ink); font-size: var(--t-chat-sm); font-weight: 450;
+  padding: 3.5px 9px; border-radius: 8px; line-height: 1.3;
+  color: var(--ink); font-size: 15px; font-weight: 400;
   cursor: pointer; user-select: none; position: relative;
   transition: background .13s var(--soft), color .13s var(--soft);
 }
 .navitem:hover { background: var(--wash); }
-.navitem.on { background: var(--wash-2); font-weight: 500; }
-.navitem svg { width: 15px; height: 15px; flex: 0 0 15px; color: var(--ink-2); }
+.navitem.on { background: var(--wash-2); }
+.navitem svg { width: 17px; height: 17px; flex: 0 0 17px; color: var(--ink-3); stroke-width: 1.4; }
 .navitem.on svg { color: var(--ink); }
 .navitem .tail { margin-left: auto; color: var(--ink-4); font-size: 11px; font-family: var(--mono); }
 .navitem .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
 
 .scroller { flex: 1; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px; }
-.sect { font-size: 11.5px; color: var(--ink-3); padding: 16px 8px 5px; font-weight: 500; letter-spacing: .005em; }
+.sect { font-size: 13.5px; color: var(--ink-3); padding: 20px 9px 5px; font-weight: 400; }
 .thread {
   display: flex; align-items: center; gap: 8px;
-  padding: 5.5px 8px 5.5px 10px; border-radius: 8px;
-  color: var(--ink-2); font-size: 13px; cursor: pointer; position: relative;
+  padding: 4.75px 9px; border-radius: 8px; line-height: 1.3;
+  color: var(--ink); font-size: 14.5px; cursor: pointer; position: relative;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   transition: background .13s var(--soft), color .13s var(--soft);
 }
-.thread:hover { background: var(--wash); color: var(--ink); }
-.thread.active { background: var(--wash-2); color: var(--ink); font-weight: 500; }
-.thread .pip { width: 5px; height: 5px; border-radius: 50%; flex: 0 0 5px; background: var(--ink-4); }
+.thread:hover { background: var(--wash); }
+.thread.active { background: var(--wash-2); }
+.thread .pip { display: none; }   /* Codex carries no status dots in the rail */
 .thread.active .pip { background: var(--daisy); box-shadow: 0 0 0 3px var(--daisy-wash); }
 .thread .pip.fail { background: var(--fail); }
 .thread .pip.run { background: var(--leaf); animation: pulse 2.2s var(--soft) infinite; }
@@ -303,22 +378,64 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 .topbar {
   display: flex; align-items: center; gap: 9px;
   padding: 12px 18px 12px 16px;
-  border-bottom: .5px solid var(--border);
   min-height: 50px;
-  background: color-mix(in srgb, var(--bg) 76%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  /* Codex runs no rule and no shadow under the title; the transcript simply
+     scrolls beneath an opaque bar. */
+  background: var(--bg);
   -webkit-app-region: drag;
 }
 .topbar button, .topbar .ell { -webkit-app-region: no-drag; }
 .topbar .folder { color: var(--ink-3); display: inline-flex; }
 .topbar .folder svg { width: 15px; height: 15px; }
 .topbar .title {
-  font-size: 14px; font-weight: 600; letter-spacing: -.012em;
+  font-size: 15px; font-weight: 600; letter-spacing: -.012em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%;
 }
 .topbar .ell { color: var(--ink-3); letter-spacing: 1px; cursor: pointer; padding: 0 2px; }
 .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 3px; }
+.iconbtn.on { background: var(--wash-2); color: var(--ink); }
+.topbar .right .iconbtn { position: relative; }
+.topbar .right .iconbtn .tip { left: auto; right: 0; transform: translateY(-3px) scale(.96); transform-origin: top right; }
+.topbar .right .iconbtn:hover .tip, .topbar .right .iconbtn:focus-visible .tip { transform: none; }
+.ctx .crow2 svg.chev { width: 13px; height: 13px; flex: 0 0 13px; margin-left: auto; color: var(--ink-4); }
+
+/* ---- context panel -------------------------------------------------------
+   Codex's right-hand panel: a floating card over the transcript, not a docked
+   column — hairline, soft float shadow, gray section labels, flat-wash rows.
+   Daisy's version answers "what is this run actually bound to": the lanes it
+   routed, the branch it writes, the gate that is holding it, and the sources
+   its numbers came from. Every row here is a fact the run already carries. */
+.ctx {
+  position: absolute; top: 58px; right: 14px; width: 272px; z-index: 55;
+  background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-float);
+  padding: 8px; max-height: calc(100% - 86px); overflow-y: auto;
+  opacity: 0; pointer-events: none;
+  transform: translateY(-6px) scale(.985); transform-origin: top right;
+  transition: opacity var(--d-menu) var(--out), transform var(--d-menu) var(--out);
+}
+.ctx.on { opacity: 1; pointer-events: auto; transform: none; }
+.ctx h4 {
+  display: flex; align-items: center; font-size: 13.5px; font-weight: 400;
+  color: var(--ink-3); padding: 8px 8px 5px; margin: 0;
+}
+.ctx h4 .add { margin-left: auto; color: var(--ink-3); font-size: 15px; line-height: 1; }
+.ctx .crow2 {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 8px; border-radius: 8px; font-size: 14.5px; line-height: 1.3;
+  color: var(--ink); white-space: nowrap;
+  transition: background .13s var(--soft);
+}
+.ctx .crow2:hover { background: var(--wash); }
+.ctx .crow2 svg { width: 16px; height: 16px; flex: 0 0 16px; color: var(--ink-3); stroke-width: 1.5; }
+.ctx .crow2 .lbl { overflow: hidden; text-overflow: ellipsis; }
+.ctx .crow2 .chev { margin-left: auto; color: var(--ink-4); font-size: 10px; }
+.ctx .crow2.mute, .ctx .crow2.mute svg { color: var(--ink-3); }
+.ctx .crow2.mute:hover { background: transparent; }
+.ctx .id {
+  font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+  padding: 7px 8px 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ctx hr { border: none; border-top: .5px solid var(--border); margin: 5px 8px; }
 
 .view { flex: 1; display: none; flex-direction: column; min-height: 0; }
 .view.on { display: flex; animation: viewin .34s var(--expo) both; }
@@ -423,21 +540,20 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 
 /* ---------- cards ---------- */
 .card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-card); overflow: hidden; box-shadow: var(--shadow-1);
-  transition: box-shadow .3s var(--soft), border-color .3s var(--soft);
+  background: var(--surface); border: .5px solid var(--border-strong);
+  border-radius: 12px; overflow: hidden; box-shadow: none;
+  transition: background .3s var(--soft), border-color .3s var(--soft);
 }
-.card:hover { box-shadow: var(--shadow-2); }
-.chead { display: flex; align-items: center; gap: 10px; padding: 12px; }
+.chead { display: flex; align-items: center; gap: 11px; padding: 12px; }
 .chead .ci {
-  width: 40px; height: 40px; border-radius: var(--r-card); flex: 0 0 40px;
+  width: 36px; height: 36px; border-radius: 9px; flex: 0 0 36px;
   background: var(--surface-2);
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--ink-3); font-family: var(--mono); font-size: 13px; font-weight: 600;
 }
-.chead .ci svg { width: 24px; height: 24px; }
-.chead b { font-size: var(--t-chat); font-weight: 600; letter-spacing: -.008em; display: block; }
-.chead .sub { font-size: var(--t-chat-sm); color: var(--ink-3); margin-top: 1px; font-family: var(--mono); }
+.chead .ci svg { width: 21px; height: 21px; }
+.chead b { font-size: 15.5px; font-weight: 700; letter-spacing: -.012em; display: block; }
+.chead .sub { font-size: 13.5px; color: var(--ink-3); margin-top: 1px; font-variant-numeric: tabular-nums; }
 .chead .sub .hov { display: none; align-items: center; gap: 4px; font-family: var(--sans); }
 .card.reviewable:hover .chead .sub .dflt,
 .card.reviewable:focus-within .chead .sub .dflt { display: none; }
@@ -450,34 +566,35 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 .plus { color: var(--add-ink); font-weight: 500; } .minus { color: var(--del-ink); font-weight: 500; }
 
 button {
-  font-family: var(--sans); font-size: 12.5px; font-weight: 500; letter-spacing: -.005em;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 450; letter-spacing: -.005em;
   background: var(--bg); color: var(--ink);
   border: .5px solid var(--border-strong); border-radius: var(--r-btn);
-  padding: 5px 11px; white-space: nowrap; height: 28px;
+  padding: 5px 13px; white-space: nowrap; height: 30px;
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   transition: background var(--d-hover) var(--out), border-color var(--d-hover) var(--out),
-              transform var(--d-press) var(--out), box-shadow var(--d-hover) var(--out), color var(--d-hover) var(--out);
-  box-shadow: var(--shadow-1);
+              transform var(--d-press) var(--out), color var(--d-hover) var(--out);
+  box-shadow: none;
 }
 button:hover { background: var(--surface-2); }
 button:active { transform: scale(.97); }
-button:focus-visible { outline: none; box-shadow: var(--shadow-1), 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
+button:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 42%, transparent); }
 button.primary {
   background: var(--daisy); color: var(--daisy-ink); border-color: transparent;
   box-shadow: 0 1px 2px rgba(120,90,10,.18), var(--inner-hi);
 }
 button.primary:hover { background: var(--daisy-hi); border-color: transparent; }
-button.ghost { background: none; border-color: transparent; box-shadow: none; color: var(--ink-2); font-weight: 500; }
+button.ghost { background: none; border: none; box-shadow: none; color: var(--ink); font-weight: 400; padding: 5px 6px; }
 button.ghost:hover { background: var(--surface-2); color: var(--ink); }
 button[disabled] { opacity: .45; cursor: default; transform: none !important; }
 
 .row, .grow {
   display: flex; align-items: center; gap: 8px;
-  height: 36px; padding: 0 12px; border-top: .5px solid var(--border);
-  font-family: var(--mono); font-size: var(--t-code);
+  height: 32px; padding: 0 12px;
+  font-family: var(--sans); font-size: 13.5px;
   transition: background var(--d-hover) var(--out);
   content-visibility: auto; contain-intrinsic-size: auto 36px;
 }
+.grow + .grow { border-top: .5px solid var(--border); }
 .row:hover, .grow:hover { background: var(--wash); }
 .row .st, table.m td, .pill .tm, .frow .ms, table.l .mo {
   font-variant-numeric: tabular-nums; font-feature-settings: "cv01" on, "cv02" on;
@@ -543,7 +660,7 @@ table.m td.nm { color: var(--ink); }
   transition: border-color .16s var(--soft), transform .22s var(--spring), color .16s;
   cursor: default;
 }
-.chip:hover { border-color: var(--ink-4); color: var(--ink); transform: translateY(-1px); }
+.chip:hover { border-color: var(--ink-4); color: var(--ink); background: var(--wash); }
 .chip i { color: var(--ink-4); font-style: normal; }
 
 /* flame graph */
@@ -584,15 +701,17 @@ table.m td.nm { color: var(--ink); }
 .dock { padding: 4px 22px 18px; }
 .composer {
   max-width: 720px; margin: 0 auto;
-  background: var(--bg); border: 1px solid var(--border-strong);
-  border-radius: var(--r-composer); padding: 11px 12px 9px;
-  box-shadow: var(--shadow-2);
-  transition: border-color var(--d-menu) var(--out), box-shadow var(--d-sheet) var(--out);
+  /* One hairline, not two: the old rule stacked a 1px border on top of the
+     stroke inside --shadow-2, which read as a heavy outline next to Codex's. */
+  background: var(--bg); border: none;
+  border-radius: var(--r-composer); padding: 14px 14px 10px;
+  box-shadow: var(--shadow-float);
+  transition: box-shadow var(--d-sheet) var(--out);
 }
-.composer:focus-within { border-color: var(--ink-4); box-shadow: var(--shadow-2), 0 0 0 3.5px var(--daisy-wash); }
+.composer:focus-within { box-shadow: var(--shadow-float), 0 0 0 3.5px var(--daisy-wash); }
 .composer input[type=text] {
   width: 100%; background: none; border: none; outline: none; color: var(--ink);
-  font-family: var(--sans); font-size: 14.5px; padding: 3px 4px 11px; letter-spacing: -.008em;
+  font-family: var(--sans); font-size: 16px; padding: 2px 4px 16px; letter-spacing: -.008em;
 }
 .composer input::placeholder { color: var(--ink-3); }
 .crow { display: flex; align-items: center; gap: 8px; }
@@ -613,11 +732,13 @@ select {
 select:hover { background: var(--surface-2); border-color: var(--border); }
 select:focus-visible { outline: 2px solid var(--leaf); }
 .send {
-  width: 28px; height: 28px; padding: 0; border-radius: 50%; padding: 0;
-  background: var(--ink); color: var(--bg); border-color: transparent;
+  width: 30px; height: 30px; padding: 0; border-radius: 50%; padding: 0;
+  background: var(--ink-4); color: var(--bg); border-color: transparent;
   display: inline-flex; align-items: center; justify-content: center;
+  transition: background var(--d-hover) var(--out), transform var(--d-press) var(--out);
 }
-.send:hover { background: var(--ink); filter: brightness(1.25); }
+.send.ready { background: var(--ink); }
+.send:hover { filter: brightness(1.15); }
 .send svg { width: 15px; height: 15px; }
 
 /* jump-to-latest */
@@ -681,7 +802,7 @@ table.l tr.click:hover td { background: var(--wash); }
 .acard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
   overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-1);
   transition: transform .34s var(--spring), box-shadow .3s var(--soft); }
-.acard:hover { transform: translateY(-3px); box-shadow: var(--shadow-2); }
+.acard:hover { background: var(--wash); border-color: var(--border-strong); }
 .acard .th { height: 146px; background: var(--surface-2); border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .acard .mt { padding: 11px 13px; }
@@ -779,6 +900,7 @@ table.l tr.click:hover td { background: var(--wash); }
 }
 
 /* ---------- eased stagger on rows: bunch toward the end, like a fanned hand ---------- */
+.card .chead { border-bottom: .5px solid var(--border); }
 .card .row, .card .grow {
   animation: rowin .34s var(--out) both;
   animation-delay: calc(var(--i, 0) * 26ms);
@@ -800,14 +922,29 @@ table.l tr.click:hover td { background: var(--wash); }
 </style>
 
 <aside>
-  <div class="lights"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+  <div class="titlebar">
+    <div class="lights"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <div class="tb-tools">
+      <button class="tbtn" id="tb-rail" aria-label="Toggle sidebar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2.4"/><path d="M6.2 3v10"/></svg><span class="tip">Toggle sidebar <kbd>⌘B</kbd></span></button>
+      <button class="tbtn" id="tb-back" aria-label="Back" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8H3.4M7.2 3.8 3 8l4.2 4.2"/></svg><span class="tip">Back <kbd>⌘[</kbd></span></button>
+      <button class="tbtn" id="tb-fwd" aria-label="Forward" disabled><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h9.6M8.8 3.8 13 8l-4.2 4.2"/></svg><span class="tip">Forward <kbd>⌘]</kbd></span></button>
+      <button class="tbtn" id="tb-new" aria-label="New run"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M8.3 3H4.1A1.6 1.6 0 0 0 2.5 4.6v7.3A1.6 1.6 0 0 0 4.1 13.5h7.3a1.6 1.6 0 0 0 1.6-1.6V7.7" stroke-linecap="round"/><path d="M11.3 2.4a1.34 1.34 0 0 1 1.9 1.9L8.5 9l-2.4.5.5-2.4 4.7-4.7Z"/></svg><span class="tip">New run <kbd>⌘N</kbd></span></button>
+    </div>
+  </div>
   <div class="brand">
-    <span class="mark" id="brandmark"></span>
-    <span class="name">Daisy</span><span class="chev">▾</span>
+    <button class="brand-trigger" id="brand-menu-trigger" aria-label="Daisy menu" aria-haspopup="menu" aria-expanded="false">
+      <span class="mark" id="brandmark"></span>
+      <span class="name">Daisy</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 6.4 8 10l3.6-3.6"/></svg>
+    </button>
     <span class="tools">
       <button class="iconbtn" id="btn-search" title="Search (⌘K)" aria-label="Search"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14" stroke-linecap="round"/></svg></button>
       <button class="iconbtn" id="btn-bell" title="Alerts" aria-label="Alerts"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6.5a4 4 0 1 1 8 0c0 3 1 4 1 4H3s1-1 1-4Z" stroke-linejoin="round"/><path d="M6.5 13a1.6 1.6 0 0 0 3 0" stroke-linecap="round"/></svg></button>
     </span>
+    <div class="brand-menu" id="brand-menu" role="menu" aria-label="Daisy" aria-hidden="true">
+      <button role="menuitem" data-brand-action="new">New run</button>
+      <button role="menuitem" data-brand-action="appearance">Appearance</button>
+      <button role="menuitem" data-brand-action="about">About Daisy</button>
+    </div>
   </div>
 
   <nav id="nav" role="tablist" aria-label="Sections">
@@ -849,9 +986,24 @@ table.l tr.click:hover td { background: var(--wash); }
     <span class="title" id="tb-title">Sensor fleet dashboard + SR-11 mounting bracket</span>
     <span class="ell">···</span>
     <div class="right">
-      <button class="iconbtn" id="btn-theme" title="Toggle appearance" aria-label="Toggle appearance"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke-linecap="round"/></svg></button>
-      <button class="iconbtn" id="btn-rail" title="Toggle sidebar" aria-label="Toggle sidebar"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M6.2 3v10"/></svg></button>
+      <button class="iconbtn" id="btn-theme" aria-label="Toggle appearance"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1" stroke-linecap="round"/></svg><span class="tip">Appearance <kbd>⇧⌘L</kbd></span></button>
+      <button class="iconbtn" id="btn-ctx" aria-label="Run context" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M10.2 3v10"/></svg><span class="tip">Run context</span></button>
     </div>
+  </div>
+
+  <div class="ctx" id="ctx" role="region" aria-label="Run context" aria-hidden="true">
+    <h4>Run 1043 <span class="add">+</span></h4>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M2.6 4.2h4l1.1 1.4h5.7v6.2H2.6V4.2Z"/></svg><span class="lbl">web &middot; hardware</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 6.4 8 10l3.6-3.6"/></svg></div>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="4.2" cy="4" r="1.7"/><circle cx="4.2" cy="12" r="1.7"/><circle cx="11.8" cy="6.4" r="1.7"/><path d="M4.2 5.7v4.6M5.9 5.2 10.3 6"/></svg><span class="lbl">lab/run-1043</span><svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 6.4 8 10l3.6-3.6"/></svg></div>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M8 1.9 13.6 4.6v4.1c0 3-2.4 4.6-5.6 5.4-3.2-.8-5.6-2.4-5.6-5.4V4.6L8 1.9Z"/></svg><span class="lbl">11 gate failures caught</span></div>
+    <div class="crow2 mute"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M2.4 8h3M10.6 8h3"/><circle cx="8" cy="8" r="2.4"/></svg><span class="lbl">Awaiting cost approval</span></div>
+    <div class="id">019fc027-115d-7bc3-bf94-92475f7e6</div>
+    <hr>
+    <h4>Sources <span class="add">+</span></h4>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><rect x="2.2" y="3" width="11.6" height="10" rx="1.6"/><path d="M2.2 9.6 5.6 6.9l2.8 2.3 1.9-1.4 3.5 2.6"/></svg><span class="lbl">Reference site &mdash; design DNA</span></div>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M2.6 12.4V3.6h6.2l1.4 1.6h3.2v7.2H2.6Z"/></svg><span class="lbl">Fastener table &mdash; 11:07:32</span></div>
+    <div class="crow2"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M4 2.4h5.2L12.4 5.6v8H4v-11Z"/><path d="M9.2 2.4v3.2h3.2"/></svg><span class="lbl">brief.md &mdash; Port action</span></div>
+    <div class="crow2 mute"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6.4 9.6 9.6 6.4M6.9 4.9 8.3 3.5a2.4 2.4 0 0 1 3.4 3.4l-1.4 1.4M9.1 11.1l-1.4 1.4a2.4 2.4 0 0 1-3.4-3.4l1.4-1.4"/></svg><span class="lbl">View all</span></div>
   </div>
 
   <!-- ============ RUN ============ -->
@@ -1527,10 +1679,21 @@ $ echo $?
   /* ---------------- views ---------------- */
   var VIEW_ORDER = ['run','runs','review','precedent','artifacts','autos','skills','settings'];
   var curView = 'run';
+  // Back/forward walk the views actually visited, not VIEW_ORDER — the arrows
+  // in the title bar are history, so a jump from Skills to Runs must come back
+  // to Skills, not to whatever sits above Runs in the rail.
+  var histBack = [], histFwd = [], histNav = false;
+  function syncHist() {
+    var b = $('#tb-back'), f = $('#tb-fwd');
+    if (b) b.disabled = !histBack.length;
+    if (f) f.disabled = !histFwd.length;
+  }
   function show(name) {
     if (name === curView) return;
+    if (!histNav) { histBack.push(curView); histFwd.length = 0; }
     var back = VIEW_ORDER.indexOf(name) < VIEW_ORDER.indexOf(curView);
     curView = name;
+    syncHist();
     var swap = function () {
       $$('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'view-' + name); });
       $$('.navitem').forEach(function (a) {
@@ -1746,9 +1909,50 @@ $ echo $?
     if (ap) { ap.disabled = true; ap.textContent = 'Approved'; toast('<b>Approved.</b> ' + ap.getAttribute('data-approve')); return; }
   });
 
-  $('#btn-bell').addEventListener('click', function () { openRun('1042'); toast('<b>1 alert.</b> gate_failures ≥ 2 fired on run 1042 — the escalation card is in the feed.'); });
-  $('#btn-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
-  $('#btn-search').addEventListener('click', palOpen);
+  $('#btn-bell').addEventListener('click', function () { closeBrandMenu(); openRun('1042'); toast('<b>1 alert.</b> gate_failures ≥ 2 fired on run 1042 — the escalation card is in the feed.'); });
+  var ctxPanel = $('#ctx');
+  $('#btn-ctx').addEventListener('click', function () {
+    var on = ctxPanel.classList.toggle('on');
+    this.classList.toggle('on', on);
+    this.setAttribute('aria-expanded', on ? 'true' : 'false');
+    ctxPanel.setAttribute('aria-hidden', on ? 'false' : 'true');
+  });
+
+  function histGo(dir) {
+    var from = dir < 0 ? histBack : histFwd, to = dir < 0 ? histFwd : histBack;
+    if (!from.length) return;
+    var target = from.pop();
+    to.push(curView);
+    histNav = true; show(target); histNav = false;
+    syncHist();
+  }
+  $('#tb-rail').addEventListener('click', function () { document.body.classList.toggle('rail'); });
+  $('#tb-back').addEventListener('click', function () { histGo(-1); });
+  $('#tb-fwd').addEventListener('click', function () { histGo(1); });
+  $('#tb-new').addEventListener('click', function () { show('run'); playLive(); });
+  syncHist();
+  $('#btn-search').addEventListener('click', function () { closeBrandMenu(); palOpen(); });
+
+  var brandMenu = $('#brand-menu'), brandTrigger = $('#brand-menu-trigger');
+  function closeBrandMenu() {
+    brandMenu.classList.remove('on');
+    brandMenu.setAttribute('aria-hidden', 'true');
+    brandTrigger.setAttribute('aria-expanded', 'false');
+  }
+  brandTrigger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var open = brandMenu.classList.toggle('on');
+    brandMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    brandTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  brandMenu.addEventListener('click', function (e) {
+    var item = e.target.closest('[data-brand-action]'); if (!item) return;
+    var action = item.getAttribute('data-brand-action'); closeBrandMenu();
+    if (action === 'new') { show('run'); playLive(); }
+    else if (action === 'appearance') show('settings');
+    else toast('<b>Daisy.</b> Verified software and hardware from one brief.');
+  });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.brand')) closeBrandMenu(); });
 
   /* ---------------- toast ---------------- */
   var toastEl = $('#toast'), tt = null;
@@ -1760,7 +1964,7 @@ $ echo $?
   /* ---------------- composer ---------------- */
   function sendAmend() {
     var inp = $('#amend'), v = inp.value.trim(); if (!v) return;
-    inp.value = '';
+    inp.value = ''; $('#send').classList.remove('ready');
     // A brief that names a budget is a NEW run, not an amendment — and a
     // tighter ceiling has to reach a different conclusion.
     var m = /\$\s?(\d+(?:\.\d+)?)/.exec(v);
@@ -1775,6 +1979,10 @@ $ echo $?
   }
   $('#send').addEventListener('click', sendAmend);
   $('#amend').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.keyCode === 13) sendAmend(); });
+  // Codex greys the send control until there is something to send
+  $('#amend').addEventListener('input', function (e) {
+    $('#send').classList.toggle('ready', e.target.value.trim().length > 0);
+  });
 
   /* ---------------- diff modal ---------------- */
   var modOv = $('#mod-ov');
@@ -1902,9 +2110,15 @@ $ echo $?
       if (marks[to]) { e.preventDefault(); marks[to].click(); }
       return;
     }
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); document.body.classList.toggle('rail'); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === '[') { e.preventDefault(); histGo(-1); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === ']') { e.preventDefault(); histGo(1); return; }
     if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); palOv.classList.contains('on') ? palClose() : palOpen(); }
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); toggleTheme(); }
-    if (e.key === 'Escape') { palClose(); modOv.classList.remove('on'); }
+    if (e.key === 'Escape') {
+      palClose(); closeBrandMenu(); modOv.classList.remove('on');
+      if (ctxPanel.classList.contains('on')) $('#btn-ctx').click();
+    }
   });
 
   /* ---------------- appearance ---------------- */
