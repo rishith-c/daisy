@@ -33,6 +33,9 @@ line
 gate "taste.t1 — design lint over the UI itself" \
      $PY -m taste.lint index.html
 
+gate "taste.t2 — computed contrast, both themes" \
+     $PY -m taste.contrast index.html
+
 gate "taste — linter test suite" \
      env PYTHONWARNINGS=ignore $PY -m taste.test_lint
 

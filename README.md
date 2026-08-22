@@ -45,8 +45,9 @@ Motion follows the same discipline: `ease-out` for enter and exit and never `eas
 
 ## The taste gate
 
-`taste/lint.py` — tier 1 of the three-tier taste ladder, and a real program rather
-than a prompt. Pure stdlib, milliseconds, zero tokens. Twenty named tells, each
+Two of the three tiers are real programs, not prompts.
+
+### Tier 1 — `taste/lint.py` Pure stdlib, milliseconds, zero tokens. Twenty named tells, each
 reported with `file:line` and a reason:
 
 ```
@@ -68,6 +69,27 @@ typographic glyphs (`✓`, `σ`, `≥`) as emoji when those inherit `currentColo
 not the tell, and it had no suppression mechanism, so a file that *documents* the
 tells could never pass. Both fixed; fixtures that quote a tell now carry an explicit
 `taste-ok` marker.
+
+### Tier 2 — `taste/contrast.py`
+
+Computes what an eye cannot judge. It reads the design tokens out of the stylesheet,
+resolves `rgba()` over its surface and composites `color-mix()`, and checks the WCAG
+ratio of every declared text-on-surface pair **in both themes**.
+
+It found **seven real WCAG failures** in this file on its first run — every one of
+which looked fine on screen, including three I had already "fixed" by hand after
+eyeballing a smaller sample:
+
+```
+light  diff additions       --add-ink  on --surface    3.36:1  (needs 4.5)
+light  disabled / hint      --ink-4    on --bg         2.13:1  (needs 3.0)
+dark   FAIL chip            --fail     on --del-bg     3.98:1  (needs 4.5)
+…
+```
+
+Now: `28 pairs checked, 0 failing`, tightest 3.11:1. Chip grounds are their own
+tokens (`--pass-chip`, `--fail-chip`, …) specifically so the stylesheet and the
+checker's pair table cannot silently drift apart.
 
 ---
 

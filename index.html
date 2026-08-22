@@ -21,7 +21,7 @@
   --ink:           #1A1C1F;              /* --color-text-foreground */
   --ink-2:         rgba(26,28,31,.66);
   --ink-3:         rgba(26,28,31,.62);   /* Codex ships .495; raised to clear 4.5:1 on white */
-  --ink-4:         rgba(26,28,31,.34);
+  --ink-4:         rgba(26,28,31,.48);   /* 2.13:1 -> 3.2:1 on white */
 
   --daisy:         #E9C64A;
   --daisy-hi:      #F2D468;
@@ -37,7 +37,11 @@
   --info:          #0169CC;              /* focusBorder / textLink */
   --violet:        #693ACF;              /* conflicting */
 
-  --add-ink:       #00A240;
+  --add-ink:       #0B7A33;              /* 3.36:1 -> 5.5:1 on white */
+  --pass-chip:     #EFF4E2;
+  --fail-chip:     color-mix(in srgb, var(--fail) 10%, var(--bg));
+  --warn-chip:     #FBF3DA;
+  --info-chip:     #F3F3F3;
   --del-ink:       #BA2623;
   --add-bg:        color-mix(in lab, var(--bg) 88%, var(--add-ink));
   --del-bg:        color-mix(in lab, var(--bg) 88%, var(--del-ink));
@@ -100,9 +104,13 @@
     --warn:          #FF8549;              /* gitDecoration.modified, dark */
     --info:          #339CFF;
     --violet:        #7B43F8;
-    --add-ink:       #40C977; --del-ink: #FA423E;
-    --add-bg:        color-mix(in lab, var(--bg) 80%, var(--add-ink));
-    --del-bg:        color-mix(in lab, var(--bg) 80%, var(--del-ink));
+    --add-ink:       #40C977; --del-ink: #FF6762;   /* 3.88:1 -> 4.9:1 on card */
+    --pass-chip:     #1E2413;
+    --fail-chip:     color-mix(in srgb, var(--fail) 8%, var(--bg));
+    --warn-chip:     #2A2413;
+    --info-chip:     #212121;
+    --add-bg:        color-mix(in lab, var(--bg) 88%, var(--add-ink));
+    --del-bg:        color-mix(in lab, var(--bg) 88%, var(--del-ink));
     --wash: rgba(255,255,255,.06); --wash-2: rgba(255,255,255,.10);
     --elev-stroke:   0 0 0 .5px var(--border-strong);
     --shadow-1:      var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
@@ -132,9 +140,13 @@
   --warn:      #FF8549;        /* gitDecoration.modified, dark */
   --info:      #339CFF;
   --violet:    #7B43F8;
-  --add-ink:     #40C977; --del-ink: #FA423E;
-  --add-bg:    color-mix(in lab, var(--bg) 80%, var(--add-ink));
-  --del-bg:    color-mix(in lab, var(--bg) 80%, var(--del-ink));
+  --add-ink:     #40C977; --del-ink: #FF6762;   /* 3.88:1 -> 4.9:1 on card */
+  --pass-chip:   #1E2413;
+  --fail-chip:   color-mix(in srgb, var(--fail) 8%, var(--bg));
+  --warn-chip:   #2A2413;
+  --info-chip:   #212121;
+  --add-bg:    color-mix(in lab, var(--bg) 88%, var(--add-ink));
+  --del-bg:    color-mix(in lab, var(--bg) 88%, var(--del-ink));
   --wash: rgba(255,255,255,.06); --wash-2: rgba(255,255,255,.10);
   --elev-stroke:   0 0 0 .5px var(--border-strong);
   --shadow-1:    var(--elev-stroke), 0 1px 2px rgba(0,0,0,.4);
@@ -457,10 +469,10 @@ button[disabled] { opacity: .45; cursor: default; transform: none !important; }
   font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
   padding: 3px 8px; border-radius: 999px; white-space: nowrap;
 }
-.tag.fail { color: var(--fail); background: var(--del-bg); }
-.tag.pass { color: var(--pass); background: var(--leaf-wash); }
-.tag.warn { color: var(--warn); background: var(--daisy-wash); }
-.tag.info { color: var(--info); background: var(--surface-2); }
+.tag.fail { color: var(--fail); background: var(--fail-chip); }
+.tag.pass { color: var(--pass); background: var(--pass-chip); }
+.tag.warn { color: var(--warn); background: var(--warn-chip); }
+.tag.info { color: var(--info); background: var(--info-chip); }
 
 .grow { gap: 12px; }
 .grow .gn { color: var(--ink-2); flex: 0 0 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1499,7 +1511,7 @@ $ echo $?
      computed rather than typed. Skipped entirely under reduced motion. */
   function countUp() {
     if (reduced || !motionOn()) return;
-    $$('.mo').forEach(function (el) {
+    $$('#precedent-body .mo').forEach(function (el) {
       if (el.dataset.ticked) return;
       var m = /^([\d,]+)$/.exec(el.textContent.trim());
       if (!m) return;
