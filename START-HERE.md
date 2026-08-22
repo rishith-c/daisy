@@ -62,11 +62,36 @@ retrieves correctly, and why a genuinely novel failure returns nothing.
 The UI and the gates were built the night before. Declare it plainly, on camera
 and in the README. Brought assets are normal; undeclared ones are not.
 
-## What is NOT built
+## Running the factory for real
 
-`labctl` — the orchestrator that runs real agents and talks to the three
-sponsors. That is the day's work. Daisy already speaks SSE, so pointing it at a
-real event stream is the first thing to wire.
+```bash
+python3 labctl.py agents                      # which agents can actually be driven
+python3 labctl.py run --brief "..." --lane hardware --lane scrape
+python3 labctl.py run --brief "..." --lane software    # needs a usable agent
+```
+
+The hardware and scrape lanes need no LLM and no credentials — algebra does not
+require a language model. That run commits a plan, fails `physics.bend` at FoS
+0.725, recalls the fix from the commons, solves t = 4.61 mm, writes a real STL,
+and picks a fastener from scraped rows.
+
+To show the whole failure chain in one trace:
+
+```bash
+DAISY_SCRAPE_FIXTURE=vendor_v2.html python3 tools/traced_verify.py
+```
+
+A vendor page restructures, `scrape.schema` goes red, the repair signal fires,
+and `physics.fastener` then fails with "cannot certify" — a website changing its
+HTML making a physical part unsignable, visible without narration.
+
+## Known limits
+
+- The UI's run playback is a scripted replay, not a live execution. Say so.
+- Port / SigNoz / Bright Data are offline until credentials are set.
+- `claude -p` and `codex exec` were both unusable on this machine at build
+  time (expired session; CLI older than its configured model). `labctl agents`
+  will tell you the current truth.
 
 ---
 
