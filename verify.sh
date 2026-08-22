@@ -7,6 +7,25 @@
 # Exit code is the number of failing gates. Nothing here needs a network, an
 # API key, or a third-party package.
 
+
+# ---------------------------------------------------------------------------
+# Shared-tree notice.
+#
+# Claude and Codex are both working in this repository at the same time, in the
+# same working tree. This banner lives here because verify.sh is the one command
+# both agents run every cycle — a protocol nobody reads is not a protocol.
+# ---------------------------------------------------------------------------
+if [ -z "${DAISY_NO_BANNER:-}" ]; then
+  _claims=$(python3 tools/claim.py list 2>/dev/null | grep -v '^no live claims' | tail -n +3 || true)
+  printf '\033[2m%s\033[0m\n' "two agents share this tree — read AGENTS.md before editing"
+  if [ -n "$_claims" ]; then
+    printf '\033[2m%s\033[0m\n' "live path claims:"
+    printf '\033[2m%s\033[0m\n' "$_claims"
+  fi
+  printf '\033[2m%s\033[0m\n' "claim before you edit:  python3 tools/claim.py take <path> --as <you>"
+  echo
+fi
+
 set -uo pipefail
 cd "$(dirname "$0")"
 
