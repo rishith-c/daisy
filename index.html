@@ -800,6 +800,8 @@ table.l tr.click:hover td { background: var(--wash); }
       <span class="pip"></span><span class="txt">Taste gate rehearsal — tier 1 findings</span></div>
     <div class="thread" data-run="1039" data-peek="Retries exhausted on the bending margin. The load case in the brief cannot be met at this wall thickness within budget; parked for a human with the full derivation attached." data-foot="escalated · 3 fails · 9m 51s">
       <span class="pip fail"></span><span class="txt">Bracket margin sweep, FoS 1.5</span></div>
+    <div class="thread" data-run="heal" data-peek="The vendor restructured its table overnight. The collector did not error — it quietly returned fewer keys per row, which is the failure mode that actually matters." data-foot="healed · verified before review · 2m 55s">
+      <span class="pip run"></span><span class="txt">Scraper heal — bolt table</span></div>
     <div class="sect">Recents</div>
     <div class="thread" data-run="1042" data-peek="Replay of the merged run from the flight recorder — same events, same timing, no agents re-invoked." data-foot="replay · read-only">
       <span class="pip"></span><span class="txt">Replay — run 1042</span></div>
@@ -1182,10 +1184,21 @@ $ echo $?
       '<div class="prov"><span class="p port"><i></i>PORT &middot; run 1043 &middot; approved by rishith</span><span class="p sig"><i></i>SIGNOZ &middot; trace b7c1e4</span><span class="p bd"><i></i>BRIGHT DATA &middot; scraped 11:07:32</span></div>' },
   ];
 
+  var HEAL_STEPS = [
+    { d: 760, kind: 'prose', tag: "<div class=\"who-tag sys\"><i></i>watchdog \u00b7 every 15 min</div>", text: "The vendor shipped a table restructure overnight. Nothing errored \u2014 the collector still returned rows, just <em>fewer keys</em> per row. That is the failure mode that matters: a scraper that breaks loudly gets noticed, and a scraper that quietly returns partial data poisons everything downstream." },
+    { d: 820, kind: 'fail', html: "<div class=\"card\"><div class=\"chead\"><span class=\"ci\">&#8800;</span><div style=\"min-width:0\"><b>Schema key-diff</b><div class=\"sub\">run output vs the schema pinned in CLAUDE.md</div></div><div class=\"act\"><span class=\"tag fail\">2 KEYS MISSING</span></div></div><div class=\"derive\">expected  grade, tensile_mpa, price_usd, in_stock\nreceived  grade, in_stock\nmissing   tensile_mpa, price_usd        <-- silently omitted, not an error</div><div class=\"grow\"><span class=\"gn\">rows returned</span><span class=\"gd\">5 &mdash; the collector did not fail</span><span class=\"gm\">&mdash;</span></div><div class=\"grow\"><span class=\"gn\">downstream effect</span><span class=\"gd\">bom_select has no tensile figure, so no fastener can be certified</span><span class=\"gm no\">blocked</span></div><div class=\"res\" style=\"display:block\">The run stops here rather than proceeding on partial data. <b class=\"no\">scraper.broken</b> is emitted as a span event, which is what raises the alert.</div></div>" },
+    { d: 760, kind: 'card', html: "<div class=\"card\"><div class=\"chead\"><span class=\"ci\" style=\"color:var(--warn)\">&#8635;</span><div style=\"min-width:0\"><b>Auto-repair</b><div class=\"sub\">brightdata scraper heal &middot; 41 s</div></div><div class=\"act\"><span class=\"tag warn\">AWAITING APPROVAL</span></div></div><div class=\"derive\">$ npx -p @brightdata/cli scraper heal c_bolt_table \\\n    \"tensile_mpa and price_usd missing after table restructure\"\n\n  status      awaiting_approval\n  preview     5 rows, all 4 keys present\n  selector    td:nth-child(2) -> [data-col=\"tensile\"]\n              td:nth-child(3) -> [data-col=\"price\"]</div></div>" },
+    { d: 820, kind: 'pass', html: "<div class=\"card\"><div class=\"chead\"><span class=\"ci\">&#10003;</span><div style=\"min-width:0\"><b>Machine checks the fix first</b><div class=\"sub\">the verifier runs on preview_result before a human sees it</div></div><div class=\"act\"><span class=\"tag pass\">PREVIEW OK</span></div></div><div class=\"grow\"><span class=\"gn\">schema key-diff</span><span class=\"gd\">all 4 keys present in all 5 rows</span><span class=\"gm ok\">&#10003;</span></div><div class=\"grow\"><span class=\"gn\">type sanity</span><span class=\"gd\">tensile 800&ndash;1040 MPa, price $0.09&ndash;$0.31 &mdash; plausible</span><span class=\"gm ok\">&#10003;</span></div><div class=\"grow\"><span class=\"gn\">row-count stability</span><span class=\"gd\">5 rows, unchanged from the last good run</span><span class=\"gm ok\">&#10003;</span></div><div class=\"res\" style=\"display:block\">A person is asked to approve a fix that has <b>already been checked</b>, not to be the checker. Approving is a judgement call about intent; verifying is a machine job.</div></div>" },
+    { d: 900, kind: 'gate', wait: "healapprove", html: "<div class=\"card alert\"><div class=\"chead\"><span class=\"ci\">!</span><div style=\"min-width:0\"><b>Approve the healed extractor</b><div class=\"sub\">the agent cannot approve this &mdash; its token has no approval action</div></div><div class=\"act\"><button class=\"primary\" id=\"healapprove\">Approve heal</button></div></div><div class=\"res\" hidden><b>Approved</b> by rishith &middot; <code>scraper approve c_bolt_table</code> &middot; healed selectors committed to CLAUDE.md &middot; diff in git</div></div>" },
+    { d: 760, kind: 'card', html: "<div class=\"card\"><div class=\"chead\"><span class=\"ci\">&#9998;</span><div style=\"min-width:0\"><b>The repair is version-controlled</b><div class=\"sub\">config lives in the repo, not in a dashboard</div></div><div class=\"act\"><span class=\"tag pass\">COMMITTED</span></div></div><div class=\"derive\">  CLAUDE.md\n- tensile_mpa:  td:nth-child(2)\n- price_usd:    td:nth-child(3)\n+ tensile_mpa:  [data-col=\"tensile\"]\n+ price_usd:    [data-col=\"price\"]\n+ healed:       2026-08-22 &middot; approved by rishith &middot; run heal-0007</div><div class=\"res\" style=\"display:block\">Next run reads the healed selectors from the same file the agent already loads. Nobody has to remember to update a console.</div></div>" },
+    { d: 700, kind: 'done', html: "<div class=\"pill\"><span class=\"tag pass\">HEALED</span><b>heal-0007</b><span class=\"mu\">detected in 15 min &middot; healed in 41 s &middot; verified before review &middot; committed</span><span class=\"tm\">2m 55s</span><button class=\"ghost\" id=\"replay\">Replay</button></div><div class=\"prov\"><span class=\"p bd\"><i></i>BRIGHT DATA &middot; c_bolt_table &middot; heal approved</span><span class=\"p sig\"><i></i>SIGNOZ &middot; scraper.broken &rarr; heal_approved</span><span class=\"p port\"><i></i>PORT &middot; review queue &middot; approved by rishith</span></div>" },
+  ];
+
   var RUNS = {
     '1042': { t: 'Sensor fleet dashboard + SR-11 mounting bracket', live: true },
     '1041': { t: 'Taste gate rehearsal — tier 1 findings', n: 14 },
     '1039': { t: 'Bracket margin sweep, FoS 1.5', n: 18, failed: true },
+    'heal': { t: 'Scraper heal — bolt table restructure', live: true, script: 'heal' },
   };
 
   /* ---------------- precedent card ---------------- */
@@ -1367,7 +1380,10 @@ $ echo $?
     feed.classList.add('live');
     following = true; $('#jump').classList.remove('on');
     $('#btn-bell').style.color = '';
-    if (variant === 'budget') {
+    if (variant === 'heal') {
+      script = HEAL_STEPS;
+      $('#tb-title').textContent = RUNS['heal'].t;
+    } else if (variant === 'budget') {
       // same plan, same physics, different economics
       script = STEPS.slice(0, 18).concat(BUDGET_STEPS);
       $('#tb-title').textContent = 'Sensor fleet dashboard + SR-11 bracket — $18 fastener ceiling';
@@ -1409,7 +1425,7 @@ $ echo $?
     $('#tb-title').textContent = r.t;
     $$('.thread').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-run') === id); });
     show('run');
-    if (r.live) playLive(); else snapshot(id);
+    if (r.live) playLive(r.script || null); else snapshot(id);
   }
 
   /* ---------------- views ---------------- */
@@ -1431,13 +1447,20 @@ $ echo $?
     };
     // Same-document view transition: the panes cross-fade and slide in the
     // direction of travel, off the main thread, with a hard fallback.
-    if (document.startViewTransition && !reduced && motionOn()) {
+    // A hidden document rejects startViewTransition with InvalidStateError, and
+    // ready/finished/updateCallbackDone all reject — each one an unhandled
+    // rejection if left alone. Skip the transition when hidden, and swallow the
+    // rejections when it aborts for any other reason.
+    if (document.startViewTransition && !reduced && motionOn() && !document.hidden) {
       document.documentElement.dataset.vt = back ? 'back' : 'fwd';
-      var t = document.startViewTransition(swap);
-      if (t && t.finished && t.finished.then) {
-        t.finished.then(function () { delete document.documentElement.dataset.vt; },
-                        function () { delete document.documentElement.dataset.vt; });
-      }
+      var done = function () { delete document.documentElement.dataset.vt; };
+      var t;
+      try { t = document.startViewTransition(swap); } catch (err) { done(); swap(); return; }
+      if (t) {
+        ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) {
+          if (t[k] && t[k].then) t[k].then(k === 'finished' ? done : function () {}, done);
+        });
+      } else { done(); }
     } else swap();
   }
   function motionOn() { return document.documentElement.getAttribute('data-motion') !== 'calm'; }
