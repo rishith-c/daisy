@@ -30,7 +30,8 @@ A command center in the Codex-desktop design language, **light-first**: serif ag
 
 - **Live run view** — the full factory run with real human approval gates (clarify → Port approve → escalation). Streaming word-level narration, diff cards, gate tables, an algebraic-repair derivation, and a span flame graph.
 - **Proportional minimap** down the left edge, colour-coded by gate outcome, click to jump.
-- **Runs** — replayable snapshots, including a red escalated run so a judge can diagnose a failure from history.
+- **Runs** — aggregate windows plus ten replayable snapshots, including a red escalated run so a judge can diagnose a failure from history.
+- **Scraper heal** — the whole auto-repair loop as its own watchable thread: the vendor restructures its table, the collector *does not error* (it quietly returns fewer keys), the schema key-diff catches it, `scraper heal` runs, the verifier checks the preview **before** a human sees it, and the healed selectors are committed to `CLAUDE.md` rather than a dashboard.
 - **Review queue** — nothing merges itself. Diffs, scorecards, smoke-boot status.
 - **Precedent** — the innovative core, below.
 - **Artifacts / Automations / Skills**, ⌘K command palette, and `daisy-theme-v1` appearance settings (chat font, code font, accent, motion) persisted to localStorage.
