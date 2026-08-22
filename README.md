@@ -35,7 +35,8 @@ A command center in the Codex-desktop design language, **light-first**: serif ag
 - **Scraper heal** — the whole auto-repair loop as its own watchable thread: the vendor restructures its table, the collector *does not error* (it quietly returns fewer keys), the schema key-diff catches it, `scraper heal` runs, the verifier checks the preview **before** a human sees it, and the healed selectors are committed to `CLAUDE.md` rather than a dashboard.
 - **Review queue** — nothing merges itself. Diffs, scorecards, smoke-boot status.
 - **Precedent** — the innovative core, below.
-- **Artifacts / Automations / Skills**, ⌘K command palette, and `daisy-theme-v1` appearance settings (chat font, code font, accent, motion) persisted to localStorage.
+- **Skills** — the mounted skill files, the factory's own `CLAUDE.md` (scrapers, agent routing, gate list, and the laws the orchestrator enforces), and the taste gate applied to Daisy itself
+- **Artifacts / Automations**, ⌘K command palette, and `daisy-theme-v1` appearance settings (chat font, code font, accent, motion) persisted to localStorage.
 
 ### Craft notes
 

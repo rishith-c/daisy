@@ -1020,6 +1020,45 @@ web bend   106 / 172 MPa     &lt;- computed, not asserted</div>
       <p>~40 binary gates distilled from the slop test. The tier-3 vision judge scores screenshots against these by name — never a scalar.</p>
       <span class="chip"><i>▸</i> skills/taste-rubric.md</span></div>
 
+
+    <h3>The factory config</h3>
+    <div class="lede" style="margin-bottom:12px">One version-controlled file. The agents load it, the gates read it, and an approved scraper heal writes its new selectors straight back into it &mdash; so the repair is a commit, not a change someone made in a console.</div>
+    <div class="card"><div class="chead"><span class="ci">&#9776;</span><div style="min-width:0"><b>CLAUDE.md</b>
+      <div class="sub">reusable &middot; version-controlled &middot; not a one-off command</div></div>
+      <div class="act"><span class="tag pass">IN GIT</span></div></div>
+      <div class="derive"># CLAUDE.md &mdash; factory config          (loaded by every agent, committed to git)
+
+## scrapers
+c_bolt_table          vendor fastener table
+  schema              grade, tensile_mpa, price_usd, in_stock
+  selectors           [data-col=&quot;tensile&quot;], [data-col=&quot;price&quot;]   # healed 2026-08-22
+  ttl                 15m          # past this, no certification
+  heal_history        1 approved (run heal-0007, rishith)
+
+c_design_dna          reference site, type + palette + structure
+  emits               design.md    # mounted into the frontend worktree
+  ttl                 24h
+
+## agent routing
+web/frontend          claude   -p  --model fable-5-high
+web/api               codex exec  --model gpt-5.3-codex
+hardware              claude   -p  --model fable-5-high
+mobile, macos         routing-only            # emitted to plan.md, not built
+
+## gates              (committed as gates.json BEFORE any agent spawns)
+taste.t1              0 findings across 20 named tells
+taste.t2              every text-on-surface pair &ge; 4.5:1, both themes
+physics.*             FoS &ge; 1.5, closed form, no LLM in the path
+contract              routes &equiv; contract, both directions
+scrape.freshness      inside ttl, or the run stops
+
+## law
+retry_cap             2, findings injected verbatim &mdash; never a blind re-roll
+escalation            SigNoz alert only; labctl keeps no failure counter
+approvals             the agent token has no approval action
+honesty               &quot;closed-form stress field &mdash; not FEA&quot;</div>
+      <div class="res" style="display:block">Nothing here is typed twice. The scraper section is the same text the Bright Data CLI reads, the routing table is what <code>labctl</code> dispatches on, and the gate list is what gets committed as <code>gates.json</code> before a single agent starts.</div></div>
+
     <h3>The gate, applied to itself</h3>
     <div class="lede" style="margin-bottom:12px">Two of the three tiers are real programs, not prompts: <code>taste/lint.py</code> and <code>taste/contrast.py</code>, pure stdlib, exit code = finding count. Daisy is held to the same gate it applies to everything the factory builds.</div>
     <div class="card"><div class="chead"><span class="ci">T</span><div style="min-width:0"><b>taste.t1 &middot; index.html</b>
