@@ -169,6 +169,11 @@ Worth listing because they're the reason to write tests at all:
 10. View Transitions reject with `InvalidStateError` on a hidden document, and
     `ready`/`finished`/`updateCallbackDone` each rejected unhandled — one
     unhandled rejection per view switch, invisible unless you look.
+11. Two of my own build generators were not idempotent: their guard strings
+    didn't match what they emit (one checked for a literal `·` where the output
+    uses `&middot;`, the other for `class="bay"` which is JSON-escaped inside a
+    JS string). Re-running either silently duplicated a whole section. Found by
+    running every generator twice and diffing — which is now the check.
 
 39/39 precedent tests and 26/26 taste tests pass, plus a scripted interaction
 sweep over every view, control, and keyboard path. `./verify.sh` is green.
@@ -184,9 +189,10 @@ sweep over every view, control, and keyboard path. `./verify.sh` is green.
 
 ## Where things are
 
-- `~/Developer/daisy` — the repo, 10 commits
+- `~/Developer/daisy` — the repo, 37 commits, working tree clean
 - `Daisy.app` — the native Mac app, running, with the hand-drawn icon
 - Artifact: the same link as before, republished
 - `./verify.sh` — every gate, one command
+- `tools/README.md` — what each build script does; all are idempotent
 - `python3 -m precedent.cli bench` — the numbers above, reproducible
 - 65 tests across the two suites
