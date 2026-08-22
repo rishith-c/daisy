@@ -32,6 +32,9 @@ def main(argv=None):
                help="agents for the crew lane (default: claude, codex)")
     r.add_argument("--agent", default="auto", choices=("auto", "claude", "codex", "opencode"))
     r.add_argument("--fixture", default="vendor_v1.html")
+    r.add_argument("--garden", action="store_true",
+                   help="publish what passes to the shared Garden index "
+                        "(prepares a PR branch; never pushes without --live)")
     r.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
 
@@ -45,7 +48,7 @@ def main(argv=None):
         return 0
 
     s = execute(a.brief, a.run_id, tuple(a.lane or ("hardware", "scrape", "software")),
-                a.agent, a.fixture, quiet=a.json, crew=a.crew)
+                a.agent, a.fixture, quiet=a.json, crew=a.crew, to_garden=a.garden)
     if a.json:
         print(json.dumps(s, indent=1, default=str))
     else:
@@ -54,6 +57,8 @@ def main(argv=None):
               % (s["run"], s["gates"]["total"], s["gates"]["failed"], s["duration_s"]))
         if s["blocked_lanes"]:
             print("  blocked lanes: %s" % ", ".join(s["blocked_lanes"]))
+        for g in s.get("garden", []):
+            print("  garden: %s %s %s" % (g["lane"], g["mode"], g.get("branch") or g.get("why","")[:50]))
         if s["admitted_to_commons"]:
             print("  admitted to the commons: %s"
                   % ", ".join(x["lane"] for x in s["admitted_to_commons"]))

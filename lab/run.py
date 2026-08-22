@@ -55,6 +55,8 @@ from hardware.bracket import Bracket                              # noqa: E402
 from taste.lint import lint                                       # noqa: E402
 from commons.store import Solution, admit, recall, record_reuse, NotVerified  # noqa: E402
 from lab import executors                                         # noqa: E402
+from garden import index as garden_index                          # noqa: E402
+from garden.publish import publish as garden_publish, NotPublishable  # noqa: E402
 
 RUNS = os.path.join(ROOT, "runs")
 MAX_RETRIES = 2
@@ -113,6 +115,14 @@ def hardware_lane(run_id: str, brief: str, log) -> LaneResult:
         log("  physics.bend FAILED at FoS %.3f — asking the commons" % b.margin)
         # Before solving it again, ask whether this exact gate has been failed
         # and fixed before. This is the token that does not get spent twice.
+        # Ask the shared index too. The commons is what this machine knows;
+        # Garden is what anyone knows, and the point of publishing was so the
+        # next machine does not pay for this again.
+        gh = garden_index.search(["physics.bend"], "cantilever web bending margin", limit=1)
+        if gh:
+            log("  garden: %s (published by %s)"
+                % (gh[0].get("title", "")[:50],
+                   gh[0].get("published_by", {}).get("as", "?")))
         hits = recall("cantilever web bending margin negative",
                       gates=["physics.bend"], limit=1)
         if hits:
@@ -457,7 +467,8 @@ def software_lane(run_id: str, brief: str, prefer: str, log) -> LaneResult:
 
 def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape", "software"),
             prefer: str = "auto", fixture: str = "vendor_v1.html",
-            quiet: bool = False, crew: list = None) -> dict:
+            quiet: bool = False, crew: list = None,
+            to_garden: bool = False) -> dict:
     run_id = run_id or time.strftime("%H%M%S")
     d = _rundir(run_id)
     out = []
@@ -503,7 +514,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         blocked = [r.lane for r in results.values() if not r.ran]
 
         # 2. admit what passed, so the next run pays less for it.
-        admitted = []
+        admitted, published = [], []
         for r in results.values():
             if not r.passed or not r.gates:
                 continue
@@ -517,6 +528,25 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
                     recipe="run %s, %d attempt(s)" % (run_id, r.attempts),
                     tokens_cost=0))
                 admitted.append({"lane": r.lane, "id": sid})
+                if to_garden:
+                    # Outward-facing, so it stops at a prepared branch unless
+                    # consent is recorded AND the caller asked for live.
+                    try:
+                        from commons.store import recall as _rc
+                        full = [x for x in _rc(r.gates[0]["name"], gates=[g["name"] for g in r.gates],
+                                               limit=20) if x["id"] == sid]
+                        res = garden_publish(full[0], live=False) if full else \
+                              {"mode": "blocked", "why": "solution not readable back"}
+                        published.append({"lane": r.lane, "id": sid,
+                                          "mode": res.get("mode"),
+                                          "branch": res.get("branch", ""),
+                                          "why": res.get("why", "")})
+                        log("  garden: %s%s" % (res.get("mode"),
+                            (" -> " + res["branch"]) if res.get("branch") else
+                            (" (" + res.get("why", "")[:60] + ")")))
+                    except (NotPublishable, Exception) as exc:
+                        published.append({"lane": r.lane, "id": sid,
+                                          "mode": "error", "why": str(exc)[:90]})
             except NotVerified:
                 pass
 
@@ -534,6 +564,7 @@ def execute(brief: str, run_id: str = None, lanes: tuple = ("hardware", "scrape"
         "gates": {"total": len(all_gates), "failed": len(failed)},
         "blocked_lanes": blocked,
         "admitted_to_commons": admitted,
+        "garden": published,
         "artifacts_dir": d,
     }
     open(os.path.join(d, "summary.json"), "w", encoding="utf-8").write(

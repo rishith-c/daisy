@@ -17,3 +17,6 @@ scrape/rules.proposed.json
 
 # per-run artifacts
 runs/
+
+# Garden is its own repository
+.garden/

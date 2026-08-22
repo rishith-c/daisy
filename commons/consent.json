@@ -7,6 +7,13 @@
    "at": 1787418535.675437,
    "target": "",
    "note": ""
+  },
+  {
+   "scope": "artifact",
+   "granted": true,
+   "at": 1787422075.267144,
+   "target": "garden",
+   "note": ""
   }
  ]
 }
