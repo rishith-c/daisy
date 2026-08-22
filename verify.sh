@@ -88,6 +88,30 @@ gate "memory — four tiers and the verified forgetting boundary" \
 gate "importer — detection, idempotent import, autosync, attention" \
      env PYTHONWARNINGS=ignore $PY -m importer.test_importer
 
+# Codex wrote these and they pass, but nothing ran them: verify.sh is the board
+# everyone reads, and a board that omits a third of the suite reports green for
+# a codebase it has not checked. Wired in rather than trusted.
+gate "chain — model orchestration across available agents" \
+     env PYTHONWARNINGS=ignore $PY -m lab.test_chain
+
+gate "labctl — agent probes report the real reason" \
+     env PYTHONWARNINGS=ignore $PY -m lab.test_labctl_agents
+
+gate "sponsors — Port, Bright Data and SigNoz in one run" \
+     env PYTHONWARNINGS=ignore $PY -m lab.test_sponsors
+
+gate "bridge — native shell to web, and back" \
+     env PYTHONWARNINGS=ignore $PY -m app.test_bridge
+
+gate "onboarding — generator is idempotent and escapes stay literal" \
+     env PYTHONWARNINGS=ignore $PY -m tools.test_onboarding
+
+gate "chain view — the UI the orchestrator paints" \
+     env PYTHONWARNINGS=ignore $PY -m tools.test_daisy_chain_ui
+
+gate "app build — reproducible bundle" \
+     env PYTHONWARNINGS=ignore $PY -m tools.test_build_app
+
 printf '\n▸ precedent — archive present\n'
 if [ -f precedent/precedent.db ]; then
   $PY -m precedent.cli stats | sed 's/^/  /'
