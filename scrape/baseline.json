@@ -1,0 +1,92 @@
+{
+  "vendors.fastener": {
+    "anchors": [
+      {
+        "dia_mm": 3.0,
+        "grade": "8.8",
+        "in_stock": true,
+        "price_usd": 0.09,
+        "tensile_mpa": 800.0
+      },
+      {
+        "dia_mm": 4.0,
+        "grade": "8.8",
+        "in_stock": true,
+        "price_usd": 0.14,
+        "tensile_mpa": 800.0
+      },
+      {
+        "dia_mm": 4.0,
+        "grade": "10.9",
+        "in_stock": true,
+        "price_usd": 0.23,
+        "tensile_mpa": 1040.0
+      },
+      {
+        "dia_mm": 4.0,
+        "grade": "A2-70",
+        "in_stock": true,
+        "price_usd": 0.27,
+        "tensile_mpa": 700.0
+      },
+      {
+        "dia_mm": 5.0,
+        "grade": "8.8",
+        "in_stock": false,
+        "price_usd": 0.19,
+        "tensile_mpa": 800.0
+      },
+      {
+        "dia_mm": 5.0,
+        "grade": "10.9",
+        "in_stock": true,
+        "price_usd": 0.31,
+        "tensile_mpa": 1040.0
+      },
+      {
+        "dia_mm": 6.0,
+        "grade": "12.9",
+        "in_stock": true,
+        "price_usd": 0.58,
+        "tensile_mpa": 1220.0
+      }
+    ],
+    "captured": 1787419260.099478,
+    "captured_iso": "2026-08-22T17:21:00Z",
+    "complete": 7,
+    "fields": {
+      "dia_mm": {
+        "distinct": 4,
+        "max": 6.0,
+        "median": 4.0,
+        "min": 3.0,
+        "present": 7
+      },
+      "grade": {
+        "distinct": 4,
+        "present": 7
+      },
+      "in_stock": {
+        "distinct": 2,
+        "present": 7
+      },
+      "price_usd": {
+        "distinct": 7,
+        "max": 0.58,
+        "median": 0.23,
+        "min": 0.09,
+        "present": 7
+      },
+      "tensile_mpa": {
+        "distinct": 4,
+        "max": 1220.0,
+        "median": 800.0,
+        "min": 700.0,
+        "present": 7
+      }
+    },
+    "rows": 7,
+    "rules_version": 1,
+    "source": "fixture:vendor_v1.html"
+  }
+}

@@ -10,3 +10,7 @@ __pycache__/
 # transient run state
 tools/timer_state.json
 tools/timer.log
+
+# generated at runtime by the scraper
+scrape/last_good.json
+scrape/rules.proposed.json

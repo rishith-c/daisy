@@ -50,6 +50,11 @@ import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 
+try:                                  # POSIX only; Windows falls back to no lock
+    import fcntl
+except ImportError:                   # pragma: no cover - not the demo platform
+    fcntl = None
+
 # api.port.io is the current canonical host and api.us.port.io is the US
 # region; api.getport.io still serves the same API and is what the integration
 # was written against. Override with PORT_BASE_URL rather than editing this.
@@ -383,18 +388,27 @@ def append(path: str, record: dict) -> dict:
     Each line carries the hash of the line before it, so a record cannot be
     edited or removed after the fact without breaking every hash downstream.
 
-    The chain assumes one writer at a time. Two processes appending in the same
-    instant will show up as a broken link — which is the correct failure mode:
-    verify() reports it rather than repairing it.
+    Read-then-append is a race, and the demo runs it from two terminals at once
+    — one process polling for a decision while another writes it. So the whole
+    read/hash/write is held under an exclusive flock. Without the lock the
+    chain would break at random and verify() would be reporting a collision
+    rather than tampering, which is the wrong alarm for the right reason.
+
+    flock is POSIX. On Windows the lock is skipped and concurrent writers can
+    break the chain; that is stated rather than papered over.
     """
     os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
-    rows = read(path)
     record = dict(record)
-    record["seq"] = len(rows) + 1
-    record["prev"] = rows[-1]["hash"] if rows else GENESIS
-    record["hash"] = digest(record)
-    with open(path, "a", encoding="utf-8") as f:
+    with open(path, "a+", encoding="utf-8") as f:
+        if fcntl is not None:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        f.seek(0)
+        rows = [json.loads(line) for line in f if line.strip()]
+        record["seq"] = len(rows) + 1
+        record["prev"] = rows[-1]["hash"] if rows else GENESIS
+        record["hash"] = digest(record)
         f.write(json.dumps(record, sort_keys=True) + "\n")
+        f.flush()                     # the lock releases on close; flush first
     return record
 
 
@@ -406,10 +420,15 @@ def digest(record: dict) -> str:
 
 
 def read(path: str) -> list[dict]:
+    """Every record, in order. Shared-locked so a concurrent append cannot be
+    read half-written — a torn line would raise, and a poll loop that dies
+    because someone approved the run at the wrong microsecond is not a gate."""
     if not os.path.exists(path):
         return []
     out = []
     with open(path, encoding="utf-8") as f:
+        if fcntl is not None:
+            fcntl.flock(f.fileno(), fcntl.LOCK_SH)
         for line in f:
             line = line.strip()
             if line:

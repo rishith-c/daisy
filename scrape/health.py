@@ -145,8 +145,9 @@ def evaluate(extraction, spec, baseline: dict | None = None,
         "scrape.required", not short and bool(rows), FATAL,
         "%d/%d rows complete" % (len(complete), len(rows)),
         "%d/%d" % (len(rows), len(rows)) if rows else ">= 1 row",
-        "missing: " + ", ".join("%s in %d row(s)" % (k, v) for k, v in sorted(short.items()))
-        if short else "every required field present in every row"))
+        ("missing: " + ", ".join("%s in %d row(s)" % (k, v) for k, v in sorted(short.items()))
+         if short else "the row selector matched nothing, so there is no key to be missing"
+         if not rows else "every required field present in every row")))
 
     # -- types -----------------------------------------------------------
     # Distinguishes "the selector is gone" from "the selector still matches a

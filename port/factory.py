@@ -578,7 +578,8 @@ def run_loop(client: PortClient, run: str, gates: list[dict], brief: dict | None
     results arrive here already decided.
     """
     out = {"plan": commit_plan(client, run, brief, lanes)}
-    for g in gates:
+    for spec in gates:
+        g = dict(spec)                       # the caller's dicts are not ours to empty
         record_gate(client, run, g.pop("lane", "web-frontend"), **g)
     out["summary"] = sync(client, run)
     out["approval"] = open_approval(client, run, requested_by)
