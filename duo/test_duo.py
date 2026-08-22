@@ -9,6 +9,8 @@ logged in today is not a suite, it is a weather report.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import tempfile
