@@ -67,6 +67,9 @@ gate "precedent — engine + compaction test suite" \
 gate "agents — adoption of other tools' sessions" \
      env PYTHONWARNINGS=ignore $PY -m agents.test_discover
 
+gate "models — only locally selectable models and their real ladders" \
+     env PYTHONWARNINGS=ignore $PY -m agents.test_models
+
 gate "port — governance client, blueprints, and the approval gate" \
      env PYTHONWARNINGS=ignore $PY -m port.test_port
 
@@ -93,6 +96,9 @@ gate "importer — detection, idempotent import, autosync, attention" \
 # a codebase it has not checked. Wired in rather than trusted.
 gate "chain — model orchestration across available agents" \
      env PYTHONWARNINGS=ignore $PY -m lab.test_chain
+
+gate "executors — exact selected model reaches each local CLI" \
+     env PYTHONWARNINGS=ignore $PY -m lab.test_executors
 
 gate "labctl — agent probes report the real reason" \
      env PYTHONWARNINGS=ignore $PY -m lab.test_labctl_agents
