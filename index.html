@@ -232,7 +232,7 @@ nav { display: flex; flex-direction: column; gap: 1px; }
 .navitem .tail { margin-left: auto; color: var(--ink-4); font-size: 11px; font-family: var(--mono); }
 .navitem .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
 
-.scroller { flex: 1; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; }
+.scroller { flex: 1; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px; }
 .sect { font-size: 11.5px; color: var(--ink-3); padding: 16px 8px 5px; font-weight: 500; letter-spacing: .005em; }
 .thread {
   display: flex; align-items: center; gap: 8px;
@@ -331,7 +331,7 @@ main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: r
 .mm.gfail { background: var(--fail); }
 .mm.gpass { background: var(--pass); }
 
-#feed { flex: 1; overflow-y: auto; padding: 22px 0 26px; scroll-behavior: smooth;
+#feed { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 22px 0 26px; scroll-behavior: smooth;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%);
           mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 26px), transparent 100%); }
 @media (prefers-reduced-motion: reduce) { #feed { scroll-behavior: auto; } }
@@ -591,7 +591,7 @@ select:focus-visible { outline: 2px solid var(--leaf); }
 .toast b { color: var(--ink); font-weight: 600; }
 
 /* ---------- pages ---------- */
-.page { flex: 1; overflow-y: auto; padding: 30px 30px 60px; }
+.page { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 30px 30px 60px; }
 .pcol { max-width: 840px; margin: 0 auto; }
 .page h2 { font-size: 21px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 3px; }
 .page .lede { color: var(--ink-3); font-size: 13.5px; margin-bottom: 22px; }
@@ -667,7 +667,7 @@ table.l tr.click:hover td { background: var(--wash); }
 .pal input { width: 100%; background: none; border: none; outline: none; color: var(--ink);
   font-size: 15px; padding: 14px 17px; border-bottom: 1px solid var(--border); font-family: var(--sans); }
 .pal input::placeholder { color: var(--ink-3); }
-.plist { max-height: 340px; overflow-y: auto; padding: 5px; }
+.plist { max-height: 340px; overflow-y: auto; overscroll-behavior: contain; padding: 5px; }
 .pit { display: flex; align-items: center; gap: 10px; padding: 8px 12px; font-size: 13.2px;
   cursor: pointer; border-radius: 9px; color: var(--ink); }
 .pit:hover, .pit.hot { background: var(--wash-2); }
@@ -907,6 +907,8 @@ table.l tr.click:hover td { background: var(--wash); }
       </div></div>
     <div class="setrow"><div class="lb"><b>Motion</b><span>fluid springs, or reduced</span></div>
       <div class="seg" id="segmotion"><button data-motion="full" class="on">Fluid</button><button data-motion="calm">Calm</button></div></div>
+    <div class="setrow"><div class="lb"><b>Playback</b><span>run pacing — slow it down when you are narrating</span></div>
+      <div class="seg" id="segspeed"><button data-speed="0.5">0.5&times;</button><button data-speed="1" class="on">1&times;</button><button data-speed="2">2&times;</button><button data-speed="4">4&times;</button></div></div>
     <div class="setrow"><div class="lb"><b>Export theme</b><span>daisy-theme-v1 JSON</span></div>
       <button id="copytheme">Copy JSON</button></div>
     <div class="jsonbox" id="jsonbox"></div>
@@ -1218,7 +1220,7 @@ table.l tr.click:hover td { background: var(--wash); }
         if (b) { b.addEventListener('click', function () { settle(b); feed.scrollTop = feed.scrollHeight; next(); }, { once: true }); return; }
       }
       next();
-    }, reduced ? 10 : s.d);
+    }, reduced ? 10 : Math.round(s.d / (theme.speed || 1)));
   }
 
   var script = STEPS;
@@ -1526,6 +1528,41 @@ table.l tr.click:hover td { background: var(--wash); }
   $('#mod-close').addEventListener('click', function () { modOv.classList.remove('on'); });
   modOv.addEventListener('click', function (e) { if (e.target === modOv) modOv.classList.remove('on'); });
 
+  /* File rows preview their own change on hover — the same 800ms delay the
+     real app uses, with the delay-skip once one preview is already warm. */
+  var rowPeekTimer = null;
+  document.body.addEventListener('mouseover', function (e) {
+    var row = e.target.closest('.card .row');
+    if (!row || !row.querySelector('.path b')) return;
+    clearTimeout(rowPeekTimer);
+    rowPeekTimer = setTimeout(function () {
+      var name = row.querySelector('.path b').textContent;
+      var stat = row.querySelector('.st') ? row.querySelector('.st').textContent.trim() : '';
+      var r = row.getBoundingClientRect();
+      peek.style.transitionDuration = peekWarm ? '0ms' : '';
+      peek.innerHTML = '<b>' + name + '</b><p style="font-family:var(--mono);font-size:11.5px;-webkit-line-clamp:4">' +
+        (DIFF_SNIPPET[name] || 'diff available in review — click the card to open it') + '</p>' +
+        '<div class="foot"><span>' + stat + '</span><span>hover 800ms &middot; click card to review</span></div>';
+      peek.style.left = Math.min(window.innerWidth - 310, r.left + 40) + 'px';
+      peek.style.top = Math.max(8, r.top - 96) + 'px';
+      peek.classList.add('on');
+      peekWarm = true; clearTimeout(peekCool);
+    }, peekWarm ? 0 : 800);
+  });
+  document.body.addEventListener('mouseout', function (e) {
+    if (!e.target.closest('.card .row')) return;
+    clearTimeout(rowPeekTimer); peek.classList.remove('on');
+    clearTimeout(peekCool); peekCool = setTimeout(function () { peekWarm = false; }, 700);
+  });
+  var DIFF_SNIPPET = {
+    'tokens.css': '- --primary: #6366F1;\n+ --primary: var(--dna-accent);',
+    'route.ts': '+ const missing = contract.endpoints\n+   .filter(e => !routes.includes(e.path));',
+    'contract-guard.ts': '+ if (extra.length || missing.length)\n+   fail({ extra, missing });',
+    'plan.json': '+ "lanes": ["web", "hardware"],\n+ "mobile": "routing-only"',
+    'gates.json': '+ "physics.bend": { "fos_min": 1.5 },\n+ "taste.t1": { "max_findings": 0 }',
+    'api-contract.json': '+ { "path": "/api/fleet", "method": "GET" }',
+  };
+
   /* ---------------- thread peek ---------------- */
   var peek = $('#peek'), pk = null, peekWarm = false, peekCool = null;
   $$('.thread').forEach(function (th) {
@@ -1615,7 +1652,7 @@ table.l tr.click:hover td { background: var(--wash); }
     moss:  ['#8FA84A', '#A6BE63', '#141B06', '#5E7320', '#F0F4E4', '#6B8F2E'],
     ink:   ['#3A3A36', '#4C4C47', '#FFFFFF', '#3A3A36', '#F0F0EC', '#5E5D56'],
   };
-  var theme = { mode: 'light', serif: '', mono: '', accent: 'daisy', motion: 'full' };
+  var theme = { mode: 'light', serif: '', mono: '', accent: 'daisy', motion: 'full', speed: 1 };
   try { var s = localStorage.getItem('daisy-theme'); if (s) theme = Object.assign(theme, JSON.parse(s)); } catch (e) {}
 
   function applyTheme() {
@@ -1633,6 +1670,7 @@ table.l tr.click:hover td { background: var(--wash); }
     $$('.sw').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-accent') === theme.accent); });
     $$('#segtheme button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-theme') === theme.mode); });
     $$('#segmotion button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-motion') === theme.motion); });
+    $$('#segspeed button').forEach(function (b) { b.classList.toggle('on', +b.getAttribute('data-speed') === +theme.speed); });
     if (theme.serif) $('#set-serif').value = theme.serif;
     if (theme.mono) $('#set-mono').value = theme.mono;
   }
@@ -1642,6 +1680,10 @@ table.l tr.click:hover td { background: var(--wash); }
   $('#btn-theme').addEventListener('click', toggleTheme);
   $('#segtheme').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { theme.mode = b.getAttribute('data-theme'); save(); } });
   $('#segmotion').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { theme.motion = b.getAttribute('data-motion'); save(); } });
+  $('#segspeed').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (b) { theme.speed = +b.getAttribute('data-speed'); save(); toast('<b>Playback ' + theme.speed + '&times;.</b> Applies to the next run.'); }
+  });
   $('#set-serif').addEventListener('change', function (e) { theme.serif = e.target.value; save(); });
   $('#set-mono').addEventListener('change', function (e) { theme.mono = e.target.value; save(); });
   $$('.sw').forEach(function (x) { x.addEventListener('click', function () { theme.accent = x.getAttribute('data-accent'); save(); }); });
@@ -1659,6 +1701,30 @@ table.l tr.click:hover td { background: var(--wash); }
     } else fall();
   }
   $('#copytheme').addEventListener('click', copyTheme);
+
+  /* ---------------- focus trap ---------------- */
+  function trap(overlay) {
+    overlay.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var f = $$('button, input, select, [tabindex]:not([tabindex="-1"])', overlay)
+        .filter(function (x) { return !x.disabled && x.offsetParent !== null; });
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+  }
+  trap(modOv); trap(palOv);
+
+  // restore focus to wherever you were when an overlay closes
+  var lastFocus = null;
+  [modOv, palOv].forEach(function (ov) {
+    var mo = new MutationObserver(function () {
+      if (ov.classList.contains('on')) { lastFocus = lastFocus || document.activeElement; }
+      else if (lastFocus) { try { lastFocus.focus(); } catch (e) {} lastFocus = null; }
+    });
+    mo.observe(ov, { attributes: true, attributeFilter: ['class'] });
+  });
 
   /* ---------------- window focus (native apps desaturate chrome when inactive) ------- */
   window.addEventListener('blur',  function () { document.body.classList.add('blurred'); });
