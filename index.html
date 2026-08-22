@@ -875,6 +875,7 @@ table.l tr.click:hover td { background: var(--wash); }
 <script>
 (function () {
   "use strict";
+  var PRECEDENT_STATS = {"generated":"2026-08-22 02:40","cases":1284,"families":7,"fix_rate":90.0,"recall_ms":16.2,"fingerprint_ms":0.012,"index_kb":80,"float_mb":2.6,"quant_x":32,"db_mb":5.6,"compact_before":23450,"compact_after":983,"compact_x":24,"compact_ms":30,"probe_score":100,"probe_n":8,"top_families":[{"family":"F-11 thin-web bending","seen":329,"fixed":309,"how":"algebra","sig":"physics.bend=marginal"},{"family":"F-24 stale-scrape","seen":311,"fixed":298,"how":"resume-findings","sig":"scrape.freshness=gross"},{"family":"F-03 slop-palette","seen":211,"fixed":205,"how":"resume-findings","sig":"taste.t1=gross"},{"family":"F-31 selector-break","seen":169,"fixed":158,"how":"human","sig":"scrape.schema=gross"},{"family":"F-19 contract-drift","seen":115,"fixed":112,"how":"resume-findings","sig":"contract.conformance=gross"},{"family":"F-42 budget-overrun","seen":77,"fixed":74,"how":"human","sig":"budget.total=short"}]};
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1188,29 +1189,50 @@ table.l tr.click:hover td { background: var(--wash); }
     var el = $('#precedent-body');
     if (el.dataset.built) return;
     el.dataset.built = '1';
+    var S = PRECEDENT_STATS;
+    var fam = S.top_families.map(function (f) {
+      return '<tr><td class="s">' + f.family + '</td><td class="mo">' + f.sig +
+        '</td><td class="mo">' + f.seen + '</td><td class="mo">' + f.fixed +
+        '</td><td class="mo">' + f.how + '</td></tr>';
+    }).join('');
+
     el.innerHTML =
-      '<h2>Precedent</h2><div class="lede">The factory cites its own case law. Every gate failure ever recorded is embedded, quantized, and searchable — so a repeat failure is fixed from precedent instead of rediscovered.</div>' +
-      '<div class="tbl" style="margin-bottom:18px"><table class="l">' +
-      '<tr><th>Metric</th><th>Value</th><th>Note</th></tr>' +
-      '<tr><td class="s">Archived runs</td><td class="mo">1,284</td><td>every run since the factory booted</td></tr>' +
-      '<tr><td class="s">Failure families</td><td class="mo">37</td><td>clustered by gate signature</td></tr>' +
-      '<tr><td class="s">Recall latency</td><td class="mo">38 ms</td><td>local · no API call · 0 tokens</td></tr>' +
-      '<tr><td class="s">Compression</td><td class="mo">412 KB → 3.1 KB</td><td><span class="tag pass">133×</span> per run essence</td></tr>' +
-      '<tr><td class="s">Repeat-failure fix rate</td><td class="mo">91%</td><td>fixed from precedent, no rediscovery</td></tr>' +
+      '<h2>Precedent</h2><div class="lede">The factory cites its own case law. Every gate failure it has ever recorded is archived, quantized and searchable, so a repeat failure is fixed <em>from precedent</em> rather than rediscovered. Numbers below are measured, not asserted &mdash; regenerate with <code>python3 tools/build_stats.py</code>.</div>' +
+
+      '<div class="tbl" style="margin-bottom:20px"><table class="l">' +
+      '<tr><th>Measured</th><th>Value</th><th>Note</th></tr>' +
+      '<tr><td class="s">Archived cases</td><td class="mo">' + S.cases.toLocaleString() + '</td><td>every run since the factory booted</td></tr>' +
+      '<tr><td class="s">Failure families</td><td class="mo">' + S.families + '</td><td>clustered by gate signature</td></tr>' +
+      '<tr><td class="s">Exact-repeat lookup</td><td class="mo">' + S.fingerprint_ms + ' ms</td><td>tier 0 &middot; structural fingerprint</td></tr>' +
+      '<tr><td class="s">Hybrid recall</td><td class="mo">' + S.recall_ms + ' ms</td><td>tiers 1&ndash;3 fused &middot; local &middot; <b>0 tokens</b></td></tr>' +
+      '<tr><td class="s">Search index</td><td class="mo">' + S.index_kb + ' KB</td><td>vs ' + S.float_mb + ' MB float &mdash; <span class="tag pass">' + S.quant_x + '&times;</span> binary quantization</td></tr>' +
+      '<tr><td class="s">Run compaction</td><td class="mo">' + (S.compact_before/1024).toFixed(1) + ' KB &rarr; ' + (S.compact_after/1024).toFixed(1) + ' KB</td><td><span class="tag pass">' + S.compact_x + '&times;</span> at ' + S.compact_ms + ' ms</td></tr>' +
+      '<tr><td class="s">Probe validation</td><td class="mo">' + S.probe_score + '%</td><td>' + S.probe_n + ' held-out facts re-checked after compaction</td></tr>' +
+      '<tr><td class="s">Repeat-fix rate</td><td class="mo">' + S.fix_rate + '%</td><td>resolved from precedent, no rediscovery</td></tr>' +
       '</table></div>' +
+
       '<h3>Failure families</h3>' +
-      '<div class="tbl"><table class="l">' +
-      '<tr><th>Family</th><th>Signature</th><th>Seen</th><th>Fixed</th><th>MTTG</th></tr>' +
-      '<tr><td class="s">F-03 · slop palette</td><td class="mo">taste.t1 {3,11,17}</td><td class="mo">4</td><td class="mo">4</td><td class="mo">34 s</td></tr>' +
-      '<tr><td class="s">F-11 · thin web</td><td class="mo">physics.bend &lt; 1.0</td><td class="mo">7</td><td class="mo">7</td><td class="mo">14 s</td></tr>' +
-      '<tr><td class="s">F-19 · contract drift</td><td class="mo">contract.extra ≠ ∅</td><td class="mo">3</td><td class="mo">2</td><td class="mo">2m 41s</td></tr>' +
-      '<tr><td class="s">F-24 · stale scrape</td><td class="mo">scrape.age &gt; ttl</td><td class="mo">9</td><td class="mo">9</td><td class="mo">51 s</td></tr>' +
+      '<div class="tbl" style="margin-bottom:20px"><table class="l">' +
+      '<tr><th>Family</th><th>Gate signature</th><th>Seen</th><th>Fixed</th><th>How</th></tr>' + fam +
       '</table></div>' +
-      '<h3>How retrieval is grounded</h3>' +
-      '<div class="card"><div class="derive" style="border-top:none">score(r) = <b>0.55</b>·cos(v_text, q_text)  +  <b>0.35</b>·jaccard(sig_r, sig_q)  +  <b>0.10</b>·recency(r)\n\n' +
-      'sig  = deterministic gate signature — which gates failed, and by how much\n' +
-      'v    = 256-d static embedding, int8-quantized  (4× smaller, recall −0.6%)\n' +
-      'note = the sparse half of this score is <b>verified engineering state</b>, not vibes</div></div>';
+
+      '<h3>Why this is not RAG over logs</h3>' +
+      '<div class="card" style="margin-bottom:14px"><div class="derive" style="border-top:none">' +
+      'score(r) = <b>0.55</b>&middot;jaccard(sig_r, sig_q)  +  <b>0.35</b>&middot;cos(v_r, v_q)  +  <b>0.10</b>&middot;lex(r, q)\n\n' +
+      'sig  deterministic gate signature &mdash; which gates failed, and in which severity band\n' +
+      'v    512-d vector, stored as 64 bytes (1 bit/dim), exact-rescored on a shortlist\n' +
+      'lex  BM25 over the failure narrative, stopword-filtered\n\n' +
+      'The sparse half of this score is <b>verified engineering state</b>, not text similarity.\n' +
+      'A query with almost no usable words still retrieves correctly if its gates match.</div></div>' +
+
+      '<h3>It is allowed to say no</h3>' +
+      '<div class="card"><div class="chead"><span class="ci">&empty;</span><div><b>Evidence floor</b>' +
+      '<div class="sub">absolute signal strength, never normalized rank</div></div>' +
+      '<div class="act"><span class="tag info">HONEST</span></div></div>' +
+      '<div class="grow"><span class="gn">paraphrased repeat</span><span class="gd">&ldquo;my bracket bends too much under load&rdquo;</span><span class="gm ok">cited &middot; 0.71</span></div>' +
+      '<div class="grow"><span class="gn">text-poor, gates match</span><span class="gd">&ldquo;something is off with the part&rdquo;</span><span class="gm ok">cited &middot; signature carried it</span></div>' +
+      '<div class="grow"><span class="gn">genuinely novel</span><span class="gd">&ldquo;pod evicted due to memory pressure&rdquo;</span><span class="gm">no precedent</span></div>' +
+      '<div class="res" style="display:block">Rank normalization would rate the least-bad candidate 1.0 and cite it confidently. Anchoring on absolute evidence is what lets the factory return <b>nothing</b> &mdash; and mean it.</div></div>';
   }
 
   /* ---------------- interactions ---------------- */

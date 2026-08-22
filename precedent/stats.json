@@ -1,0 +1,62 @@
+{
+  "generated": "2026-08-22 02:40",
+  "cases": 1284,
+  "families": 7,
+  "fix_rate": 90.0,
+  "recall_ms": 16.2,
+  "fingerprint_ms": 0.012,
+  "index_kb": 80,
+  "float_mb": 2.6,
+  "quant_x": 32,
+  "db_mb": 5.6,
+  "compact_before": 23450,
+  "compact_after": 983,
+  "compact_x": 24,
+  "compact_ms": 30,
+  "probe_score": 100,
+  "probe_n": 8,
+  "top_families": [
+    {
+      "family": "F-11 thin-web bending",
+      "seen": 329,
+      "fixed": 309,
+      "how": "algebra",
+      "sig": "physics.bend=marginal"
+    },
+    {
+      "family": "F-24 stale-scrape",
+      "seen": 311,
+      "fixed": 298,
+      "how": "resume-findings",
+      "sig": "scrape.freshness=gross"
+    },
+    {
+      "family": "F-03 slop-palette",
+      "seen": 211,
+      "fixed": 205,
+      "how": "resume-findings",
+      "sig": "taste.t1=gross"
+    },
+    {
+      "family": "F-31 selector-break",
+      "seen": 169,
+      "fixed": 158,
+      "how": "human",
+      "sig": "scrape.schema=gross"
+    },
+    {
+      "family": "F-19 contract-drift",
+      "seen": 115,
+      "fixed": 112,
+      "how": "resume-findings",
+      "sig": "contract.conformance=gross"
+    },
+    {
+      "family": "F-42 budget-overrun",
+      "seen": 77,
+      "fixed": 74,
+      "how": "human",
+      "sig": "budget.total=short"
+    }
+  ]
+}

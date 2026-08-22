@@ -35,6 +35,8 @@ from .engine import embed, cosine, pack_bits, hamming
 # stage 1 — deterministic cleanup (lossless, 15-30%)
 # ---------------------------------------------------------------------------
 
+STRUCTURED = ("gate", "diff", "repair", "approval", "decision", "next")
+
 _NOISE = (
     re.compile(r"^\s*$"),
     re.compile(r"^\s*(?:\.|·|-){1,4}\s*$"),
@@ -53,7 +55,7 @@ def deterministic_clean(events: list[dict]) -> tuple[list[dict], dict]:
         kind = ev.get("kind", "")
         text = ev.get("text", "") or ""
 
-        if any(p.match(text) for p in _NOISE) and kind not in ("gate", "diff", "repair"):
+        if any(p.match(text) for p in _NOISE) and kind not in STRUCTURED:
             dropped["blank"] += 1
             continue
 
@@ -108,7 +110,7 @@ def semantic_dedup(events: list[dict], threshold: float = 0.95) -> tuple[list[di
     removed = 0
 
     for ev in events:
-        if ev.get("kind") in ("gate", "diff", "repair", "approval"):
+        if ev.get("kind") in STRUCTURED:
             kept.append(ev)
             continue
         text = (ev.get("text") or "").strip()
@@ -238,6 +240,10 @@ def build_probes(events: list[dict], n: int = 8) -> list[dict]:
             probes.append({"kind": "decision", "q": "how was %s repaired?" % ev.get("fixes"),
                            "expect": str(ev.get("by"))})
     for ev in events:
+        if ev.get("kind") == "approval":
+            probes.append({"kind": "artifact", "q": "who approved %s?" % ev.get("what"),
+                           "expect": str(ev.get("who"))})
+    for ev in events:
         if ev.get("kind") == "next":
             probes.append({"kind": "continuation", "q": "what is next?",
                            "expect": (ev.get("text") or "")[:40]})
@@ -251,7 +257,12 @@ def validate(essence: Essence, probes: list[dict]) -> tuple[float, list[dict]]:
     Answers are looked up in the STRUCTURED fields first — which is the whole
     argument: structure survives compaction, prose does not.
     """
-    hay = json.dumps(asdict(essence)).lower()
+    # The probe list carries its own expected answers, so including it would
+    # make every compaction trivially pass. Search only the retained content.
+    d = asdict(essence)
+    d.pop("probes", None)
+    d.pop("probe_score", None)
+    hay = json.dumps(d).lower()
     results = []
     for p in probes:
         want = (p["expect"] or "").lower().strip()

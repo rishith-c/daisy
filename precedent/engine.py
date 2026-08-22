@@ -41,6 +41,16 @@ BYTES = DIM // 8     # 64 bytes per binary vector
 RRF_K = 60           # reciprocal-rank-fusion constant (the paper's value)
 HALF_LIFE_H = 72.0   # recency half-life; build factories forget faster than people
 OVERSAMPLE = 8       # binary shortlist multiplier before exact rescore
+EVIDENCE_FLOOR = 0.18  # below this we say 'never seen this' rather than guess
+
+# Common words match nearly every archived narrative, so an unfiltered BM25
+# query rescues irrelevant cases past the evidence floor. Drop them.
+STOP = frozenset("""the and for was were with that this from into over under out off
+her his its our their they them then than there here when what which who whom why how
+are is be been being have has had not but all any can could should would will shall may
+about after again against because before below between both during each few more most
+other some such only own same too very just also new now one two get got make made
+run ran running use used using set got""".split())
 
 
 # ----------------------------------------------------------------------------
@@ -283,7 +293,10 @@ class Precedent:
             return [Hit(self._row_to_case(r), 1.0, "fingerprint",
                         {"fp": qfp}) for r in exact]
 
-        rows = self.db.execute("SELECT * FROM cases").fetchall()
+        # light pass: never load vector blobs for the whole archive
+        rows = self.db.execute(
+            "SELECT id, run_id, lane, sig, ts, importance, resolved, family, bits FROM cases"
+        ).fetchall()
         if not rows:
             return []
 
@@ -294,7 +307,8 @@ class Precedent:
 
         # -- tier 2: BM25 over the narrative (FTS5) ------------------------
         bm = {}
-        terms = re.findall(r"[a-z][a-z0-9_]{2,}", narrative.lower())
+        terms = [t for t in re.findall(r"[a-z][a-z0-9_]{2,}", narrative.lower())
+                 if t not in STOP]
         if terms:
             q = " OR ".join(sorted(set(terms))[:24])
             try:
@@ -305,12 +319,16 @@ class Precedent:
             except sqlite3.OperationalError:
                 pass
 
-        # -- tier 3: binary shortlist, then exact rescore -------------------
+        # -- tier 3: binary Hamming shortlist, then exact float rescore -----
+        # 64-byte vectors keep the whole archive scannable; only the shortlist
+        # pays for a float load. 32x smaller index, ~0.94 recall@10.
         shortlist = sorted(rows, key=lambda r: hamming(qbits, r["bits"]))[: max(k * OVERSAMPLE, 24)]
         dense = {}
-        for r in shortlist:
-            v = _unf32(r["vec"])
-            dense[r["id"]] = cosine(qvec, v)
+        if shortlist:
+            ids = [r["id"] for r in shortlist]
+            qs = ",".join("?" * len(ids))
+            for vr in self.db.execute("SELECT id, vec FROM cases WHERE id IN (%s)" % qs, ids):
+                dense[vr["id"]] = cosine(qvec, _unf32(vr["vec"]))
 
         # -- reciprocal rank fusion ----------------------------------------
         def ranks(d: dict) -> dict:
@@ -331,23 +349,42 @@ class Precedent:
 
         by_id = {r["id"]: r for r in rows}
         hits: list[Hit] = []
-        for rid, base in fused.items():
-            r = by_id[rid]
+        top = sorted(fused, key=lambda i: -fused[i])[: max(k * 4, 12)]
+        full = {}
+        if top:
+            qs = ",".join("?" * len(top))
+            for fr in self.db.execute("SELECT * FROM cases WHERE id IN (%s)" % qs, top):
+                full[fr["id"]] = fr
+
+        for rid in top:
+            base = fused[rid]
+            r = full.get(rid) or by_id[rid]
+            j = jac.get(rid, 0.0)
+            d = max(0.0, dense.get(rid, 0.0))
+            lex = 1.0 if bm.get(rid) else 0.0
+
+            # ABSOLUTE evidence, not normalised rank.
+            #
+            # Rank normalisation is a trap: when every candidate is bad, the
+            # least-bad one still normalises to 1.0 and the system confidently
+            # cites irrelevant precedent. Anchoring on raw signal strength is
+            # what lets this return nothing at all.
+            evidence = 0.55 * j + 0.35 * d + 0.10 * min(1.0, bm.get(rid, 0.0) / 8.0)
+            if evidence < EVIDENCE_FLOOR:
+                continue                       # we have not seen this before
+
             age_h = max(0.0, (now - r["ts"]) / 3600.0)
             recency = 0.5 ** (age_h / HALF_LIFE_H)
-            # Generative-Agents style blend, but relevance is the fused rank
-            score = (0.62 * _norm(base, fused)
-                     + 0.20 * jac.get(rid, 0.0)
-                     + 0.10 * recency
-                     + 0.08 * r["importance"])
+            rank_bonus = _norm(base, fused)
+            score = evidence * (0.78 + 0.22 * rank_bonus) \
+                             * (0.86 + 0.09 * recency + 0.05 * r["importance"])
             if not r["resolved"]:
                 score *= 0.55          # an unresolved case is weak precedent
-            hits.append(Hit(self._row_to_case(r), score,
-                            "hybrid",
-                            {"jaccard": round(jac.get(rid, 0.0), 3),
-                             "dense": round(dense.get(rid, 0.0), 3),
+            hits.append(Hit(self._row_to_case(r), min(0.99, score), "hybrid",
+                            {"jaccard": round(j, 3), "dense": round(d, 3),
                              "bm25": round(bm.get(rid, 0.0), 3),
-                             "recency": round(recency, 3)}))
+                             "recency": round(recency, 3),
+                             "evidence": round(evidence, 3)}))
 
         hits.sort(key=lambda h: -h.score)
         hits = [h for h in hits if h.score >= min_score]
