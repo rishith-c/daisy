@@ -138,7 +138,7 @@ python3 -m precedent.cli bench
 python3 -m precedent.cli recall "my bracket bends too much" --gate physics.bend=0.78
 python3 -m precedent.cli recall "pod evicted, memory pressure" --gate infra.oom=0.0   # -> no precedent
 python3 -m precedent.cli sql "SELECT family, COUNT(*) n FROM cases GROUP BY family"
-python3 -m precedent.test_precedent                   # 35 tests
+python3 -m precedent.test_precedent                   # 39 tests
 python3 -m taste.test_lint                            # 26 tests
 ```
 

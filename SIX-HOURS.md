@@ -134,7 +134,7 @@ Worth listing because they're the reason to write tests at all:
    because it matched any numeric cell rather than statistics only.
 9. Seven WCAG contrast failures — see the tier-2 section above.
 
-35/35 precedent tests and 26/26 taste tests pass, plus a scripted interaction
+39/39 precedent tests and 26/26 taste tests pass, plus a scripted interaction
 sweep over every view, control, and keyboard path. `./verify.sh` is green.
 
 ## 6. What I did NOT do
@@ -153,4 +153,4 @@ sweep over every view, control, and keyboard path. `./verify.sh` is green.
 - Artifact: the same link as before, republished
 - `./verify.sh` — every gate, one command
 - `python3 -m precedent.cli bench` — the numbers above, reproducible
-- 61 tests across the two suites
+- 65 tests across the two suites
