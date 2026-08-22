@@ -76,11 +76,31 @@ class Finding:
 
 
 def items(body: str) -> list:
-    """Bullets if the model wrote bullets, else paragraphs. Models do both."""
-    b = [m.group(1) for m in (_BULLET.match(ln) for ln in (body or "").split("\n")) if m]
-    if b:
-        return b
-    return [p.strip().replace("\n", " ") for p in re.split(r"\n\s*\n", body or "") if p.strip()]
+    """Bullets if the model wrote bullets, else paragraphs. Models do both.
+
+    A bullet owns the wrapped lines under it. Taking only the first line looked
+    fine on a 70-column bullet and silently truncated every longer one, which
+    for an open question meant losing the half that names the two positions.
+    """
+    out, cur, bulleted = [], None, False
+    for ln in (body or "").split("\n"):
+        m = _BULLET.match(ln)
+        if m:
+            bulleted = True
+            if cur is not None:
+                out.append(cur)
+            cur = m.group(1).strip()
+        elif cur is not None:
+            if ln.strip():
+                cur += " " + ln.strip()
+            else:
+                out.append(cur)
+                cur = None
+    if cur is not None:
+        out.append(cur)
+    if bulleted:
+        return out
+    return [" ".join(p.split()) for p in re.split(r"\n\s*\n", body or "") if p.strip()]
 
 
 def testable(criterion: str) -> str:

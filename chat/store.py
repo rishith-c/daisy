@@ -115,6 +115,12 @@ MIGRATIONS = [
         # conversation that cannot be replayed. seq is per-conversation and
         # allocated inside the same IMMEDIATE transaction as the insert.
         "ALTER TABLE messages ADD COLUMN seq INTEGER NOT NULL DEFAULT 0",
+        # Backfill, or every row written before this migration ties at 0 and an
+        # upgraded conversation replays in arbitrary order. rowid is insertion
+        # order, which is the only ordering a v1 database actually recorded.
+        """UPDATE messages SET seq = (SELECT COUNT(*) FROM messages m2
+             WHERE m2.conversation_id = messages.conversation_id
+               AND m2.rowid <= messages.rowid)""",
         # How this message was classified, what signals fired, whether the
         # model was substituted, whether history was trimmed. The brief demands
         # the classification be visible rather than silent; after a restart the
@@ -433,7 +439,9 @@ def messages(conversation_id: str, limit: int = None, db: str = None,
         c = get_conversation(conversation_id, con=con)
         if not c:
             return []
-        sql = "SELECT * FROM messages WHERE conversation_id = ? ORDER BY seq ASC"
+        # rowid breaks the tie for rows backfilled by migration 2 in the rare
+        # case two of them landed in the same conversation at the same seq.
+        sql = "SELECT * FROM messages WHERE conversation_id = ? ORDER BY seq ASC, rowid ASC"
         rows = con.execute(sql, (c["id"],)).fetchall()
         if limit:
             rows = rows[-limit:]

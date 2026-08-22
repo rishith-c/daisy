@@ -269,9 +269,11 @@ def _why(c: Classification, decided: str) -> str:
     pos = [f for f in c.fired if f["weight"] > 0]
     neg = [f for f in c.fired if f["weight"] < 0]
     if c.override:
-        return ("%s, because you said so (%s). The table would have chosen %s at %.1f."
-                % ("Running this" if c.mode == "run" else "Answering this",
-                   c.override, decided, c.score))
+        agreed = decided == c.mode
+        return ("%s, because you asked for it (%s). The table %s"
+                % ("Running this" if c.mode == "run" else "Answering this", c.override,
+                   "agreed: %s at %.1f." % (decided, c.score) if agreed
+                   else "would have chosen %s at %.1f." % (decided, c.score)))
     if c.mode == "run":
         return ("Run: %s. Score %.1f, threshold %.1f."
                 % ("; ".join(f["why"] for f in pos) or "run signals outweighed the rest",
@@ -323,16 +325,33 @@ def assemble(history: list, text: str, budget: int = CHAR_BUDGET) -> tuple:
     """
     head = "%s\n\n" % SYSTEM
     tail = "user: %s" % text
-    room = budget - len(head) - len(tail)
-    kept, used = [], 0
-    for m in reversed(history):
-        line = "%s: %s" % (m["role"], m["content"])
-        if used + len(line) + 1 > room:
-            break
-        kept.append(line)
-        used += len(line) + 1
-    kept.reverse()
+
+    def fit(reserve):
+        """Pack newest-first into the room left after `reserve`."""
+        room = budget - len(head) - len(tail) - reserve
+        kept, used = [], 0
+        for m in reversed(history):
+            line = "%s: %s" % (m["role"], m["content"])
+            if used + len(line) + 1 > room:
+                break
+            kept.append(line)
+            used += len(line) + 1
+        kept.reverse()
+        return kept
+
+    # Two passes, because the omission notice is only added when something is
+    # omitted — and it occupies budget it was never charged for. Packing first
+    # and prepending the notice afterwards overshot by exactly the notice's
+    # length (measured: 1227 against a 1200 budget). The second pass re-packs
+    # with that cost reserved, so the notice can never push the prompt over the
+    # ceiling it exists to explain.
+    kept = fit(0)
     dropped = len(history) - len(kept)
+    if dropped:
+        notice = OMITTED % (dropped, "" if dropped == 1 else "s", 0) + "\n"
+        kept = fit(len(notice) + 16)      # slack for a wider count in the notice
+        dropped = len(history) - len(kept)
+
     dropped_chars = sum(len(m["content"]) + len(m["role"]) + 2 for m in history[:dropped])
 
     body = ""
@@ -341,6 +360,10 @@ def assemble(history: list, text: str, budget: int = CHAR_BUDGET) -> tuple:
     if kept:
         body += "\n".join(kept) + "\n"
     prompt = head + body + tail
+
+    # The newest turn is never trimmed, so a single enormous message can still
+    # exceed the budget on its own. That is reported, not silently truncated —
+    # cutting what someone just typed is the wrong trade in every case.
     report = {"budget": budget, "used": len(prompt), "kept": len(kept), "dropped": dropped,
               "dropped_chars": dropped_chars,
               "over_budget": len(prompt) > budget}

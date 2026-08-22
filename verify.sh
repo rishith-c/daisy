@@ -91,6 +91,12 @@ gate "memory — four tiers and the verified forgetting boundary" \
 gate "importer — detection, idempotent import, autosync, attention" \
      env PYTHONWARNINGS=ignore $PY -m importer.test_importer
 
+gate "chat — conversation, storage, and the run boundary" \
+     env PYTHONWARNINGS=ignore $PY -m chat.test_chat
+
+gate "duo — two models, four rounds, measured collaboration" \
+     env PYTHONWARNINGS=ignore $PY -m duo.test_duo
+
 # Codex wrote these and they pass, but nothing ran them: verify.sh is the board
 # everyone reads, and a board that omits a third of the suite reports green for
 # a codebase it has not checked. Wired in rather than trusted.
