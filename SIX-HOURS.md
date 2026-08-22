@@ -130,9 +130,18 @@ a solved thickness could land fractionally under target — the repair failing t
 very gate that asked for it, and looping forever. It rounds up now. You never
 round a safety margin down.
 
+Then the geometry too. `hardware/bracket.py` generates a real parametric mesh,
+writes binary STL, and computes mass from the actual solid. Two independent
+volume calculations — analytic and mesh-by-divergence-theorem — cross-check each
+other and differ by exactly the uncut hole volume, so a disagreement means one
+of them is wrong. That immediately caught a third thing: **the mass gate was
+measuring a bounding box**, under-reporting by the entire foot (6.6 g where the
+part is 8.3 g). It measures the solid now, and reports which it used.
+
 Scope is stated in the module rather than implied: statics, not FEA, fatigue,
-buckling or impact. Defensible for a bracket in single-axis bending; not for
-anything cyclic, and it says so.
+buckling or impact; hand-built geometry, not a kernel. Defensible for a bracket
+in single-axis bending on convex slab geometry; not for anything cyclic or
+filleted, and it says so.
 
 ## 6. Every view made load-bearing
 
@@ -198,7 +207,7 @@ Worth listing because they're the reason to write tests at all:
     JS string). Re-running either silently duplicated a whole section. Found by
     running every generator twice and diffing — which is now the check.
 
-39 precedent tests, 27 physics tests and 26 taste tests all pass, plus a
+39 precedent tests, 35 physics/geometry tests and 26 taste tests all pass, plus a
 scripted interaction sweep over every view, control and keyboard path.
 `./verify.sh` runs the lot and is green.
 
@@ -219,4 +228,4 @@ scripted interaction sweep over every view, control and keyboard path.
 - `./verify.sh` — every gate, one command
 - `tools/README.md` — what each build script does; all are idempotent
 - `python3 -m precedent.cli bench` — the numbers above, reproducible
-- 92 tests across the three suites
+- 100 tests across the three suites
