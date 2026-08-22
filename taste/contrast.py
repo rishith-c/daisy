@@ -37,6 +37,8 @@ PAIRS = [
     ("--ink-3",     "--bg",             "tertiary text",            4.5),
     ("--ink-3",     "--surface",        "tertiary on a card",       4.5),
     ("--ink-3",     "--sidebar",        "sidebar labels",           4.5),
+    ("--tip-ink",   "--tip-bg",         "tooltip label",            4.5),
+    ("--tip-ink",   "--tip-kbd",        "tooltip shortcut badge",   4.5),
     ("--pass",      "--pass-chip",      "PASS chip",                4.5),
     ("--fail",      "--fail-chip",      "FAIL chip",                4.5),
     ("--warn",      "--warn-chip",      "warning chip",             4.5),

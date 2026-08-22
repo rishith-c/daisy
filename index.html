@@ -13,6 +13,9 @@
   /* --- light (default) — values traced from the Codex webview palette --- */
   --bg:            #FFFFFF;              /* --color-background-surface */
   --sidebar:       #FFFFFF;              /* Codex sidebar is white, not a gray rail */
+  --tip-bg:        #232326;              /* tooltip: inverted surface, as Codex draws it */
+  --tip-ink:       #FFFFFF;
+  --tip-kbd:       #3D3D42;              /* shortcut badge, lifted off the tooltip ground */
   --surface:       #FFFFFF;              /* --color-token-dropdown-background */
   --surface-2:     #F3F3F3;              /* --gray-75 */
   --surface-3:     #EDEDED;              /* --gray-100 */
@@ -93,6 +96,9 @@
   :root:not([data-theme="light"]) {
     --bg:            #181818;              /* --gray-900 / surface */
     --sidebar:       #141414;              /* bg-primary, dark */
+    --tip-bg:        #3A3A3E;              /* lifted off the dark ground, not sunk into it */
+    --tip-ink:       #FFFFFF;
+    --tip-kbd:       #55555B;
     --surface:       #2D2D2D;              /* dropdown-background, dark */
     --surface-2:     #212121;              /* --gray-800 */
     --surface-3:     #303030;              /* --gray-700 */
@@ -133,6 +139,9 @@
 :root[data-theme="dark"] {
   --bg:      #181818;        /* --gray-900 / surface */
   --sidebar:     #141414;        /* bg-primary, dark */
+  --tip-bg:      #3A3A3E;
+  --tip-ink:     #FFFFFF;
+  --tip-kbd:     #55555B;
   --surface:     #2D2D2D;        /* dropdown-background, dark */
   --surface-2:   #212121;        /* --gray-800 */
   --surface-3:   #303030;        /* --gray-700 */
@@ -249,7 +258,7 @@ body.rail aside { margin-left: -248px; opacity: 0; }
   position: absolute; top: calc(100% + 6px); left: 50%; z-index: 200;
   transform: translateX(-50%) translateY(-3px) scale(.96); transform-origin: top center;
   display: inline-flex; align-items: center; gap: 7px;
-  background: #232326; color: #fff; border-radius: 9px; padding: 6px 9px;
+  background: var(--tip-bg); color: var(--tip-ink); border-radius: 9px; padding: 6px 9px;
   font-size: 12.5px; font-weight: 450; line-height: 1; white-space: nowrap;
   pointer-events: none; opacity: 0;
   box-shadow: 0 4px 14px rgba(0,0,0,.22), 0 1px 3px rgba(0,0,0,.16);
@@ -258,7 +267,7 @@ body.rail aside { margin-left: -248px; opacity: 0; }
 .tbtn:hover .tip, .tbtn:focus-visible .tip {
   opacity: 1; transform: translateX(-50%) translateY(0) scale(1); transition-delay: .34s;
 }
-.tip kbd { background: rgba(255,255,255,.17); border-radius: 5px; padding: 3px 5px; font: inherit; font-size: 11.5px; }
+.tip kbd { background: var(--tip-kbd); border-radius: 5px; padding: 3px 5px; font: inherit; font-size: 11.5px; }
 @media (prefers-reduced-motion: reduce) { .tip { transition: opacity .01ms; transform: translateX(-50%); } }
 
 .brand { display: flex; align-items: center; gap: 4px; padding: 0 2px 12px; position: relative; z-index: 60; }
