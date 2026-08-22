@@ -11,10 +11,10 @@ One brief in → verified software **and** verified hardware out. Claude Code an
 ```
 index.html          the whole app — one file, zero dependencies, zero network
 precedent/          the Precedent Engine (see below) — pure stdlib Python
-taste/              the tier-1 design lint — the taste gate, as a program
+taste/              the taste gate as programs — tier 1 lint, tier 2 contrast
 app/                native macOS wrapper (Swift + WKWebView)
 icon/               generators for the hand-drawn daisy icon and brand mark
-tools/              stats builder, six-hour refinement timer
+tools/              stats builder, view generators, refinement timer (see tools/README.md)
 verify.sh           every gate Daisy claims to enforce, run against Daisy
 ```
 
@@ -33,14 +33,14 @@ A command center in the Codex-desktop design language, **light-first**: serif ag
 - **Proportional minimap** down the left edge, colour-coded by gate outcome, click to jump.
 - **Runs** — aggregate windows plus ten replayable snapshots, including a red escalated run so a judge can diagnose a failure from history.
 - **Scraper heal** — the whole auto-repair loop as its own watchable thread: the vendor restructures its table, the collector *does not error* (it quietly returns fewer keys), the schema key-diff catches it, `scraper heal` runs, the verifier checks the preview **before** a human sees it, and the healed selectors are committed to `CLAUDE.md` rather than a dashboard.
-- **Review queue** — nothing merges itself. Diffs, scorecards, smoke-boot status.
+- **Review queue** — nothing merges itself. Diffs, scorecards, smoke-boot status, how long each item has waited, and a breakdown of what a green scorecard actually covers.
 - **Precedent** — the innovative core, below.
 - **Skills** — the mounted skill files, the factory's own `CLAUDE.md` (scrapers, agent routing, gate list, and the laws the orchestrator enforces), and the taste gate applied to Daisy itself
 - **Artifacts / Automations**, ⌘K command palette, and `daisy-theme-v1` appearance settings (chat font, code font, accent, motion) persisted to localStorage.
 
 ### Craft notes
 
-Values are taken from the real Codex webview palette rather than approximated: `--color-token-*` chains, the `0 0 0 .5px` elevation-stroke recipe, `rounded-lg` = 10px cards against a 20px composer, `superellipse(1.5)` corners, git-decoration diff colours (`#00a240` / `#ba2623` light), 28px buttons, 36px file rows, and `cursor: default` — because Mac apps don't use pointing-hand cursors.
+Values are taken from the real Codex webview palette rather than approximated (with two deliberate departures, both forced by the tier-2 contrast gate: the added-green and the dark deleted-red are darkened/lightened from the shipped `gitDecoration` values, which are tuned for file labels on plain ground and fail at 10.5px bold on a tinted chip): `--color-token-*` chains, the `0 0 0 .5px` elevation-stroke recipe, `rounded-lg` = 10px cards against a 20px composer, `superellipse(1.5)` corners, git-decoration diff colours, 28px buttons, 36px file rows, and `cursor: default` — because Mac apps don't use pointing-hand cursors.
 
 Motion follows the same discipline: `ease-out` for enter and exit and never `ease-in`; springs generated from Apple's `.spring(duration:bounce:)` mapping; View Transitions for directional view changes; `@starting-style` transitions rather than keyframes so interrupted animations retarget instead of restarting; a wall-clock stagger budget so streaming never builds an invisible queue. The command palette deliberately has **no** open animation — it's used dozens of times a day, and Raycast ships it that way for the same reason.
 
