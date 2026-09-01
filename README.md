@@ -2,6 +2,14 @@
 
 Daisy is the command center for **THE LAB: Workbench** — an agentic software factory built for the WeMakeDevs Zero Downtime Hackathon (Aug 22, 2026).
 
+## Awards
+
+**🏅 Honorable Mention — WeMakeDevs Zero Downtime Hackathon** (Aug 2026), co-hosted by
+[Port.io](https://www.getport.io), [Bright Data](https://brightdata.com), and
+[SigNoz](https://signoz.io). The challenge: don't build the app — build the factory
+that builds, operates, and repairs it. 38 teams competed; Daisy took an honorable
+mention with one of the few high-school builders in the field.
+
 One brief in → verified software **and** verified hardware out. Claude Code and Codex build in parallel git worktrees; every artifact passes gates a human can audit line by line: a three-tier taste ladder for frontends, closed-form physics margins for parts. Port governs, Bright Data feeds, SigNoz escalates.
 
 ---
